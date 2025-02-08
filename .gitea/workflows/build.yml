@@ -4,8 +4,8 @@ on:
     branches: [main]
 env:
   REGISTRY_SERVER: ${{vars.REGISTRY_SERVER}}
-  APP_NAME: uw-auth-center
-  APP_PORT: 10000
+  APP_NAME: uw-ai-center
+  APP_PORT: 10090
 
 jobs:
   build:
