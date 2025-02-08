@@ -1,0 +1,21 @@
+name: build
+on:
+  push:
+    branches: [main]
+env:
+  REGISTRY_SERVER: ${{vars.REGISTRY_SERVER}}
+  APP_NAME: uw-auth-center
+  APP_PORT: 10000
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: build
+        run: |
+          git clone -q ${{gitea.server_url}}/${{ gitea.repository }}.git .
+          mvn clean package -U -Dmaven.test.skip=true
+          APP_VERSION=`grep '<version>' pom.xml |awk -F'>' '{print $2}'|awk -F"<" '{print $1}'|head -n 1`
+          docker build --build-arg APP_NAME=${APP_NAME} -t ${REGISTRY_SERVER}/${APP_NAME}:${APP_VERSION} .
+          docker push ${REGISTRY_SERVER}/${APP_NAME}:${APP_VERSION}
+          /home/gitea/runner/deploy/deploy-registry-app.sh ${APP_NAME} ${APP_VERSION} ${APP_PORT}
