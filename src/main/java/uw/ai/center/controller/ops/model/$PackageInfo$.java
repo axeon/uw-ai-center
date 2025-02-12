@@ -1,4 +1,4 @@
-package uw.ai.center.controller.ops.vendor;
+package uw.ai.center.controller.ops.model;
 
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,8 +12,8 @@ import uw.auth.service.constant.UserType;
 @RestController
 public class $PackageInfo$ {
 
-    @GetMapping("/ops/vendor")
-    @Operation(summary = "服务商管理", description = "服务商管理")
+    @GetMapping("/ops/model")
+    @Operation(summary = "模型管理", description = "模型管理")
     @MscPermDeclare(user = UserType.OPS)
     public void info() {
     }

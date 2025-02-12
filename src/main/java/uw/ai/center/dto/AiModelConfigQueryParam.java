@@ -1,7 +1,7 @@
 package uw.ai.center.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import uw.dao.PageQueryParam;
+import uw.app.common.dto.AuthPageQueryParam;
 import uw.dao.annotation.QueryMeta;
 
 import java.util.Date;
@@ -9,11 +9,19 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
-* AI服务商信息列表查询参数。
+* AI服务模型列表查询参数。
 */
-@Schema(title = "AI服务商信息列表查询参数", description = "AI服务商信息列表查询参数")
-public class AiVendorInfoQueryParam extends PageQueryParam{
+@Schema(title = "AI服务模型列表查询参数", description = "AI服务模型列表查询参数")
+public class AiModelConfigQueryParam extends AuthPageQueryParam{
 
+    public AiModelConfigQueryParam() {
+        super();
+    }
+
+    public AiModelConfigQueryParam(Long saasId) {
+        super(saasId);
+    }
+	
     /**
      * 允许的排序属性。
      * key:排序名 value:排序字段
@@ -24,8 +32,11 @@ public class AiVendorInfoQueryParam extends PageQueryParam{
     public Map<String, String> ALLOWED_SORT_PROPERTY() {
         return new HashMap<>() {{
             put( "id", "id" );
-            put( "vendorCode", "vendor_code" );
-            put( "vendorName", "vendor_name" );
+            put( "saasId", "saas_id" );
+            put( "mchId", "mch_id" );
+            put( "vendorClass", "vendor_class" );
+            put( "modelCode", "model_code" );
+            put( "modelName", "model_name" );
             put( "createDate", "create_date" );
             put( "modifyDate", "modify_date" );
             put( "state", "state" );
@@ -40,18 +51,32 @@ public class AiVendorInfoQueryParam extends PageQueryParam{
     private Long id;
 	
     /**
+    * 商户ID。
+    */
+    @QueryMeta(expr = "mch_id=?")
+    @Schema(title="商户ID", description = "商户ID")
+    private Long mchId;
+	
+    /**
+    * 服务商类。
+    */
+    @QueryMeta(expr = "vendor_class like ?")
+    @Schema(title="服务商类", description = "服务商类")
+    private String vendorClass;
+	
+    /**
     * 服务商代码。
     */
-    @QueryMeta(expr = "vendor_code like ?")
+    @QueryMeta(expr = "model_code like ?")
     @Schema(title="服务商代码", description = "服务商代码")
-    private String vendorCode;
+    private String modelCode;
 	
     /**
     * 服务商名称。
     */
-    @QueryMeta(expr = "vendor_name like ?")
+    @QueryMeta(expr = "model_name like ?")
     @Schema(title="服务商名称", description = "服务商名称")
-    private String vendorName;
+    private String modelName;
 	
     /**
     * 创建时间范围。
@@ -113,52 +138,96 @@ public class AiVendorInfoQueryParam extends PageQueryParam{
     /**
     * 设置ID链式调用。
     */
-	public AiVendorInfoQueryParam id(Long id){
+	public AiModelConfigQueryParam id(Long id){
         setId(id);
+        return this;
+    }
+	
+    /**
+    * 获取商户ID。
+    */
+    public Long getMchId(){
+        return this.mchId;
+    }
+
+    /**
+    * 设置商户ID。
+    */
+    public void setMchId(Long mchId){
+        this.mchId = mchId;
+    }
+	
+    /**
+    * 设置商户ID链式调用。
+    */
+	public AiModelConfigQueryParam mchId(Long mchId){
+        setMchId(mchId);
+        return this;
+    }
+	
+    /**
+    * 获取服务商类。
+    */
+    public String getVendorClass(){
+        return this.vendorClass;
+    }
+
+    /**
+    * 设置服务商类。
+    */
+    public void setVendorClass(String vendorClass){
+        this.vendorClass = vendorClass;
+    }
+	
+    /**
+    * 设置服务商类链式调用。
+    */
+    public AiModelConfigQueryParam vendorClass(String vendorClass) {
+        setVendorClass(vendorClass);
         return this;
     }
 	
     /**
     * 获取服务商代码。
     */
-    public String getVendorCode(){
-        return this.vendorCode;
+    public String getModelCode(){
+        return this.modelCode;
     }
 
     /**
     * 设置服务商代码。
     */
-    public void setVendorCode(String vendorCode){
-        this.vendorCode = vendorCode;
+    public void setModelCode(String modelCode){
+        this.modelCode = modelCode;
     }
 	
     /**
     * 设置服务商代码链式调用。
     */
-    public AiVendorInfoQueryParam vendorCode(String vendorCode) {
-        setVendorCode(vendorCode);
+    public AiModelConfigQueryParam modelCode(String modelCode) {
+        setModelCode(modelCode);
         return this;
     }
 	
     /**
     * 获取服务商名称。
     */
-    public String getVendorName(){
-        return this.vendorName;
+    public String getModelName(){
+        return this.modelName;
     }
 
     /**
     * 设置服务商名称。
     */
-    public void setVendorName(String vendorName){
-        this.vendorName = vendorName;
+    public void setModelName(String modelName){
+        this.modelName = modelName;
     }
 	
     /**
     * 设置服务商名称链式调用。
     */
-    public AiVendorInfoQueryParam vendorName(String vendorName) {
-        setVendorName(vendorName);
+    public AiModelConfigQueryParam modelName(String modelName) {
+        setModelName(modelName);
         return this;
     }
 	
@@ -179,7 +248,7 @@ public class AiVendorInfoQueryParam extends PageQueryParam{
     /**
     * 设置创建时间范围链式调用。
     */
-    public AiVendorInfoQueryParam createDateRange(Date[] createDateRange) {
+    public AiModelConfigQueryParam createDateRange(Date[] createDateRange) {
         setCreateDateRange(createDateRange);
         return this;
     }
@@ -201,7 +270,7 @@ public class AiVendorInfoQueryParam extends PageQueryParam{
     /**
     * 设置修改时间范围链式调用。
     */
-    public AiVendorInfoQueryParam modifyDateRange(Date[] modifyDateRange) {
+    public AiModelConfigQueryParam modifyDateRange(Date[] modifyDateRange) {
         setModifyDateRange(modifyDateRange);
         return this;
     }
@@ -223,7 +292,7 @@ public class AiVendorInfoQueryParam extends PageQueryParam{
     /**
     * 设置状态链式调用。
     */
-    public AiVendorInfoQueryParam state(Integer state) {
+    public AiModelConfigQueryParam state(Integer state) {
         setState(state);
         return this;
     }
@@ -245,7 +314,7 @@ public class AiVendorInfoQueryParam extends PageQueryParam{
     /**
     * 设置数组状态链式调用。
     */
-    public AiVendorInfoQueryParam states(Integer[] states) {
+    public AiModelConfigQueryParam states(Integer[] states) {
         setStates(states);
         return this;
     }
@@ -267,7 +336,7 @@ public class AiVendorInfoQueryParam extends PageQueryParam{
     /**
     * 设置大于等于状态链式调用。
     */
-    public AiVendorInfoQueryParam stateGte(Integer stateGte) {
+    public AiModelConfigQueryParam stateGte(Integer stateGte) {
         setStateGte(stateGte);
         return this;
     }
@@ -289,7 +358,7 @@ public class AiVendorInfoQueryParam extends PageQueryParam{
     /**
     * 获取小于等于状态链式调用。
     */
-    public AiVendorInfoQueryParam stateLte(Integer stateLte) {
+    public AiModelConfigQueryParam stateLte(Integer stateLte) {
         setStateLte(stateLte);
         return this;
     }

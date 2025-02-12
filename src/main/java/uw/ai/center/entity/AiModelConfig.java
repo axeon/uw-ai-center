@@ -12,14 +12,14 @@ import uw.dao.annotation.ColumnMeta;
 import uw.dao.annotation.TableMeta;
 
 /**
- * AiVendorModel实体类
+ * AiModelConfig实体类
  * AI服务模型
  *
  * @author axeon
  */
-@TableMeta(tableName="ai_vendor_model",tableType="table")
+@TableMeta(tableName="ai_model_config",tableType="table")
 @Schema(title = "AI服务模型", description = "AI服务模型")
-public class AiVendorModel implements DataEntity,Serializable{
+public class AiModelConfig implements DataEntity,Serializable{
 
 
     /**
@@ -30,11 +30,25 @@ public class AiVendorModel implements DataEntity,Serializable{
     private long id;
 
     /**
-     * 服务商ID
+     * SAAS ID
      */
-    @ColumnMeta(columnName="vendor_id", dataType="long", dataSize=19, nullable=false)
-    @Schema(title = "服务商ID", description = "服务商ID")
-    private long vendorId;
+    @ColumnMeta(columnName="saas_id", dataType="long", dataSize=19, nullable=false, primaryKey=true)
+    @Schema(title = "SAAS ID", description = "SAAS ID")
+    private long saasId;
+
+    /**
+     * 商户ID
+     */
+    @ColumnMeta(columnName="mch_id", dataType="long", dataSize=19, nullable=false)
+    @Schema(title = "商户ID", description = "商户ID")
+    private long mchId;
+
+    /**
+     * 服务商类
+     */
+    @ColumnMeta(columnName="vendor_class", dataType="String", dataSize=200, nullable=false)
+    @Schema(title = "服务商类", description = "服务商类")
+    private String vendorClass;
 
     /**
      * 服务商代码
@@ -46,7 +60,7 @@ public class AiVendorModel implements DataEntity,Serializable{
     /**
      * 服务商名称
      */
-    @ColumnMeta(columnName="model_name", dataType="String", dataSize=100, nullable=true)
+    @ColumnMeta(columnName="model_name", dataType="String", dataSize=200, nullable=true)
     @Schema(title = "服务商名称", description = "服务商名称")
     private String modelName;
 
@@ -70,6 +84,30 @@ public class AiVendorModel implements DataEntity,Serializable{
     @ColumnMeta(columnName="modify_date", dataType="java.util.Date", dataSize=23, nullable=true)
     @Schema(title = "修改时间", description = "修改时间")
     private java.util.Date modifyDate;
+
+    /**
+     * 公开配置
+     */
+    @ColumnMeta(columnName="public_data", dataType="String", dataSize=1073741824, nullable=true)
+    @Schema(title = "公开配置", description = "公开配置")
+    @JsonRawValue(value = false)
+    private String publicData;
+
+    /**
+     * API配置
+     */
+    @ColumnMeta(columnName="model_data", dataType="String", dataSize=1073741824, nullable=true)
+    @Schema(title = "API配置", description = "API配置")
+    @JsonRawValue(value = false)
+    private String modelData;
+
+    /**
+     * 日志配置
+     */
+    @ColumnMeta(columnName="log_data", dataType="String", dataSize=1073741824, nullable=true)
+    @Schema(title = "日志配置", description = "日志配置")
+    @JsonRawValue(value = false)
+    private String logData;
 
     /**
      * 状态
@@ -122,7 +160,7 @@ public class AiVendorModel implements DataEntity,Serializable{
      */
     private void _INIT_UPDATE_INFO() {
         this.UPDATED_COLUMN = new HashSet<String>();
-        this.UPDATED_INFO = new StringBuilder("表ai_vendor_model主键\"" + 
+        this.UPDATED_INFO = new StringBuilder("表ai_model_config主键\"" + 
         this.id+ "\"更新为:\r\n");
     }
 
@@ -135,10 +173,24 @@ public class AiVendorModel implements DataEntity,Serializable{
     }
 
     /**
-     * 获取服务商ID。
+     * 获取SAAS ID。
      */
-    public long getVendorId(){
-        return this.vendorId;
+    public long getSaasId(){
+        return this.saasId;
+    }
+
+    /**
+     * 获取商户ID。
+     */
+    public long getMchId(){
+        return this.mchId;
+    }
+
+    /**
+     * 获取服务商类。
+     */
+    public String getVendorClass(){
+        return this.vendorClass;
     }
 
     /**
@@ -177,6 +229,27 @@ public class AiVendorModel implements DataEntity,Serializable{
     }
 
     /**
+     * 获取公开配置。
+     */
+    public String getPublicData(){
+        return this.publicData;
+    }
+
+    /**
+     * 获取API配置。
+     */
+    public String getModelData(){
+        return this.modelData;
+    }
+
+    /**
+     * 获取日志配置。
+     */
+    public String getLogData(){
+        return this.logData;
+    }
+
+    /**
      * 获取状态。
      */
     public int getState(){
@@ -199,16 +272,44 @@ public class AiVendorModel implements DataEntity,Serializable{
     }
 
     /**
-     * 设置服务商ID。
+     * 设置SAAS ID。
      */
-    public void setVendorId(long vendorId){
-        if (!Objects.equals(this.vendorId, vendorId)){
+    public void setSaasId(long saasId){
+        if (!Objects.equals(this.saasId, saasId)){
             if (this.UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("vendor_id");
-            this.UPDATED_INFO.append("vendor_id:\"" + this.vendorId+ "\"=>\"" + vendorId + "\"\r\n");
-            this.vendorId = vendorId;
+            this.UPDATED_COLUMN.add("saas_id");
+            this.UPDATED_INFO.append("saas_id:\"" + this.saasId+ "\"=>\"" + saasId + "\"\r\n");
+            this.saasId = saasId;
+        }
+    }
+
+    /**
+     * 设置商户ID。
+     */
+    public void setMchId(long mchId){
+        if (!Objects.equals(this.mchId, mchId)){
+            if (this.UPDATED_COLUMN == null) {
+                _INIT_UPDATE_INFO();
+            }
+            this.UPDATED_COLUMN.add("mch_id");
+            this.UPDATED_INFO.append("mch_id:\"" + this.mchId+ "\"=>\"" + mchId + "\"\r\n");
+            this.mchId = mchId;
+        }
+    }
+
+    /**
+     * 设置服务商类。
+     */
+    public void setVendorClass(String vendorClass){
+        if (!Objects.equals(this.vendorClass, vendorClass)){
+            if (this.UPDATED_COLUMN == null) {
+                _INIT_UPDATE_INFO();
+            }
+            this.UPDATED_COLUMN.add("vendor_class");
+            this.UPDATED_INFO.append("vendor_class:\"" + this.vendorClass+ "\"=>\"" + vendorClass + "\"\r\n");
+            this.vendorClass = vendorClass;
         }
     }
 
@@ -283,6 +384,48 @@ public class AiVendorModel implements DataEntity,Serializable{
     }
 
     /**
+     * 设置公开配置。
+     */
+    public void setPublicData(String publicData){
+        if (!Objects.equals(this.publicData, publicData)){
+            if (this.UPDATED_COLUMN == null) {
+                _INIT_UPDATE_INFO();
+            }
+            this.UPDATED_COLUMN.add("public_data");
+            this.UPDATED_INFO.append("public_data:\"" + this.publicData+ "\"=>\"" + publicData + "\"\r\n");
+            this.publicData = publicData;
+        }
+    }
+
+    /**
+     * 设置API配置。
+     */
+    public void setModelData(String modelData){
+        if (!Objects.equals(this.modelData, modelData)){
+            if (this.UPDATED_COLUMN == null) {
+                _INIT_UPDATE_INFO();
+            }
+            this.UPDATED_COLUMN.add("model_data");
+            this.UPDATED_INFO.append("model_data:\"" + this.modelData+ "\"=>\"" + modelData + "\"\r\n");
+            this.modelData = modelData;
+        }
+    }
+
+    /**
+     * 设置日志配置。
+     */
+    public void setLogData(String logData){
+        if (!Objects.equals(this.logData, logData)){
+            if (this.UPDATED_COLUMN == null) {
+                _INIT_UPDATE_INFO();
+            }
+            this.UPDATED_COLUMN.add("log_data");
+            this.UPDATED_INFO.append("log_data:\"" + this.logData+ "\"=>\"" + logData + "\"\r\n");
+            this.logData = logData;
+        }
+    }
+
+    /**
      * 设置状态。
      */
     public void setState(int state){
@@ -303,12 +446,17 @@ public class AiVendorModel implements DataEntity,Serializable{
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("id:\"" + this.id + "\"\r\n");
-        sb.append("vendor_id:\"" + this.vendorId + "\"\r\n");
+        sb.append("saas_id:\"" + this.saasId + "\"\r\n");
+        sb.append("mch_id:\"" + this.mchId + "\"\r\n");
+        sb.append("vendor_class:\"" + this.vendorClass + "\"\r\n");
         sb.append("model_code:\"" + this.modelCode + "\"\r\n");
         sb.append("model_name:\"" + this.modelName + "\"\r\n");
         sb.append("model_desc:\"" + this.modelDesc + "\"\r\n");
         sb.append("create_date:\"" + this.createDate + "\"\r\n");
         sb.append("modify_date:\"" + this.modifyDate + "\"\r\n");
+        sb.append("public_data:\"" + this.publicData + "\"\r\n");
+        sb.append("model_data:\"" + this.modelData + "\"\r\n");
+        sb.append("log_data:\"" + this.logData + "\"\r\n");
         sb.append("state:\"" + this.state + "\"\r\n");
         return sb.toString();
     }
