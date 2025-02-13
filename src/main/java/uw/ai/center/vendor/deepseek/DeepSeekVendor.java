@@ -1,10 +1,8 @@
-package uw.ai.center.service.openai;
+package uw.ai.center.vendor.deepseek;
 
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.model.ChatModel;
-import org.springframework.ai.ollama.api.OllamaApi;
 import org.springframework.stereotype.Service;
-import uw.ai.center.service.AiVendor;
+import uw.ai.center.vendor.AiVendor;
 import uw.ai.center.vo.AiModelConfigData;
 
 import java.util.List;
@@ -13,19 +11,14 @@ import java.util.List;
  * OllamaVendor。
  */
 @Service
-public class OpenAiVendor implements AiVendor {
-
-    public OpenAiVendor() {
-        OllamaApi api = new OllamaApi();
-//        OllamaChatModel model = new OllamaChatModel(api,"deepseek-r1:7b");
-    }
+public class DeepSeekVendor implements AiVendor {
 
     /**
      * 链接器名称
      */
     @Override
     public String vendorName() {
-        return "OpenAi";
+        return "DeepSeek";
     }
 
     /**
@@ -45,17 +38,17 @@ public class OpenAiVendor implements AiVendor {
     }
 
     /**
-     * PUB参数信息集合，所有人可见。
+     * Vendor参数信息集合，管理员可见。
      */
     @Override
-    public List<ConfigParam> pubicParam() {
+    public List<ConfigParam> vendorParam() {
         return List.of( new ConfigParam( "", "", "" ),
                 new ConfigParam( "", "", "" ),
                 new ConfigParam( "", "", "" ) );
     }
 
     /**
-     * API参数信息集合，运营商可见。
+     * model参数信息集合，运营商可见。
      */
     @Override
     public List<ConfigParam> modelParam() {
@@ -63,10 +56,10 @@ public class OpenAiVendor implements AiVendor {
     }
 
     /**
-     * 日志类型参数信息集合，仅管理员可见。
+     * embed参数信息集合，仅管理员可见。
      */
     @Override
-    public List<ConfigParam> logParam() {
+    public List<ConfigParam> embedParam() {
         return List.of();
     }
 

@@ -1,4 +1,4 @@
-package uw.ai.center.service;
+package uw.ai.center.vendor;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.springframework.ai.chat.client.ChatClient;
@@ -34,19 +34,19 @@ public interface AiVendor {
     }
 
     /**
-     * PUB参数信息集合，所有人可见。
+     * Vendor参数信息集合，管理员可见。
      */
-    List<ConfigParam> pubicParam();
+    List<ConfigParam> vendorParam();
 
     /**
-     * API参数信息集合，管理员可见。
+     * model参数信息集合，管理员可见。
      */
     List<ConfigParam> modelParam();
 
     /**
-     * 日志类型参数信息集合，仅管理员可见。
+     * embed参数信息集合，仅管理员可见。
      */
-    List<ConfigParam> logParam();
+    List<ConfigParam> embedParam();
 
     /**
      * 构造模型实例。

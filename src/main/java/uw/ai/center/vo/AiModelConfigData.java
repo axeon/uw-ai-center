@@ -1,9 +1,12 @@
 package uw.ai.center.vo;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uw.ai.center.entity.AiModelConfig;
-import uw.ai.center.service.AiVendor;
-import uw.ai.center.service.AiVendorHelper;
+import uw.ai.center.vendor.AiVendor;
+import uw.ai.center.vendor.AiVendorHelper;
 import uw.httpclient.json.JsonInterfaceHelper;
 
 import java.util.Date;
@@ -15,6 +18,7 @@ import java.util.Map;
  */
 public class AiModelConfigData {
 
+    private static final Logger logger = LoggerFactory.getLogger( AiModelConfigData.class );
     private final AiModelConfig aiModelConfig;
     /**
      * vendor参数信息集合，所有人可见。
@@ -34,25 +38,43 @@ public class AiModelConfigData {
         AiVendor aiVendor = AiVendorHelper.getVendor( aiModelConfig.getVendorClass() );
         if (aiVendor != null) {
             vendorParamMap = new HashMap<String, String>();
-            for (AiVendor.ConfigParam configParam : aiVendor.pubicParam()) {
+            for (AiVendor.ConfigParam configParam : aiVendor.vendorParam()) {
                 vendorParamMap.put( configParam.getKey(), configParam.getValue() );
             }
-            vendorParamMap.putAll( JsonInterfaceHelper.JSON_CONVERTER.parse( aiModelConfig.getVendorData(), new TypeReference<Map<? extends String, ? extends String>>() {
-            } ) );
+            if (StringUtils.isNotBlank( aiModelConfig.getVendorData() )) {
+                try {
+                    vendorParamMap.putAll( JsonInterfaceHelper.JSON_CONVERTER.parse( aiModelConfig.getVendorData(), new TypeReference<Map<? extends String, ? extends String>>() {
+                    } ) );
+                } catch (Exception e) {
+                    logger.error( e.getMessage(), e );
+                }
+            }
 
             modelParamMap = new HashMap<String, String>();
             for (AiVendor.ConfigParam configParam : aiVendor.modelParam()) {
                 modelParamMap.put( configParam.getKey(), configParam.getValue() );
             }
-            modelParamMap.putAll( JsonInterfaceHelper.JSON_CONVERTER.parse( aiModelConfig.getModelData(), new TypeReference<Map<? extends String, ? extends String>>() {
-            } ) );
+            if (StringUtils.isNotBlank( aiModelConfig.getModelData() )) {
+                try {
+                    modelParamMap.putAll( JsonInterfaceHelper.JSON_CONVERTER.parse( aiModelConfig.getModelData(), new TypeReference<Map<? extends String, ? extends String>>() {
+                    } ) );
+                } catch (Exception e) {
+                    logger.error( e.getMessage(), e );
+                }
+            }
 
             embedParamMap = new HashMap<String, String>();
-            for (AiVendor.ConfigParam configParam : aiVendor.logParam()) {
+            for (AiVendor.ConfigParam configParam : aiVendor.embedParam()) {
                 embedParamMap.put( configParam.getKey(), configParam.getValue() );
             }
-            embedParamMap.putAll( JsonInterfaceHelper.JSON_CONVERTER.parse( aiModelConfig.getEmbedData(), new TypeReference<Map<? extends String, ? extends String>>() {
-            } ) );
+            if (StringUtils.isNotBlank( aiModelConfig.getEmbedData() )) {
+                try {
+                    embedParamMap.putAll( JsonInterfaceHelper.JSON_CONVERTER.parse( aiModelConfig.getEmbedData(), new TypeReference<Map<? extends String, ? extends String>>() {
+                    } ) );
+                } catch (Exception e) {
+                    logger.error( e.getMessage(), e );
+                }
+            }
 
         }
     }
@@ -187,7 +209,7 @@ public class AiModelConfigData {
 
 
     /**
-     * 获取API参数信息集合
+     * 获取model参数信息集合
      *
      * @return 集合
      */

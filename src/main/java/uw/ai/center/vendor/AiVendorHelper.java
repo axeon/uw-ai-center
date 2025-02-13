@@ -1,4 +1,4 @@
-package uw.ai.center.service;
+package uw.ai.center.vendor;
 
 import com.github.benmanes.caffeine.cache.CacheLoader;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -6,9 +6,9 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.ai.chat.client.ChatClient;
 import uw.ai.center.entity.AiModelConfig;
-import uw.ai.center.service.deepseek.DeepSeekVendor;
-import uw.ai.center.service.ollama.OllamaVendor;
-import uw.ai.center.service.openai.OpenAiVendor;
+import uw.ai.center.vendor.deepseek.DeepSeekVendor;
+import uw.ai.center.vendor.ollama.OllamaVendor;
+import uw.ai.center.vendor.openai.OpenAiVendor;
 import uw.ai.center.vo.AiModelConfigData;
 import uw.cache.CacheChangeNotifyListener;
 import uw.cache.CacheDataLoader;
