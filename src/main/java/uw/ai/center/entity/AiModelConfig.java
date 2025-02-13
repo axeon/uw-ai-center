@@ -53,23 +53,75 @@ public class AiModelConfig implements DataEntity,Serializable{
     /**
      * 服务商代码
      */
-    @ColumnMeta(columnName="model_code", dataType="String", dataSize=100, nullable=true)
+    @ColumnMeta(columnName="config_code", dataType="String", dataSize=100, nullable=true)
     @Schema(title = "服务商代码", description = "服务商代码")
-    private String modelCode;
+    private String configCode;
 
     /**
      * 服务商名称
      */
-    @ColumnMeta(columnName="model_name", dataType="String", dataSize=200, nullable=true)
+    @ColumnMeta(columnName="config_name", dataType="String", dataSize=200, nullable=true)
     @Schema(title = "服务商名称", description = "服务商名称")
-    private String modelName;
+    private String configName;
 
     /**
      * 服务商描述
      */
-    @ColumnMeta(columnName="model_desc", dataType="String", dataSize=65535, nullable=true)
+    @ColumnMeta(columnName="config_desc", dataType="String", dataSize=65535, nullable=true)
     @Schema(title = "服务商描述", description = "服务商描述")
-    private String modelDesc;
+    private String configDesc;
+
+    /**
+     * api地址
+     */
+    @ColumnMeta(columnName="api_url", dataType="String", dataSize=100, nullable=true)
+    @Schema(title = "api地址", description = "api地址")
+    private String apiUrl;
+
+    /**
+     * api key
+     */
+    @ColumnMeta(columnName="api_key", dataType="String", dataSize=100, nullable=true)
+    @Schema(title = "api key", description = "api key")
+    private String apiKey;
+
+    /**
+     * 主模型
+     */
+    @ColumnMeta(columnName="model_main", dataType="String", dataSize=100, nullable=true)
+    @Schema(title = "主模型", description = "主模型")
+    private String modelMain;
+
+    /**
+     * 嵌入模型
+     */
+    @ColumnMeta(columnName="model_embed", dataType="String", dataSize=100, nullable=true)
+    @Schema(title = "嵌入模型", description = "嵌入模型")
+    private String modelEmbed;
+
+    /**
+     * 服务商配置
+     */
+    @ColumnMeta(columnName="vendor_data", dataType="String", dataSize=1073741824, nullable=true)
+    @Schema(title = "服务商配置", description = "服务商配置")
+    @JsonRawValue(value = false)
+    private String vendorData;
+
+    /**
+     * 模型配置
+     */
+    @ColumnMeta(columnName="model_data", dataType="String", dataSize=1073741824, nullable=true)
+    @Schema(title = "模型配置", description = "模型配置")
+    @JsonRawValue(value = false)
+    private String modelData;
+
+    /**
+     * 嵌入配置
+     */
+    @ColumnMeta(columnName="embed_data", dataType="String", dataSize=1073741824, nullable=true)
+    @Schema(title = "嵌入配置", description = "嵌入配置")
+    @JsonRawValue(value = false)
+    private String embedData;
 
     /**
      * 创建时间
@@ -84,30 +136,6 @@ public class AiModelConfig implements DataEntity,Serializable{
     @ColumnMeta(columnName="modify_date", dataType="java.util.Date", dataSize=23, nullable=true)
     @Schema(title = "修改时间", description = "修改时间")
     private java.util.Date modifyDate;
-
-    /**
-     * 公开配置
-     */
-    @ColumnMeta(columnName="public_data", dataType="String", dataSize=1073741824, nullable=true)
-    @Schema(title = "公开配置", description = "公开配置")
-    @JsonRawValue(value = false)
-    private String publicData;
-
-    /**
-     * API配置
-     */
-    @ColumnMeta(columnName="model_data", dataType="String", dataSize=1073741824, nullable=true)
-    @Schema(title = "API配置", description = "API配置")
-    @JsonRawValue(value = false)
-    private String modelData;
-
-    /**
-     * 日志配置
-     */
-    @ColumnMeta(columnName="log_data", dataType="String", dataSize=1073741824, nullable=true)
-    @Schema(title = "日志配置", description = "日志配置")
-    @JsonRawValue(value = false)
-    private String logData;
 
     /**
      * 状态
@@ -196,22 +224,71 @@ public class AiModelConfig implements DataEntity,Serializable{
     /**
      * 获取服务商代码。
      */
-    public String getModelCode(){
-        return this.modelCode;
+    public String getConfigCode(){
+        return this.configCode;
     }
 
     /**
      * 获取服务商名称。
      */
-    public String getModelName(){
-        return this.modelName;
+    public String getConfigName(){
+        return this.configName;
     }
 
     /**
      * 获取服务商描述。
      */
-    public String getModelDesc(){
-        return this.modelDesc;
+    public String getConfigDesc(){
+        return this.configDesc;
+    }
+
+    /**
+     * 获取api地址。
+     */
+    public String getApiUrl(){
+        return this.apiUrl;
+    }
+
+    /**
+     * 获取api key。
+     */
+    public String getApiKey(){
+        return this.apiKey;
+    }
+
+    /**
+     * 获取主模型。
+     */
+    public String getModelMain(){
+        return this.modelMain;
+    }
+
+    /**
+     * 获取嵌入模型。
+     */
+    public String getModelEmbed(){
+        return this.modelEmbed;
+    }
+
+    /**
+     * 获取服务商配置。
+     */
+    public String getVendorData(){
+        return this.vendorData;
+    }
+
+    /**
+     * 获取模型配置。
+     */
+    public String getModelData(){
+        return this.modelData;
+    }
+
+    /**
+     * 获取嵌入配置。
+     */
+    public String getEmbedData(){
+        return this.embedData;
     }
 
     /**
@@ -226,27 +303,6 @@ public class AiModelConfig implements DataEntity,Serializable{
      */
     public java.util.Date getModifyDate(){
         return this.modifyDate;
-    }
-
-    /**
-     * 获取公开配置。
-     */
-    public String getPublicData(){
-        return this.publicData;
-    }
-
-    /**
-     * 获取API配置。
-     */
-    public String getModelData(){
-        return this.modelData;
-    }
-
-    /**
-     * 获取日志配置。
-     */
-    public String getLogData(){
-        return this.logData;
     }
 
     /**
@@ -316,42 +372,140 @@ public class AiModelConfig implements DataEntity,Serializable{
     /**
      * 设置服务商代码。
      */
-    public void setModelCode(String modelCode){
-        if (!Objects.equals(this.modelCode, modelCode)){
+    public void setConfigCode(String configCode){
+        if (!Objects.equals(this.configCode, configCode)){
             if (this.UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("model_code");
-            this.UPDATED_INFO.append("model_code:\"" + this.modelCode+ "\"=>\"" + modelCode + "\"\r\n");
-            this.modelCode = modelCode;
+            this.UPDATED_COLUMN.add("config_code");
+            this.UPDATED_INFO.append("config_code:\"" + this.configCode+ "\"=>\"" + configCode + "\"\r\n");
+            this.configCode = configCode;
         }
     }
 
     /**
      * 设置服务商名称。
      */
-    public void setModelName(String modelName){
-        if (!Objects.equals(this.modelName, modelName)){
+    public void setConfigName(String configName){
+        if (!Objects.equals(this.configName, configName)){
             if (this.UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("model_name");
-            this.UPDATED_INFO.append("model_name:\"" + this.modelName+ "\"=>\"" + modelName + "\"\r\n");
-            this.modelName = modelName;
+            this.UPDATED_COLUMN.add("config_name");
+            this.UPDATED_INFO.append("config_name:\"" + this.configName+ "\"=>\"" + configName + "\"\r\n");
+            this.configName = configName;
         }
     }
 
     /**
      * 设置服务商描述。
      */
-    public void setModelDesc(String modelDesc){
-        if (!Objects.equals(this.modelDesc, modelDesc)){
+    public void setConfigDesc(String configDesc){
+        if (!Objects.equals(this.configDesc, configDesc)){
             if (this.UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("model_desc");
-            this.UPDATED_INFO.append("model_desc:\"" + this.modelDesc+ "\"=>\"" + modelDesc + "\"\r\n");
-            this.modelDesc = modelDesc;
+            this.UPDATED_COLUMN.add("config_desc");
+            this.UPDATED_INFO.append("config_desc:\"" + this.configDesc+ "\"=>\"" + configDesc + "\"\r\n");
+            this.configDesc = configDesc;
+        }
+    }
+
+    /**
+     * 设置api地址。
+     */
+    public void setApiUrl(String apiUrl){
+        if (!Objects.equals(this.apiUrl, apiUrl)){
+            if (this.UPDATED_COLUMN == null) {
+                _INIT_UPDATE_INFO();
+            }
+            this.UPDATED_COLUMN.add("api_url");
+            this.UPDATED_INFO.append("api_url:\"" + this.apiUrl+ "\"=>\"" + apiUrl + "\"\r\n");
+            this.apiUrl = apiUrl;
+        }
+    }
+
+    /**
+     * 设置api key。
+     */
+    public void setApiKey(String apiKey){
+        if (!Objects.equals(this.apiKey, apiKey)){
+            if (this.UPDATED_COLUMN == null) {
+                _INIT_UPDATE_INFO();
+            }
+            this.UPDATED_COLUMN.add("api_key");
+            this.UPDATED_INFO.append("api_key:\"" + this.apiKey+ "\"=>\"" + apiKey + "\"\r\n");
+            this.apiKey = apiKey;
+        }
+    }
+
+    /**
+     * 设置主模型。
+     */
+    public void setModelMain(String modelMain){
+        if (!Objects.equals(this.modelMain, modelMain)){
+            if (this.UPDATED_COLUMN == null) {
+                _INIT_UPDATE_INFO();
+            }
+            this.UPDATED_COLUMN.add("model_main");
+            this.UPDATED_INFO.append("model_main:\"" + this.modelMain+ "\"=>\"" + modelMain + "\"\r\n");
+            this.modelMain = modelMain;
+        }
+    }
+
+    /**
+     * 设置嵌入模型。
+     */
+    public void setModelEmbed(String modelEmbed){
+        if (!Objects.equals(this.modelEmbed, modelEmbed)){
+            if (this.UPDATED_COLUMN == null) {
+                _INIT_UPDATE_INFO();
+            }
+            this.UPDATED_COLUMN.add("model_embed");
+            this.UPDATED_INFO.append("model_embed:\"" + this.modelEmbed+ "\"=>\"" + modelEmbed + "\"\r\n");
+            this.modelEmbed = modelEmbed;
+        }
+    }
+
+    /**
+     * 设置服务商配置。
+     */
+    public void setVendorData(String vendorData){
+        if (!Objects.equals(this.vendorData, vendorData)){
+            if (this.UPDATED_COLUMN == null) {
+                _INIT_UPDATE_INFO();
+            }
+            this.UPDATED_COLUMN.add("vendor_data");
+            this.UPDATED_INFO.append("vendor_data:\"" + this.vendorData+ "\"=>\"" + vendorData + "\"\r\n");
+            this.vendorData = vendorData;
+        }
+    }
+
+    /**
+     * 设置模型配置。
+     */
+    public void setModelData(String modelData){
+        if (!Objects.equals(this.modelData, modelData)){
+            if (this.UPDATED_COLUMN == null) {
+                _INIT_UPDATE_INFO();
+            }
+            this.UPDATED_COLUMN.add("model_data");
+            this.UPDATED_INFO.append("model_data:\"" + this.modelData+ "\"=>\"" + modelData + "\"\r\n");
+            this.modelData = modelData;
+        }
+    }
+
+    /**
+     * 设置嵌入配置。
+     */
+    public void setEmbedData(String embedData){
+        if (!Objects.equals(this.embedData, embedData)){
+            if (this.UPDATED_COLUMN == null) {
+                _INIT_UPDATE_INFO();
+            }
+            this.UPDATED_COLUMN.add("embed_data");
+            this.UPDATED_INFO.append("embed_data:\"" + this.embedData+ "\"=>\"" + embedData + "\"\r\n");
+            this.embedData = embedData;
         }
     }
 
@@ -384,48 +538,6 @@ public class AiModelConfig implements DataEntity,Serializable{
     }
 
     /**
-     * 设置公开配置。
-     */
-    public void setPublicData(String publicData){
-        if (!Objects.equals(this.publicData, publicData)){
-            if (this.UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this.UPDATED_COLUMN.add("public_data");
-            this.UPDATED_INFO.append("public_data:\"" + this.publicData+ "\"=>\"" + publicData + "\"\r\n");
-            this.publicData = publicData;
-        }
-    }
-
-    /**
-     * 设置API配置。
-     */
-    public void setModelData(String modelData){
-        if (!Objects.equals(this.modelData, modelData)){
-            if (this.UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this.UPDATED_COLUMN.add("model_data");
-            this.UPDATED_INFO.append("model_data:\"" + this.modelData+ "\"=>\"" + modelData + "\"\r\n");
-            this.modelData = modelData;
-        }
-    }
-
-    /**
-     * 设置日志配置。
-     */
-    public void setLogData(String logData){
-        if (!Objects.equals(this.logData, logData)){
-            if (this.UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this.UPDATED_COLUMN.add("log_data");
-            this.UPDATED_INFO.append("log_data:\"" + this.logData+ "\"=>\"" + logData + "\"\r\n");
-            this.logData = logData;
-        }
-    }
-
-    /**
      * 设置状态。
      */
     public void setState(int state){
@@ -449,14 +561,18 @@ public class AiModelConfig implements DataEntity,Serializable{
         sb.append("saas_id:\"" + this.saasId + "\"\r\n");
         sb.append("mch_id:\"" + this.mchId + "\"\r\n");
         sb.append("vendor_class:\"" + this.vendorClass + "\"\r\n");
-        sb.append("model_code:\"" + this.modelCode + "\"\r\n");
-        sb.append("model_name:\"" + this.modelName + "\"\r\n");
-        sb.append("model_desc:\"" + this.modelDesc + "\"\r\n");
+        sb.append("config_code:\"" + this.configCode + "\"\r\n");
+        sb.append("config_name:\"" + this.configName + "\"\r\n");
+        sb.append("config_desc:\"" + this.configDesc + "\"\r\n");
+        sb.append("api_url:\"" + this.apiUrl + "\"\r\n");
+        sb.append("api_key:\"" + this.apiKey + "\"\r\n");
+        sb.append("model_main:\"" + this.modelMain + "\"\r\n");
+        sb.append("model_embed:\"" + this.modelEmbed + "\"\r\n");
+        sb.append("vendor_data:\"" + this.vendorData + "\"\r\n");
+        sb.append("model_data:\"" + this.modelData + "\"\r\n");
+        sb.append("embed_data:\"" + this.embedData + "\"\r\n");
         sb.append("create_date:\"" + this.createDate + "\"\r\n");
         sb.append("modify_date:\"" + this.modifyDate + "\"\r\n");
-        sb.append("public_data:\"" + this.publicData + "\"\r\n");
-        sb.append("model_data:\"" + this.modelData + "\"\r\n");
-        sb.append("log_data:\"" + this.logData + "\"\r\n");
         sb.append("state:\"" + this.state + "\"\r\n");
         return sb.toString();
     }

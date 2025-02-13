@@ -1,9 +1,11 @@
 package uw.ai.center.service.deepseek;
 
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.ollama.api.OllamaApi;
 import org.springframework.stereotype.Service;
 import uw.ai.center.service.AiVendor;
+import uw.ai.center.vo.AiModelConfigData;
 
 import java.util.List;
 
@@ -64,13 +66,13 @@ public class DeepSeekVendor implements AiVendor {
     }
 
     /**
-     * 构造供应商信息。
+     * 构造模型实例。
      *
-     * @param configId
+     * @param aiModelConfigData
      * @return
      */
     @Override
-    public ChatModel buildModel(long configId) {
+    public ChatClient buildChatClient(AiModelConfigData aiModelConfigData) {
         return null;
     }
 }

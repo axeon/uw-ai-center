@@ -4,7 +4,7 @@ import com.github.benmanes.caffeine.cache.CacheLoader;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.chat.client.ChatClient;
 import uw.ai.center.entity.AiModelConfig;
 import uw.ai.center.service.deepseek.DeepSeekVendor;
 import uw.ai.center.service.ollama.OllamaVendor;
@@ -19,7 +19,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * AI帮助类。
+ * AI供应商帮助类。
  */
 public class AiVendorHelper {
 
@@ -27,20 +27,6 @@ public class AiVendorHelper {
      * 数据访问对象。
      */
     private static final DaoFactory dao = DaoFactory.getInstance();
-
-    /**
-     * 本地AisLinker实例缓存。
-     */
-    private static final LoadingCache<Long, ChatModel> modelInstanceCache = Caffeine.newBuilder().maximumSize( 1000 ).build( new CacheLoader<Long, ChatModel>() {
-        @Override
-        public @Nullable ChatModel load(Long configId) {
-            AiModelConfigData aiModelConfigData = FusionCache.get( AiModelConfigData.class, configId );
-            if (aiModelConfigData == null) {
-                return null;
-            }
-            return buildModel( aiModelConfigData );
-        }
-    } );
     /**
      * AI供应商列表。
      */
@@ -49,9 +35,22 @@ public class AiVendorHelper {
         put( DeepSeekVendor.class.getName(), new DeepSeekVendor() );
         put( OpenAiVendor.class.getName(), new OpenAiVendor() );
     }};
+    /**
+     * 本地AisLinker实例缓存。
+     */
+    private static final LoadingCache<Long, ChatClient> modelInstanceCache = Caffeine.newBuilder().maximumSize( 1000 ).build( new CacheLoader<Long, ChatClient>() {
+        @Override
+        public @Nullable ChatClient load(Long configId) {
+            AiModelConfigData aiModelConfigData = FusionCache.get( AiModelConfigData.class, configId );
+            if (aiModelConfigData == null) {
+                return null;
+            }
+            return buildChatClient( aiModelConfigData );
+        }
+    } );
 
     static {
-
+        // AI模型配置数据缓存。
         FusionCache.config( FusionCache.Config.builder().entityClass( AiModelConfigData.class ).localCacheMaxNum( 10000 ).globalCacheExpireMillis( 86400_000L ).nullProtectMillis( 86400_000L ).build(), new CacheDataLoader<Long, AiModelConfigData>() {
             @Override
             public AiModelConfigData load(Long configId) throws Exception {
@@ -77,6 +76,7 @@ public class AiVendorHelper {
 
     /**
      * 根据供应商类获取AI供应商。
+     *
      * @param vendorClass
      * @return
      */
@@ -90,8 +90,8 @@ public class AiVendorHelper {
      * @param configId
      * @return
      */
-    public static ChatModel buildModel(long configId) {
-        return null;
+    public static ChatClient buildChatClient(long configId) {
+        return modelInstanceCache.get( configId );
     }
 
     /**
@@ -100,7 +100,13 @@ public class AiVendorHelper {
      * @param aiModelConfigData
      * @return
      */
-    public static ChatModel buildModel(AiModelConfigData aiModelConfigData) {
+    private static ChatClient buildChatClient(AiModelConfigData aiModelConfigData) {
+        if (aiModelConfigData != null) {
+            AiVendor aiVendor = VENDOR_MAP.get( aiModelConfigData.getVendorClass() );
+            if (aiVendor != null) {
+                return aiVendor.buildChatClient( aiModelConfigData );
+            }
+        }
         return null;
     }
 

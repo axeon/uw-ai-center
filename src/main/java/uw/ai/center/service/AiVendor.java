@@ -1,7 +1,8 @@
 package uw.ai.center.service;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.chat.client.ChatClient;
+import uw.ai.center.vo.AiModelConfigData;
 
 import java.util.List;
 
@@ -48,11 +49,11 @@ public interface AiVendor {
     List<ConfigParam> logParam();
 
     /**
-     * 构造大模型信息。
-     * @param modelId
+     * 构造模型实例。
+     * @param aiModelConfigData
      * @return
      */
-    ChatModel buildModel(long modelId);
+    ChatClient buildChatClient(AiModelConfigData aiModelConfigData);
 
     /**
      * 配置信息解析类

@@ -1,9 +1,15 @@
 package uw.ai.center.service.ollama;
 
+import io.micrometer.observation.ObservationRegistry;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
+import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.ai.ollama.api.OllamaApi;
+import org.springframework.ai.ollama.management.ModelManagementOptions;
+import org.springframework.ai.ollama.management.PullModelStrategy;
 import org.springframework.stereotype.Service;
 import uw.ai.center.service.AiVendor;
+import uw.ai.center.vo.AiModelConfigData;
 
 import java.util.List;
 
@@ -57,7 +63,7 @@ public class OllamaVendor implements AiVendor {
      */
     @Override
     public List<ConfigParam> modelParam() {
-        return List.of();
+        return List.of(new ConfigParam( "server", "http://localhost:11434", "服务器地址"));
     }
 
     /**
@@ -69,13 +75,19 @@ public class OllamaVendor implements AiVendor {
     }
 
     /**
-     * 构造供应商信息。
+     * 构造模型实例。
      *
-     * @param configId
+     * @param aiModelConfigData
      * @return
      */
     @Override
-    public ChatModel buildModel(long configId) {
+    public ChatClient buildChatClient(AiModelConfigData aiModelConfigData) {
+        OllamaApi ollamaApi = new OllamaApi(aiModelConfigData.getModelParam( "server" ));
+        if (ollamaApi != null) {
+//            OllamaChatModel chatModel = OllamaChatModel.builder().ollamaApi(ollamaApi).defaultOptions(properties.getOptions()).functionCallbackResolver(functionCallbackResolver).toolFunctionCallbacks(toolFunctionCallbacks).observationRegistry((ObservationRegistry)observationRegistry.getIfUnique(() -> ObservationRegistry.NOOP)).modelManagementOptions(new ModelManagementOptions(chatModelPullStrategy, initProperties.getChat().getAdditionalModels(), initProperties.getTimeout(), initProperties.getMaxRetries())).build();
+            OllamaChatModel chatModel = OllamaChatModel.builder().ollamaApi(ollamaApi).build();
+//            return chatModel;
+        }
         return null;
     }
 }

@@ -35,8 +35,12 @@ public class AiModelConfigQueryParam extends AuthPageQueryParam{
             put( "saasId", "saas_id" );
             put( "mchId", "mch_id" );
             put( "vendorClass", "vendor_class" );
-            put( "modelCode", "model_code" );
-            put( "modelName", "model_name" );
+            put( "configCode", "config_code" );
+            put( "configName", "config_name" );
+            put( "apiUrl", "api_url" );
+            put( "apiKey", "api_key" );
+            put( "modelMain", "model_main" );
+            put( "modelEmbed", "model_embed" );
             put( "createDate", "create_date" );
             put( "modifyDate", "modify_date" );
             put( "state", "state" );
@@ -67,16 +71,44 @@ public class AiModelConfigQueryParam extends AuthPageQueryParam{
     /**
     * 服务商代码。
     */
-    @QueryMeta(expr = "model_code like ?")
+    @QueryMeta(expr = "config_code like ?")
     @Schema(title="服务商代码", description = "服务商代码")
-    private String modelCode;
+    private String configCode;
 	
     /**
     * 服务商名称。
     */
-    @QueryMeta(expr = "model_name like ?")
+    @QueryMeta(expr = "config_name like ?")
     @Schema(title="服务商名称", description = "服务商名称")
-    private String modelName;
+    private String configName;
+	
+    /**
+    * api地址。
+    */
+    @QueryMeta(expr = "api_url like ?")
+    @Schema(title="api地址", description = "api地址")
+    private String apiUrl;
+	
+    /**
+    * api key。
+    */
+    @QueryMeta(expr = "api_key like ?")
+    @Schema(title="api key", description = "api key")
+    private String apiKey;
+	
+    /**
+    * 主模型。
+    */
+    @QueryMeta(expr = "model_main like ?")
+    @Schema(title="主模型", description = "主模型")
+    private String modelMain;
+	
+    /**
+    * 嵌入模型。
+    */
+    @QueryMeta(expr = "model_embed like ?")
+    @Schema(title="嵌入模型", description = "嵌入模型")
+    private String modelEmbed;
 	
     /**
     * 创建时间范围。
@@ -190,44 +222,132 @@ public class AiModelConfigQueryParam extends AuthPageQueryParam{
     /**
     * 获取服务商代码。
     */
-    public String getModelCode(){
-        return this.modelCode;
+    public String getConfigCode(){
+        return this.configCode;
     }
 
     /**
     * 设置服务商代码。
     */
-    public void setModelCode(String modelCode){
-        this.modelCode = modelCode;
+    public void setConfigCode(String configCode){
+        this.configCode = configCode;
     }
 	
     /**
     * 设置服务商代码链式调用。
     */
-    public AiModelConfigQueryParam modelCode(String modelCode) {
-        setModelCode(modelCode);
+    public AiModelConfigQueryParam configCode(String configCode) {
+        setConfigCode(configCode);
         return this;
     }
 	
     /**
     * 获取服务商名称。
     */
-    public String getModelName(){
-        return this.modelName;
+    public String getConfigName(){
+        return this.configName;
     }
 
     /**
     * 设置服务商名称。
     */
-    public void setModelName(String modelName){
-        this.modelName = modelName;
+    public void setConfigName(String configName){
+        this.configName = configName;
     }
 	
     /**
     * 设置服务商名称链式调用。
     */
-    public AiModelConfigQueryParam modelName(String modelName) {
-        setModelName(modelName);
+    public AiModelConfigQueryParam configName(String configName) {
+        setConfigName(configName);
+        return this;
+    }
+	
+    /**
+    * 获取api地址。
+    */
+    public String getApiUrl(){
+        return this.apiUrl;
+    }
+
+    /**
+    * 设置api地址。
+    */
+    public void setApiUrl(String apiUrl){
+        this.apiUrl = apiUrl;
+    }
+	
+    /**
+    * 设置api地址链式调用。
+    */
+    public AiModelConfigQueryParam apiUrl(String apiUrl) {
+        setApiUrl(apiUrl);
+        return this;
+    }
+	
+    /**
+    * 获取api key。
+    */
+    public String getApiKey(){
+        return this.apiKey;
+    }
+
+    /**
+    * 设置api key。
+    */
+    public void setApiKey(String apiKey){
+        this.apiKey = apiKey;
+    }
+	
+    /**
+    * 设置api key链式调用。
+    */
+    public AiModelConfigQueryParam apiKey(String apiKey) {
+        setApiKey(apiKey);
+        return this;
+    }
+	
+    /**
+    * 获取主模型。
+    */
+    public String getModelMain(){
+        return this.modelMain;
+    }
+
+    /**
+    * 设置主模型。
+    */
+    public void setModelMain(String modelMain){
+        this.modelMain = modelMain;
+    }
+	
+    /**
+    * 设置主模型链式调用。
+    */
+    public AiModelConfigQueryParam modelMain(String modelMain) {
+        setModelMain(modelMain);
+        return this;
+    }
+	
+    /**
+    * 获取嵌入模型。
+    */
+    public String getModelEmbed(){
+        return this.modelEmbed;
+    }
+
+    /**
+    * 设置嵌入模型。
+    */
+    public void setModelEmbed(String modelEmbed){
+        this.modelEmbed = modelEmbed;
+    }
+	
+    /**
+    * 设置嵌入模型链式调用。
+    */
+    public AiModelConfigQueryParam modelEmbed(String modelEmbed) {
+        setModelEmbed(modelEmbed);
         return this;
     }
 	
