@@ -2,7 +2,6 @@ package uw.ai.center.vendor.ollama;
 
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
-import org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor;
 import org.springframework.ai.chat.memory.InMemoryChatMemory;
 import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.ai.ollama.api.OllamaApi;
@@ -10,6 +9,7 @@ import org.springframework.ai.ollama.api.OllamaOptions;
 import org.springframework.ai.ollama.management.ModelManagementOptions;
 import org.springframework.ai.ollama.management.PullModelStrategy;
 import org.springframework.stereotype.Service;
+import uw.ai.center.advisor.AiChatLoggerAdvisor;
 import uw.ai.center.vendor.AiVendor;
 import uw.ai.center.vo.AiModelConfigData;
 
@@ -84,18 +84,16 @@ public class OllamaVendor implements AiVendor {
     @Override
     public ChatClient buildChatClient(AiModelConfigData aiModelConfigData) {
         OllamaApi ollamaApi = new OllamaApi( aiModelConfigData.getApiUrl() );
-        if (ollamaApi != null) {
-            OllamaChatModel chatModel = OllamaChatModel.builder().ollamaApi( ollamaApi ).modelManagementOptions( new ModelManagementOptions( PullModelStrategy.NEVER,
-                    List.of( aiModelConfigData.getModelMain() ), Duration.ofSeconds( 0 ), 3 ) ).build();
-            return ChatClient.builder( chatModel )
-                    // 实现 Chat Memory 的 Advisor
-                    // 在使用 Chat Memory 时，需要指定对话 ID，以便 Spring AI 处理上下文。
-                    .defaultAdvisors( new MessageChatMemoryAdvisor( new InMemoryChatMemory() ) )
-                    // 实现 Logger 的 Advisor
-                    .defaultAdvisors( new SimpleLoggerAdvisor() )
-                    // 设置 ChatClient 中 ChatModel 的 Options 参数
-                    .defaultOptions( OllamaOptions.builder().topP( 0.7 ).model( aiModelConfigData.getModelMain() ).build() ).build();
-        }
-        return null;
+        OllamaChatModel chatModel = OllamaChatModel.builder().ollamaApi( ollamaApi ).modelManagementOptions( new ModelManagementOptions( PullModelStrategy.NEVER,
+                List.of( aiModelConfigData.getModelMain() ), Duration.ofSeconds( 0 ), 3 ) ).build();
+        return ChatClient.builder( chatModel )
+                .defaultSystem( "你是一个自动代码编写工具。" )
+                // 实现 Chat Memory 的 Advisor
+                // 在使用 Chat Memory 时，需要指定对话 ID，以便 Spring AI 处理上下文。
+                .defaultAdvisors( new MessageChatMemoryAdvisor( new InMemoryChatMemory() ) )
+                // 实现 Logger 的 Advisor
+                .defaultAdvisors( new AiChatLoggerAdvisor() )
+                // 设置 ChatClient 中 ChatModel 的 Options 参数
+                .defaultOptions( OllamaOptions.builder().topP( 0.7 ).model( aiModelConfigData.getModelMain() ).build() ).build();
     }
 }

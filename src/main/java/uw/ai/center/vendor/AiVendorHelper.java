@@ -35,6 +35,8 @@ public class AiVendorHelper {
         put( DeepSeekVendor.class.getName(), new DeepSeekVendor() );
         put( OpenAiVendor.class.getName(), new OpenAiVendor() );
     }};
+
+
     /**
      * 本地AisLinker实例缓存。
      */
@@ -90,7 +92,7 @@ public class AiVendorHelper {
      * @param configId
      * @return
      */
-    public static ChatClient buildChatClient(long configId) {
+    public static ChatClient getChatClient(long configId) {
         return modelInstanceCache.get( configId );
     }
 
