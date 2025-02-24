@@ -2,7 +2,6 @@ package uw.ai.center.vendor.ollama;
 
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
-import org.springframework.ai.chat.memory.InMemoryChatMemory;
 import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.ai.ollama.api.OllamaApi;
 import org.springframework.ai.ollama.api.OllamaOptions;
@@ -10,6 +9,7 @@ import org.springframework.ai.ollama.management.ModelManagementOptions;
 import org.springframework.ai.ollama.management.PullModelStrategy;
 import org.springframework.stereotype.Service;
 import uw.ai.center.advisor.AiChatLoggerAdvisor;
+import uw.ai.center.advisor.AiSessionMemoryAdvisor;
 import uw.ai.center.vendor.AiVendor;
 import uw.ai.center.vo.AiModelConfigData;
 
@@ -23,8 +23,6 @@ import java.util.List;
 public class OllamaVendor implements AiVendor {
 
     public OllamaVendor() {
-        OllamaApi api = new OllamaApi();
-//        OllamaChatModel model = new OllamaChatModel(api,"deepseek-r1:7b");
     }
 
     /**
@@ -90,7 +88,7 @@ public class OllamaVendor implements AiVendor {
                 .defaultSystem( "你是一个自动代码编写工具。" )
                 // 实现 Chat Memory 的 Advisor
                 // 在使用 Chat Memory 时，需要指定对话 ID，以便 Spring AI 处理上下文。
-                .defaultAdvisors( new MessageChatMemoryAdvisor( new InMemoryChatMemory() ) )
+                .defaultAdvisors( new MessageChatMemoryAdvisor( new AiSessionMemoryAdvisor(), "", 10 ) )
                 // 实现 Logger 的 Advisor
                 .defaultAdvisors( new AiChatLoggerAdvisor() )
                 // 设置 ChatClient 中 ChatModel 的 Options 参数

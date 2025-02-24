@@ -25,7 +25,11 @@ public class AiSessionMsgQueryParam extends PageQueryParam{
         return new HashMap<>() {{
             put( "id", "id" );
             put( "sessionId", "session_id" );
-            put( "createDate", "create_date" );
+            put( "requestTokens", "request_tokens" );
+            put( "responseTokens", "response_tokens" );
+            put( "requestDate", "request_date" );
+            put( "responseStartDate", "response_start_date" );
+            put( "responseEndDate", "response_end_date" );
             put( "state", "state" );
         }};
     }
@@ -45,11 +49,53 @@ public class AiSessionMsgQueryParam extends PageQueryParam{
     private Long sessionId;
 	
     /**
+    * 请求token数。
+    */
+    @QueryMeta(expr = "request_tokens=?")
+    @Schema(title="请求token数", description = "请求token数")
+    private Long requestTokens;
+
+    /**
+    * 请求token数范围。
+    */
+    @QueryMeta(expr = "request_tokens between ? and ?")
+    @Schema(title="请求token数范围", description = "请求token数范围")
+    private Long[] requestTokensRange;
+	
+    /**
+    * 响应token数。
+    */
+    @QueryMeta(expr = "response_tokens=?")
+    @Schema(title="响应token数", description = "响应token数")
+    private Long responseTokens;
+
+    /**
+    * 响应token数范围。
+    */
+    @QueryMeta(expr = "response_tokens between ? and ?")
+    @Schema(title="响应token数范围", description = "响应token数范围")
+    private Long[] responseTokensRange;
+	
+    /**
     * 创建时间范围。
     */
-    @QueryMeta(expr = "create_date between ? and ?")
+    @QueryMeta(expr = "request_date between ? and ?")
     @Schema(title="创建时间范围", description = "创建时间范围")
-    private Date[] createDateRange;
+    private Date[] requestDateRange;
+
+    /**
+    * 回应开始时间范围。
+    */
+    @QueryMeta(expr = "response_start_date between ? and ?")
+    @Schema(title="回应开始时间范围", description = "回应开始时间范围")
+    private Date[] responseStartDateRange;
+
+    /**
+    * 回应结束时间范围。
+    */
+    @QueryMeta(expr = "response_end_date between ? and ?")
+    @Schema(title="回应结束时间范围", description = "回应结束时间范围")
+    private Date[] responseEndDateRange;
 
     /**
     * 状态。
@@ -125,24 +171,156 @@ public class AiSessionMsgQueryParam extends PageQueryParam{
     }
 	
     /**
+    * 获取请求token数。
+    */
+    public Long getRequestTokens(){
+        return this.requestTokens;
+    }
+
+    /**
+    * 设置请求token数。
+    */
+    public void setRequestTokens(Long requestTokens){
+        this.requestTokens = requestTokens;
+    }
+	
+    /**
+    * 设置请求token数链式调用。
+    */
+    public AiSessionMsgQueryParam requestTokens(Long requestTokens){
+        setRequestTokens(requestTokens);
+        return this;
+    }
+
+    /**
+    * 获取请求token数范围。
+    */
+    public Long[] getRequestTokensRange(){
+        return this.requestTokensRange;
+    }
+
+    /**
+    * 设置请求token数范围。
+    */
+    public void setRequestTokensRange(Long[] requestTokensRange){
+        this.requestTokensRange = requestTokensRange;
+    }
+	
+    /**
+    * 设置请求token数范围链式调用。
+    */
+    public AiSessionMsgQueryParam requestTokensRange(Long[] requestTokensRange){
+        setRequestTokensRange(requestTokensRange);
+        return this;
+    }
+	
+    /**
+    * 获取响应token数。
+    */
+    public Long getResponseTokens(){
+        return this.responseTokens;
+    }
+
+    /**
+    * 设置响应token数。
+    */
+    public void setResponseTokens(Long responseTokens){
+        this.responseTokens = responseTokens;
+    }
+	
+    /**
+    * 设置响应token数链式调用。
+    */
+    public AiSessionMsgQueryParam responseTokens(Long responseTokens){
+        setResponseTokens(responseTokens);
+        return this;
+    }
+
+    /**
+    * 获取响应token数范围。
+    */
+    public Long[] getResponseTokensRange(){
+        return this.responseTokensRange;
+    }
+
+    /**
+    * 设置响应token数范围。
+    */
+    public void setResponseTokensRange(Long[] responseTokensRange){
+        this.responseTokensRange = responseTokensRange;
+    }
+	
+    /**
+    * 设置响应token数范围链式调用。
+    */
+    public AiSessionMsgQueryParam responseTokensRange(Long[] responseTokensRange){
+        setResponseTokensRange(responseTokensRange);
+        return this;
+    }
+	
+    /**
     * 获取创建时间范围。
     */
-    public Date[] getCreateDateRange(){
-        return this.createDateRange;
+    public Date[] getRequestDateRange(){
+        return this.requestDateRange;
     }
 
     /**
     * 设置创建时间范围。
     */
-    public void setCreateDateRange(Date[] createDateRange){
-        this.createDateRange = createDateRange;
+    public void setRequestDateRange(Date[] requestDateRange){
+        this.requestDateRange = requestDateRange;
     }
 	
     /**
     * 设置创建时间范围链式调用。
     */
-    public AiSessionMsgQueryParam createDateRange(Date[] createDateRange) {
-        setCreateDateRange(createDateRange);
+    public AiSessionMsgQueryParam requestDateRange(Date[] requestDateRange) {
+        setRequestDateRange(requestDateRange);
+        return this;
+    }
+	
+    /**
+    * 获取回应开始时间范围。
+    */
+    public Date[] getResponseStartDateRange(){
+        return this.responseStartDateRange;
+    }
+
+    /**
+    * 设置回应开始时间范围。
+    */
+    public void setResponseStartDateRange(Date[] responseStartDateRange){
+        this.responseStartDateRange = responseStartDateRange;
+    }
+	
+    /**
+    * 设置回应开始时间范围链式调用。
+    */
+    public AiSessionMsgQueryParam responseStartDateRange(Date[] responseStartDateRange) {
+        setResponseStartDateRange(responseStartDateRange);
+        return this;
+    }
+	
+    /**
+    * 获取回应结束时间范围。
+    */
+    public Date[] getResponseEndDateRange(){
+        return this.responseEndDateRange;
+    }
+
+    /**
+    * 设置回应结束时间范围。
+    */
+    public void setResponseEndDateRange(Date[] responseEndDateRange){
+        this.responseEndDateRange = responseEndDateRange;
+    }
+	
+    /**
+    * 设置回应结束时间范围链式调用。
+    */
+    public AiSessionMsgQueryParam responseEndDateRange(Date[] responseEndDateRange) {
+        setResponseEndDateRange(responseEndDateRange);
         return this;
     }
 	

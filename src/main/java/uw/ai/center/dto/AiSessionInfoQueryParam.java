@@ -41,8 +41,12 @@ public class AiSessionInfoQueryParam extends AuthPageQueryParam{
             put( "nickName", "nick_name" );
             put( "realName", "real_name" );
             put( "sessionName", "session_name" );
+            put( "msgNum", "msg_num" );
+            put( "windowSize", "window_size" );
+            put( "requestTokens", "request_tokens" );
+            put( "responseTokens", "response_tokens" );
             put( "createDate", "create_date" );
-            put( "modifyDate", "modify_date" );
+            put( "lastUpdate", "last_update" );
             put( "state", "state" );
         }};
     }
@@ -111,6 +115,62 @@ public class AiSessionInfoQueryParam extends AuthPageQueryParam{
     private String sessionName;
 	
     /**
+    * session大小。
+    */
+    @QueryMeta(expr = "msg_num=?")
+    @Schema(title="session大小", description = "session大小")
+    private Integer msgNum;
+
+    /**
+    * session大小范围。
+    */
+    @QueryMeta(expr = "msg_num between ? and ?")
+    @Schema(title="session大小范围", description = "session大小范围")
+    private Integer[] msgNumRange;
+	
+    /**
+    * 历史长度。
+    */
+    @QueryMeta(expr = "window_size=?")
+    @Schema(title="历史长度", description = "历史长度")
+    private Integer windowSize;
+
+    /**
+    * 历史长度范围。
+    */
+    @QueryMeta(expr = "window_size between ? and ?")
+    @Schema(title="历史长度范围", description = "历史长度范围")
+    private Integer[] windowSizeRange;
+	
+    /**
+    * 请求token数。
+    */
+    @QueryMeta(expr = "request_tokens=?")
+    @Schema(title="请求token数", description = "请求token数")
+    private Long requestTokens;
+
+    /**
+    * 请求token数范围。
+    */
+    @QueryMeta(expr = "request_tokens between ? and ?")
+    @Schema(title="请求token数范围", description = "请求token数范围")
+    private Long[] requestTokensRange;
+	
+    /**
+    * 响应token数。
+    */
+    @QueryMeta(expr = "response_tokens=?")
+    @Schema(title="响应token数", description = "响应token数")
+    private Long responseTokens;
+
+    /**
+    * 响应token数范围。
+    */
+    @QueryMeta(expr = "response_tokens between ? and ?")
+    @Schema(title="响应token数范围", description = "响应token数范围")
+    private Long[] responseTokensRange;
+	
+    /**
     * 创建时间范围。
     */
     @QueryMeta(expr = "create_date between ? and ?")
@@ -118,11 +178,11 @@ public class AiSessionInfoQueryParam extends AuthPageQueryParam{
     private Date[] createDateRange;
 
     /**
-    * 修改时间范围。
+    * 最后更新时间范围。
     */
-    @QueryMeta(expr = "modify_date between ? and ?")
-    @Schema(title="修改时间范围", description = "修改时间范围")
-    private Date[] modifyDateRange;
+    @QueryMeta(expr = "last_update between ? and ?")
+    @Schema(title="最后更新时间范围", description = "最后更新时间范围")
+    private Date[] lastUpdateRange;
 
     /**
     * 状态。
@@ -352,6 +412,182 @@ public class AiSessionInfoQueryParam extends AuthPageQueryParam{
     }
 	
     /**
+    * 获取session大小。
+    */
+    public Integer getMsgNum(){
+        return this.msgNum;
+    }
+
+    /**
+    * 设置session大小。
+    */
+    public void setMsgNum(Integer msgNum){
+        this.msgNum = msgNum;
+    }
+	
+    /**
+    * 设置session大小链式调用。
+    */
+    public AiSessionInfoQueryParam msgNum(Integer msgNum){
+        setMsgNum(msgNum);
+        return this;
+    }
+
+    /**
+    * 获取session大小范围。
+    */
+    public Integer[] getMsgNumRange(){
+        return this.msgNumRange;
+    }
+
+    /**
+    * 设置session大小范围。
+    */
+    public void setMsgNumRange(Integer[] msgNumRange){
+        this.msgNumRange = msgNumRange;
+    }
+	
+    /**
+    * 设置session大小范围链式调用。
+    */
+    public AiSessionInfoQueryParam msgNumRange(Integer[] msgNumRange){
+        setMsgNumRange(msgNumRange);
+        return this;
+    }
+	
+    /**
+    * 获取历史长度。
+    */
+    public Integer getWindowSize(){
+        return this.windowSize;
+    }
+
+    /**
+    * 设置历史长度。
+    */
+    public void setWindowSize(Integer windowSize){
+        this.windowSize = windowSize;
+    }
+	
+    /**
+    * 设置历史长度链式调用。
+    */
+    public AiSessionInfoQueryParam windowSize(Integer windowSize){
+        setWindowSize(windowSize);
+        return this;
+    }
+
+    /**
+    * 获取历史长度范围。
+    */
+    public Integer[] getWindowSizeRange(){
+        return this.windowSizeRange;
+    }
+
+    /**
+    * 设置历史长度范围。
+    */
+    public void setWindowSizeRange(Integer[] windowSizeRange){
+        this.windowSizeRange = windowSizeRange;
+    }
+	
+    /**
+    * 设置历史长度范围链式调用。
+    */
+    public AiSessionInfoQueryParam windowSizeRange(Integer[] windowSizeRange){
+        setWindowSizeRange(windowSizeRange);
+        return this;
+    }
+	
+    /**
+    * 获取请求token数。
+    */
+    public Long getRequestTokens(){
+        return this.requestTokens;
+    }
+
+    /**
+    * 设置请求token数。
+    */
+    public void setRequestTokens(Long requestTokens){
+        this.requestTokens = requestTokens;
+    }
+	
+    /**
+    * 设置请求token数链式调用。
+    */
+    public AiSessionInfoQueryParam requestTokens(Long requestTokens){
+        setRequestTokens(requestTokens);
+        return this;
+    }
+
+    /**
+    * 获取请求token数范围。
+    */
+    public Long[] getRequestTokensRange(){
+        return this.requestTokensRange;
+    }
+
+    /**
+    * 设置请求token数范围。
+    */
+    public void setRequestTokensRange(Long[] requestTokensRange){
+        this.requestTokensRange = requestTokensRange;
+    }
+	
+    /**
+    * 设置请求token数范围链式调用。
+    */
+    public AiSessionInfoQueryParam requestTokensRange(Long[] requestTokensRange){
+        setRequestTokensRange(requestTokensRange);
+        return this;
+    }
+	
+    /**
+    * 获取响应token数。
+    */
+    public Long getResponseTokens(){
+        return this.responseTokens;
+    }
+
+    /**
+    * 设置响应token数。
+    */
+    public void setResponseTokens(Long responseTokens){
+        this.responseTokens = responseTokens;
+    }
+	
+    /**
+    * 设置响应token数链式调用。
+    */
+    public AiSessionInfoQueryParam responseTokens(Long responseTokens){
+        setResponseTokens(responseTokens);
+        return this;
+    }
+
+    /**
+    * 获取响应token数范围。
+    */
+    public Long[] getResponseTokensRange(){
+        return this.responseTokensRange;
+    }
+
+    /**
+    * 设置响应token数范围。
+    */
+    public void setResponseTokensRange(Long[] responseTokensRange){
+        this.responseTokensRange = responseTokensRange;
+    }
+	
+    /**
+    * 设置响应token数范围链式调用。
+    */
+    public AiSessionInfoQueryParam responseTokensRange(Long[] responseTokensRange){
+        setResponseTokensRange(responseTokensRange);
+        return this;
+    }
+	
+    /**
     * 获取创建时间范围。
     */
     public Date[] getCreateDateRange(){
@@ -374,24 +610,24 @@ public class AiSessionInfoQueryParam extends AuthPageQueryParam{
     }
 	
     /**
-    * 获取修改时间范围。
+    * 获取最后更新时间范围。
     */
-    public Date[] getModifyDateRange(){
-        return this.modifyDateRange;
+    public Date[] getLastUpdateRange(){
+        return this.lastUpdateRange;
     }
 
     /**
-    * 设置修改时间范围。
+    * 设置最后更新时间范围。
     */
-    public void setModifyDateRange(Date[] modifyDateRange){
-        this.modifyDateRange = modifyDateRange;
+    public void setLastUpdateRange(Date[] lastUpdateRange){
+        this.lastUpdateRange = lastUpdateRange;
     }
 	
     /**
-    * 设置修改时间范围链式调用。
+    * 设置最后更新时间范围链式调用。
     */
-    public AiSessionInfoQueryParam modifyDateRange(Date[] modifyDateRange) {
-        setModifyDateRange(modifyDateRange);
+    public AiSessionInfoQueryParam lastUpdateRange(Date[] lastUpdateRange) {
+        setLastUpdateRange(lastUpdateRange);
         return this;
     }
 	

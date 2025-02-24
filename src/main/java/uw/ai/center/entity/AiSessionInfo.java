@@ -88,9 +88,44 @@ public class AiSessionInfo implements DataEntity,Serializable{
     /**
      * session名称
      */
-    @ColumnMeta(columnName="session_name", dataType="String", dataSize=100, nullable=true)
+    @ColumnMeta(columnName="session_name", dataType="String", dataSize=200, nullable=true)
     @Schema(title = "session名称", description = "session名称")
     private String sessionName;
+
+    /**
+     * session大小
+     */
+    @ColumnMeta(columnName="msg_num", dataType="int", dataSize=10, nullable=true)
+    @Schema(title = "session大小", description = "session大小")
+    private int msgNum;
+
+    /**
+     * 历史长度
+     */
+    @ColumnMeta(columnName="window_size", dataType="int", dataSize=10, nullable=true)
+    @Schema(title = "历史长度", description = "历史长度")
+    private int windowSize;
+
+    /**
+     * 请求token数
+     */
+    @ColumnMeta(columnName="request_tokens", dataType="long", dataSize=19, nullable=true)
+    @Schema(title = "请求token数", description = "请求token数")
+    private long requestTokens;
+
+    /**
+     * 响应token数
+     */
+    @ColumnMeta(columnName="response_tokens", dataType="long", dataSize=19, nullable=true)
+    @Schema(title = "响应token数", description = "响应token数")
+    private long responseTokens;
+
+    /**
+     * 系统信息
+     */
+    @ColumnMeta(columnName="system_info", dataType="String", dataSize=2000, nullable=true)
+    @Schema(title = "系统信息", description = "系统信息")
+    private String systemInfo;
 
     /**
      * 创建时间
@@ -100,11 +135,11 @@ public class AiSessionInfo implements DataEntity,Serializable{
     private java.util.Date createDate;
 
     /**
-     * 修改时间
+     * 最后更新时间
      */
-    @ColumnMeta(columnName="modify_date", dataType="java.util.Date", dataSize=23, nullable=true)
-    @Schema(title = "修改时间", description = "修改时间")
-    private java.util.Date modifyDate;
+    @ColumnMeta(columnName="last_update", dataType="java.util.Date", dataSize=23, nullable=true)
+    @Schema(title = "最后更新时间", description = "最后更新时间")
+    private java.util.Date lastUpdate;
 
     /**
      * 状态
@@ -233,6 +268,41 @@ public class AiSessionInfo implements DataEntity,Serializable{
     }
 
     /**
+     * 获取session大小。
+     */
+    public int getMsgNum(){
+        return this.msgNum;
+    }
+
+    /**
+     * 获取历史长度。
+     */
+    public int getWindowSize(){
+        return this.windowSize;
+    }
+
+    /**
+     * 获取请求token数。
+     */
+    public long getRequestTokens(){
+        return this.requestTokens;
+    }
+
+    /**
+     * 获取响应token数。
+     */
+    public long getResponseTokens(){
+        return this.responseTokens;
+    }
+
+    /**
+     * 获取系统信息。
+     */
+    public String getSystemInfo(){
+        return this.systemInfo;
+    }
+
+    /**
      * 获取创建时间。
      */
     public java.util.Date getCreateDate(){
@@ -240,10 +310,10 @@ public class AiSessionInfo implements DataEntity,Serializable{
     }
 
     /**
-     * 获取修改时间。
+     * 获取最后更新时间。
      */
-    public java.util.Date getModifyDate(){
-        return this.modifyDate;
+    public java.util.Date getLastUpdate(){
+        return this.lastUpdate;
     }
 
     /**
@@ -395,6 +465,76 @@ public class AiSessionInfo implements DataEntity,Serializable{
     }
 
     /**
+     * 设置session大小。
+     */
+    public void setMsgNum(int msgNum){
+        if (!Objects.equals(this.msgNum, msgNum)){
+            if (this.UPDATED_COLUMN == null) {
+                _INIT_UPDATE_INFO();
+            }
+            this.UPDATED_COLUMN.add("msg_num");
+            this.UPDATED_INFO.append("msg_num:\"" + this.msgNum+ "\"=>\"" + msgNum + "\"\r\n");
+            this.msgNum = msgNum;
+        }
+    }
+
+    /**
+     * 设置历史长度。
+     */
+    public void setWindowSize(int windowSize){
+        if (!Objects.equals(this.windowSize, windowSize)){
+            if (this.UPDATED_COLUMN == null) {
+                _INIT_UPDATE_INFO();
+            }
+            this.UPDATED_COLUMN.add("window_size");
+            this.UPDATED_INFO.append("window_size:\"" + this.windowSize+ "\"=>\"" + windowSize + "\"\r\n");
+            this.windowSize = windowSize;
+        }
+    }
+
+    /**
+     * 设置请求token数。
+     */
+    public void setRequestTokens(long requestTokens){
+        if (!Objects.equals(this.requestTokens, requestTokens)){
+            if (this.UPDATED_COLUMN == null) {
+                _INIT_UPDATE_INFO();
+            }
+            this.UPDATED_COLUMN.add("request_tokens");
+            this.UPDATED_INFO.append("request_tokens:\"" + this.requestTokens+ "\"=>\"" + requestTokens + "\"\r\n");
+            this.requestTokens = requestTokens;
+        }
+    }
+
+    /**
+     * 设置响应token数。
+     */
+    public void setResponseTokens(long responseTokens){
+        if (!Objects.equals(this.responseTokens, responseTokens)){
+            if (this.UPDATED_COLUMN == null) {
+                _INIT_UPDATE_INFO();
+            }
+            this.UPDATED_COLUMN.add("response_tokens");
+            this.UPDATED_INFO.append("response_tokens:\"" + this.responseTokens+ "\"=>\"" + responseTokens + "\"\r\n");
+            this.responseTokens = responseTokens;
+        }
+    }
+
+    /**
+     * 设置系统信息。
+     */
+    public void setSystemInfo(String systemInfo){
+        if (!Objects.equals(this.systemInfo, systemInfo)){
+            if (this.UPDATED_COLUMN == null) {
+                _INIT_UPDATE_INFO();
+            }
+            this.UPDATED_COLUMN.add("system_info");
+            this.UPDATED_INFO.append("system_info:\"" + this.systemInfo+ "\"=>\"" + systemInfo + "\"\r\n");
+            this.systemInfo = systemInfo;
+        }
+    }
+
+    /**
      * 设置创建时间。
      */
     public void setCreateDate(java.util.Date createDate){
@@ -409,16 +549,16 @@ public class AiSessionInfo implements DataEntity,Serializable{
     }
 
     /**
-     * 设置修改时间。
+     * 设置最后更新时间。
      */
-    public void setModifyDate(java.util.Date modifyDate){
-        if (!Objects.equals(this.modifyDate, modifyDate)){
+    public void setLastUpdate(java.util.Date lastUpdate){
+        if (!Objects.equals(this.lastUpdate, lastUpdate)){
             if (this.UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("modify_date");
-            this.UPDATED_INFO.append("modify_date:\"" + this.modifyDate+ "\"=>\"" + modifyDate + "\"\r\n");
-            this.modifyDate = modifyDate;
+            this.UPDATED_COLUMN.add("last_update");
+            this.UPDATED_INFO.append("last_update:\"" + this.lastUpdate+ "\"=>\"" + lastUpdate + "\"\r\n");
+            this.lastUpdate = lastUpdate;
         }
     }
 
@@ -452,8 +592,13 @@ public class AiSessionInfo implements DataEntity,Serializable{
         sb.append("nick_name:\"" + this.nickName + "\"\r\n");
         sb.append("real_name:\"" + this.realName + "\"\r\n");
         sb.append("session_name:\"" + this.sessionName + "\"\r\n");
+        sb.append("msg_num:\"" + this.msgNum + "\"\r\n");
+        sb.append("window_size:\"" + this.windowSize + "\"\r\n");
+        sb.append("request_tokens:\"" + this.requestTokens + "\"\r\n");
+        sb.append("response_tokens:\"" + this.responseTokens + "\"\r\n");
+        sb.append("system_info:\"" + this.systemInfo + "\"\r\n");
         sb.append("create_date:\"" + this.createDate + "\"\r\n");
-        sb.append("modify_date:\"" + this.modifyDate + "\"\r\n");
+        sb.append("last_update:\"" + this.lastUpdate + "\"\r\n");
         sb.append("state:\"" + this.state + "\"\r\n");
         return sb.toString();
     }

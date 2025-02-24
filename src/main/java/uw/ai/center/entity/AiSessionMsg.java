@@ -37,6 +37,20 @@ public class AiSessionMsg implements DataEntity,Serializable{
     private long sessionId;
 
     /**
+     * 用户提问
+     */
+    @ColumnMeta(columnName="user_info", dataType="String", dataSize=2147483647, nullable=true)
+    @Schema(title = "用户提问", description = "用户提问")
+    private String userInfo;
+
+    /**
+     * 工具信息
+     */
+    @ColumnMeta(columnName="tool_info", dataType="String", dataSize=2147483647, nullable=true)
+    @Schema(title = "工具信息", description = "工具信息")
+    private String toolInfo;
+
+    /**
      * 请求信息
      */
     @ColumnMeta(columnName="request_info", dataType="String", dataSize=2147483647, nullable=true)
@@ -51,11 +65,39 @@ public class AiSessionMsg implements DataEntity,Serializable{
     private String responseInfo;
 
     /**
+     * 请求token数
+     */
+    @ColumnMeta(columnName="request_tokens", dataType="long", dataSize=19, nullable=true)
+    @Schema(title = "请求token数", description = "请求token数")
+    private long requestTokens;
+
+    /**
+     * 响应token数
+     */
+    @ColumnMeta(columnName="response_tokens", dataType="long", dataSize=19, nullable=true)
+    @Schema(title = "响应token数", description = "响应token数")
+    private long responseTokens;
+
+    /**
      * 创建时间
      */
-    @ColumnMeta(columnName="create_date", dataType="java.util.Date", dataSize=23, nullable=true)
+    @ColumnMeta(columnName="request_date", dataType="java.util.Date", dataSize=23, nullable=true)
     @Schema(title = "创建时间", description = "创建时间")
-    private java.util.Date createDate;
+    private java.util.Date requestDate;
+
+    /**
+     * 回应开始时间
+     */
+    @ColumnMeta(columnName="response_start_date", dataType="java.util.Date", dataSize=23, nullable=true)
+    @Schema(title = "回应开始时间", description = "回应开始时间")
+    private java.util.Date responseStartDate;
+
+    /**
+     * 回应结束时间
+     */
+    @ColumnMeta(columnName="response_end_date", dataType="java.util.Date", dataSize=23, nullable=true)
+    @Schema(title = "回应结束时间", description = "回应结束时间")
+    private java.util.Date responseEndDate;
 
     /**
      * 状态
@@ -128,6 +170,20 @@ public class AiSessionMsg implements DataEntity,Serializable{
     }
 
     /**
+     * 获取用户提问。
+     */
+    public String getUserInfo(){
+        return this.userInfo;
+    }
+
+    /**
+     * 获取工具信息。
+     */
+    public String getToolInfo(){
+        return this.toolInfo;
+    }
+
+    /**
      * 获取请求信息。
      */
     public String getRequestInfo(){
@@ -142,10 +198,38 @@ public class AiSessionMsg implements DataEntity,Serializable{
     }
 
     /**
+     * 获取请求token数。
+     */
+    public long getRequestTokens(){
+        return this.requestTokens;
+    }
+
+    /**
+     * 获取响应token数。
+     */
+    public long getResponseTokens(){
+        return this.responseTokens;
+    }
+
+    /**
      * 获取创建时间。
      */
-    public java.util.Date getCreateDate(){
-        return this.createDate;
+    public java.util.Date getRequestDate(){
+        return this.requestDate;
+    }
+
+    /**
+     * 获取回应开始时间。
+     */
+    public java.util.Date getResponseStartDate(){
+        return this.responseStartDate;
+    }
+
+    /**
+     * 获取回应结束时间。
+     */
+    public java.util.Date getResponseEndDate(){
+        return this.responseEndDate;
     }
 
     /**
@@ -185,6 +269,34 @@ public class AiSessionMsg implements DataEntity,Serializable{
     }
 
     /**
+     * 设置用户提问。
+     */
+    public void setUserInfo(String userInfo){
+        if (!Objects.equals(this.userInfo, userInfo)){
+            if (this.UPDATED_COLUMN == null) {
+                _INIT_UPDATE_INFO();
+            }
+            this.UPDATED_COLUMN.add("user_info");
+            this.UPDATED_INFO.append("user_info:\"" + this.userInfo+ "\"=>\"" + userInfo + "\"\r\n");
+            this.userInfo = userInfo;
+        }
+    }
+
+    /**
+     * 设置工具信息。
+     */
+    public void setToolInfo(String toolInfo){
+        if (!Objects.equals(this.toolInfo, toolInfo)){
+            if (this.UPDATED_COLUMN == null) {
+                _INIT_UPDATE_INFO();
+            }
+            this.UPDATED_COLUMN.add("tool_info");
+            this.UPDATED_INFO.append("tool_info:\"" + this.toolInfo+ "\"=>\"" + toolInfo + "\"\r\n");
+            this.toolInfo = toolInfo;
+        }
+    }
+
+    /**
      * 设置请求信息。
      */
     public void setRequestInfo(String requestInfo){
@@ -213,16 +325,72 @@ public class AiSessionMsg implements DataEntity,Serializable{
     }
 
     /**
-     * 设置创建时间。
+     * 设置请求token数。
      */
-    public void setCreateDate(java.util.Date createDate){
-        if (!Objects.equals(this.createDate, createDate)){
+    public void setRequestTokens(long requestTokens){
+        if (!Objects.equals(this.requestTokens, requestTokens)){
             if (this.UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("create_date");
-            this.UPDATED_INFO.append("create_date:\"" + this.createDate+ "\"=>\"" + createDate + "\"\r\n");
-            this.createDate = createDate;
+            this.UPDATED_COLUMN.add("request_tokens");
+            this.UPDATED_INFO.append("request_tokens:\"" + this.requestTokens+ "\"=>\"" + requestTokens + "\"\r\n");
+            this.requestTokens = requestTokens;
+        }
+    }
+
+    /**
+     * 设置响应token数。
+     */
+    public void setResponseTokens(long responseTokens){
+        if (!Objects.equals(this.responseTokens, responseTokens)){
+            if (this.UPDATED_COLUMN == null) {
+                _INIT_UPDATE_INFO();
+            }
+            this.UPDATED_COLUMN.add("response_tokens");
+            this.UPDATED_INFO.append("response_tokens:\"" + this.responseTokens+ "\"=>\"" + responseTokens + "\"\r\n");
+            this.responseTokens = responseTokens;
+        }
+    }
+
+    /**
+     * 设置创建时间。
+     */
+    public void setRequestDate(java.util.Date requestDate){
+        if (!Objects.equals(this.requestDate, requestDate)){
+            if (this.UPDATED_COLUMN == null) {
+                _INIT_UPDATE_INFO();
+            }
+            this.UPDATED_COLUMN.add("request_date");
+            this.UPDATED_INFO.append("request_date:\"" + this.requestDate+ "\"=>\"" + requestDate + "\"\r\n");
+            this.requestDate = requestDate;
+        }
+    }
+
+    /**
+     * 设置回应开始时间。
+     */
+    public void setResponseStartDate(java.util.Date responseStartDate){
+        if (!Objects.equals(this.responseStartDate, responseStartDate)){
+            if (this.UPDATED_COLUMN == null) {
+                _INIT_UPDATE_INFO();
+            }
+            this.UPDATED_COLUMN.add("response_start_date");
+            this.UPDATED_INFO.append("response_start_date:\"" + this.responseStartDate+ "\"=>\"" + responseStartDate + "\"\r\n");
+            this.responseStartDate = responseStartDate;
+        }
+    }
+
+    /**
+     * 设置回应结束时间。
+     */
+    public void setResponseEndDate(java.util.Date responseEndDate){
+        if (!Objects.equals(this.responseEndDate, responseEndDate)){
+            if (this.UPDATED_COLUMN == null) {
+                _INIT_UPDATE_INFO();
+            }
+            this.UPDATED_COLUMN.add("response_end_date");
+            this.UPDATED_INFO.append("response_end_date:\"" + this.responseEndDate+ "\"=>\"" + responseEndDate + "\"\r\n");
+            this.responseEndDate = responseEndDate;
         }
     }
 
@@ -248,9 +416,15 @@ public class AiSessionMsg implements DataEntity,Serializable{
         StringBuilder sb = new StringBuilder();
         sb.append("id:\"" + this.id + "\"\r\n");
         sb.append("session_id:\"" + this.sessionId + "\"\r\n");
+        sb.append("user_info:\"" + this.userInfo + "\"\r\n");
+        sb.append("tool_info:\"" + this.toolInfo + "\"\r\n");
         sb.append("request_info:\"" + this.requestInfo + "\"\r\n");
         sb.append("response_info:\"" + this.responseInfo + "\"\r\n");
-        sb.append("create_date:\"" + this.createDate + "\"\r\n");
+        sb.append("request_tokens:\"" + this.requestTokens + "\"\r\n");
+        sb.append("response_tokens:\"" + this.responseTokens + "\"\r\n");
+        sb.append("request_date:\"" + this.requestDate + "\"\r\n");
+        sb.append("response_start_date:\"" + this.responseStartDate + "\"\r\n");
+        sb.append("response_end_date:\"" + this.responseEndDate + "\"\r\n");
         sb.append("state:\"" + this.state + "\"\r\n");
         return sb.toString();
     }
