@@ -1,8 +1,6 @@
-package uw.ai.center.controller.open;
+package uw.ai.center.controller.user;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletResponse;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,13 +12,12 @@ import uw.ai.center.service.AiChatService;
 import uw.auth.service.AuthServiceHelper;
 import uw.auth.service.annotation.ResponseAdviceIgnore;
 import uw.common.dto.ResponseData;
-import uw.dao.DaoFactory;
 
 /**
  * 测试接口。
  */
 @RestController
-@RequestMapping("/open/ai")
+@RequestMapping("/user/ai")
 @Tag(name = "AI接口")
 @ResponseAdviceIgnore
 public class AiChatController {
@@ -39,8 +36,7 @@ public class AiChatController {
      * ChatClient 流式调用
      */
     @GetMapping("/chat")
-    public Flux<String> chat(HttpServletResponse response, @RequestParam(defaultValue = "1") long config, @RequestParam(defaultValue = "0") long sessionId, @RequestParam(defaultValue = "你是谁？") String userPrompt) {
-        response.setCharacterEncoding( "UTF-8" );
+    public Flux<String> chat(@RequestParam(defaultValue = "1") long config, @RequestParam(defaultValue = "0") long sessionId, @RequestParam(defaultValue = "你是谁？") String userPrompt) {
         return AiChatService.chat( config, AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(),
                 sessionId, userPrompt );
     }

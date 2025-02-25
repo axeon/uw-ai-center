@@ -51,7 +51,7 @@ public class AiSessionMemoryAdvisor implements ChatMemory {
                 DataList<AiSessionMsg> msgList = dao.list( AiSessionMsg.class, "select * from ai_session_msg where session_id=? order by id desc",
                         new Object[]{conversationData.getSessionId()}, 0, (int) Math.ceil( lastN / 2.0f ), false );
                 for (AiSessionMsg msg : msgList) {
-                    messages.add( new UserMessage( msg.getUserInfo() ) );
+                    messages.add( new UserMessage( msg.getUserPrompt() ) );
                     messages.add( new AssistantMessage( msg.getResponseInfo() ) );
                 }
                 return messages;

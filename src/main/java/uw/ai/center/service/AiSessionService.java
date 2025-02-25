@@ -4,10 +4,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uw.ai.center.dto.AiSessionInfoQueryParam;
-import uw.ai.center.dto.AiSessionMsgQueryParam;
 import uw.ai.center.entity.AiSessionInfo;
 import uw.ai.center.entity.AiSessionMsg;
-import uw.ai.center.vo.ConversationData;
 import uw.common.constant.StateCommon;
 import uw.dao.DaoFactory;
 import uw.dao.TransactionException;
@@ -27,9 +25,9 @@ public class AiSessionService {
      * @param sessionId
      * @return
      */
-    public static AiSessionInfo loadSession(long saasId, long userId, long sessionId) {
+    public static AiSessionInfo loadSession(Long saasId, Long userId, Integer sessionType, Long sessionId) {
         try {
-            return dao.queryForSingleObject( AiSessionInfo.class, new AiSessionInfoQueryParam( saasId ).userId( userId ).id( sessionId ) );
+            return dao.queryForSingleObject( AiSessionInfo.class, new AiSessionInfoQueryParam( saasId ).userId( userId ).sessionType( sessionType ).id( sessionId ) );
         } catch (TransactionException e) {
             logger.error( e.getMessage(), e );
         }
@@ -38,34 +36,26 @@ public class AiSessionService {
 
     /**
      * 初始化session.
+     *
      * @param saasId
-     * @param mchId
      * @param userId
      * @param userType
-     * @param groupId
-     * @param userName
-     * @param nickName
-     * @param realName
+     * @param userInfo
      * @param sessionName
-     * @param systemInfo
+     * @param systemPrompt
      * @param windowSize
      * @return
      */
-    public static AiSessionInfo initSession(long saasId, long mchId, long userId, int userType, long groupId, String userName, String nickName, String realName,
-                                            String sessionName, String systemInfo, int windowSize) {
+    public static AiSessionInfo initSession(long saasId, long userId, int userType, String userInfo, int sessionType, String sessionName, String systemPrompt, int windowSize) {
         long sessionId = dao.getSequenceId( AiSessionInfo.class );
         AiSessionInfo sessionInfo = new AiSessionInfo();
         sessionInfo.setId( sessionId );
         sessionInfo.setSaasId( saasId );
-        sessionInfo.setMchId( mchId );
         sessionInfo.setUserId( userId );
         sessionInfo.setUserType( userType );
-        sessionInfo.setGroupId( groupId );
-        sessionInfo.setUserName( userName );
-        sessionInfo.setNickName( nickName );
-        sessionInfo.setRealName( realName );
+        sessionInfo.setUserInfo( userInfo );
         sessionInfo.setSessionName( truncateWithEllipsis( sessionName, 200 ) );
-        sessionInfo.setSystemInfo( systemInfo );
+        sessionInfo.setSystemPrompt( systemPrompt );
         sessionInfo.setMsgNum( 0 );
         sessionInfo.setWindowSize( windowSize );
         sessionInfo.setRequestTokens( 0 );
@@ -83,16 +73,17 @@ public class AiSessionService {
 
     /**
      * 初始化sessionMsg.
+     *
      * @param sessionId
-     * @param question
+     * @param userPrompt
      * @return
      */
-    public static AiSessionMsg initSessionMsg(long sessionId,String question) {
+    public static AiSessionMsg initSessionMsg(long sessionId, String userPrompt) {
         long msgId = dao.getSequenceId( AiSessionMsg.class );
         AiSessionMsg sessionMsg = new AiSessionMsg();
         sessionMsg.setId( msgId );
         sessionMsg.setSessionId( sessionId );
-        sessionMsg.setUserInfo( question );
+        sessionMsg.setUserPrompt( userPrompt );
         sessionMsg.setState( StateCommon.ENABLED.getValue() );
         sessionMsg.setRequestDate( new Date() );
         return sessionMsg;
@@ -100,6 +91,7 @@ public class AiSessionService {
 
     /**
      * 保存sessionMsg.
+     *
      * @param sessionMsg
      * @return
      */

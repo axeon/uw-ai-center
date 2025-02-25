@@ -37,13 +37,6 @@ public class AiSessionInfo implements DataEntity,Serializable{
     private long saasId;
 
     /**
-     * 商户ID
-     */
-    @ColumnMeta(columnName="mch_id", dataType="long", dataSize=19, nullable=true)
-    @Schema(title = "商户ID", description = "商户ID")
-    private long mchId;
-
-    /**
      * 用户id
      */
     @ColumnMeta(columnName="user_id", dataType="long", dataSize=19, nullable=false)
@@ -58,32 +51,18 @@ public class AiSessionInfo implements DataEntity,Serializable{
     private int userType;
 
     /**
-     * 用户组ID
-     */
-    @ColumnMeta(columnName="group_id", dataType="long", dataSize=19, nullable=true)
-    @Schema(title = "用户组ID", description = "用户组ID")
-    private long groupId;
-
-    /**
      * 用户名
      */
-    @ColumnMeta(columnName="user_name", dataType="String", dataSize=100, nullable=true)
+    @ColumnMeta(columnName="user_info", dataType="String", dataSize=100, nullable=true)
     @Schema(title = "用户名", description = "用户名")
-    private String userName;
+    private String userInfo;
 
     /**
-     * 用户昵称
+     * session类型
      */
-    @ColumnMeta(columnName="nick_name", dataType="String", dataSize=100, nullable=true)
-    @Schema(title = "用户昵称", description = "用户昵称")
-    private String nickName;
-
-    /**
-     * 真实名称
-     */
-    @ColumnMeta(columnName="real_name", dataType="String", dataSize=100, nullable=true)
-    @Schema(title = "真实名称", description = "真实名称")
-    private String realName;
+    @ColumnMeta(columnName="session_type", dataType="int", dataSize=10, nullable=true)
+    @Schema(title = "session类型", description = "session类型")
+    private int sessionType;
 
     /**
      * session名称
@@ -123,9 +102,9 @@ public class AiSessionInfo implements DataEntity,Serializable{
     /**
      * 系统信息
      */
-    @ColumnMeta(columnName="system_info", dataType="String", dataSize=2000, nullable=true)
+    @ColumnMeta(columnName="system_prompt", dataType="String", dataSize=2000, nullable=true)
     @Schema(title = "系统信息", description = "系统信息")
-    private String systemInfo;
+    private String systemPrompt;
 
     /**
      * 创建时间
@@ -212,13 +191,6 @@ public class AiSessionInfo implements DataEntity,Serializable{
     }
 
     /**
-     * 获取商户ID。
-     */
-    public long getMchId(){
-        return this.mchId;
-    }
-
-    /**
      * 获取用户id。
      */
     public long getUserId(){
@@ -233,31 +205,17 @@ public class AiSessionInfo implements DataEntity,Serializable{
     }
 
     /**
-     * 获取用户组ID。
-     */
-    public long getGroupId(){
-        return this.groupId;
-    }
-
-    /**
      * 获取用户名。
      */
-    public String getUserName(){
-        return this.userName;
+    public String getUserInfo(){
+        return this.userInfo;
     }
 
     /**
-     * 获取用户昵称。
+     * 获取session类型。
      */
-    public String getNickName(){
-        return this.nickName;
-    }
-
-    /**
-     * 获取真实名称。
-     */
-    public String getRealName(){
-        return this.realName;
+    public int getSessionType(){
+        return this.sessionType;
     }
 
     /**
@@ -298,8 +256,8 @@ public class AiSessionInfo implements DataEntity,Serializable{
     /**
      * 获取系统信息。
      */
-    public String getSystemInfo(){
-        return this.systemInfo;
+    public String getSystemPrompt(){
+        return this.systemPrompt;
     }
 
     /**
@@ -353,20 +311,6 @@ public class AiSessionInfo implements DataEntity,Serializable{
     }
 
     /**
-     * 设置商户ID。
-     */
-    public void setMchId(long mchId){
-        if (!Objects.equals(this.mchId, mchId)){
-            if (this.UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this.UPDATED_COLUMN.add("mch_id");
-            this.UPDATED_INFO.append("mch_id:\"" + this.mchId+ "\"=>\"" + mchId + "\"\r\n");
-            this.mchId = mchId;
-        }
-    }
-
-    /**
      * 设置用户id。
      */
     public void setUserId(long userId){
@@ -395,58 +339,30 @@ public class AiSessionInfo implements DataEntity,Serializable{
     }
 
     /**
-     * 设置用户组ID。
-     */
-    public void setGroupId(long groupId){
-        if (!Objects.equals(this.groupId, groupId)){
-            if (this.UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this.UPDATED_COLUMN.add("group_id");
-            this.UPDATED_INFO.append("group_id:\"" + this.groupId+ "\"=>\"" + groupId + "\"\r\n");
-            this.groupId = groupId;
-        }
-    }
-
-    /**
      * 设置用户名。
      */
-    public void setUserName(String userName){
-        if (!Objects.equals(this.userName, userName)){
+    public void setUserInfo(String userInfo){
+        if (!Objects.equals(this.userInfo, userInfo)){
             if (this.UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("user_name");
-            this.UPDATED_INFO.append("user_name:\"" + this.userName+ "\"=>\"" + userName + "\"\r\n");
-            this.userName = userName;
+            this.UPDATED_COLUMN.add("user_info");
+            this.UPDATED_INFO.append("user_info:\"" + this.userInfo+ "\"=>\"" + userInfo + "\"\r\n");
+            this.userInfo = userInfo;
         }
     }
 
     /**
-     * 设置用户昵称。
+     * 设置session类型。
      */
-    public void setNickName(String nickName){
-        if (!Objects.equals(this.nickName, nickName)){
+    public void setSessionType(int sessionType){
+        if (!Objects.equals(this.sessionType, sessionType)){
             if (this.UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("nick_name");
-            this.UPDATED_INFO.append("nick_name:\"" + this.nickName+ "\"=>\"" + nickName + "\"\r\n");
-            this.nickName = nickName;
-        }
-    }
-
-    /**
-     * 设置真实名称。
-     */
-    public void setRealName(String realName){
-        if (!Objects.equals(this.realName, realName)){
-            if (this.UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this.UPDATED_COLUMN.add("real_name");
-            this.UPDATED_INFO.append("real_name:\"" + this.realName+ "\"=>\"" + realName + "\"\r\n");
-            this.realName = realName;
+            this.UPDATED_COLUMN.add("session_type");
+            this.UPDATED_INFO.append("session_type:\"" + this.sessionType+ "\"=>\"" + sessionType + "\"\r\n");
+            this.sessionType = sessionType;
         }
     }
 
@@ -523,14 +439,14 @@ public class AiSessionInfo implements DataEntity,Serializable{
     /**
      * 设置系统信息。
      */
-    public void setSystemInfo(String systemInfo){
-        if (!Objects.equals(this.systemInfo, systemInfo)){
+    public void setSystemPrompt(String systemPrompt){
+        if (!Objects.equals(this.systemPrompt, systemPrompt)){
             if (this.UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("system_info");
-            this.UPDATED_INFO.append("system_info:\"" + this.systemInfo+ "\"=>\"" + systemInfo + "\"\r\n");
-            this.systemInfo = systemInfo;
+            this.UPDATED_COLUMN.add("system_prompt");
+            this.UPDATED_INFO.append("system_prompt:\"" + this.systemPrompt+ "\"=>\"" + systemPrompt + "\"\r\n");
+            this.systemPrompt = systemPrompt;
         }
     }
 
@@ -584,19 +500,16 @@ public class AiSessionInfo implements DataEntity,Serializable{
         StringBuilder sb = new StringBuilder();
         sb.append("id:\"" + this.id + "\"\r\n");
         sb.append("saas_id:\"" + this.saasId + "\"\r\n");
-        sb.append("mch_id:\"" + this.mchId + "\"\r\n");
         sb.append("user_id:\"" + this.userId + "\"\r\n");
         sb.append("user_type:\"" + this.userType + "\"\r\n");
-        sb.append("group_id:\"" + this.groupId + "\"\r\n");
-        sb.append("user_name:\"" + this.userName + "\"\r\n");
-        sb.append("nick_name:\"" + this.nickName + "\"\r\n");
-        sb.append("real_name:\"" + this.realName + "\"\r\n");
+        sb.append("user_info:\"" + this.userInfo + "\"\r\n");
+        sb.append("session_type:\"" + this.sessionType + "\"\r\n");
         sb.append("session_name:\"" + this.sessionName + "\"\r\n");
         sb.append("msg_num:\"" + this.msgNum + "\"\r\n");
         sb.append("window_size:\"" + this.windowSize + "\"\r\n");
         sb.append("request_tokens:\"" + this.requestTokens + "\"\r\n");
         sb.append("response_tokens:\"" + this.responseTokens + "\"\r\n");
-        sb.append("system_info:\"" + this.systemInfo + "\"\r\n");
+        sb.append("system_prompt:\"" + this.systemPrompt + "\"\r\n");
         sb.append("create_date:\"" + this.createDate + "\"\r\n");
         sb.append("last_update:\"" + this.lastUpdate + "\"\r\n");
         sb.append("state:\"" + this.state + "\"\r\n");

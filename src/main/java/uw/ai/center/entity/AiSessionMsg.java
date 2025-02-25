@@ -39,9 +39,9 @@ public class AiSessionMsg implements DataEntity,Serializable{
     /**
      * 用户提问
      */
-    @ColumnMeta(columnName="user_info", dataType="String", dataSize=2147483647, nullable=true)
+    @ColumnMeta(columnName="user_prompt", dataType="String", dataSize=2147483647, nullable=true)
     @Schema(title = "用户提问", description = "用户提问")
-    private String userInfo;
+    private String userPrompt;
 
     /**
      * 工具信息
@@ -49,13 +49,6 @@ public class AiSessionMsg implements DataEntity,Serializable{
     @ColumnMeta(columnName="tool_info", dataType="String", dataSize=2147483647, nullable=true)
     @Schema(title = "工具信息", description = "工具信息")
     private String toolInfo;
-
-    /**
-     * 请求信息
-     */
-    @ColumnMeta(columnName="request_info", dataType="String", dataSize=2147483647, nullable=true)
-    @Schema(title = "请求信息", description = "请求信息")
-    private String requestInfo;
 
     /**
      * 返回信息
@@ -172,8 +165,8 @@ public class AiSessionMsg implements DataEntity,Serializable{
     /**
      * 获取用户提问。
      */
-    public String getUserInfo(){
-        return this.userInfo;
+    public String getUserPrompt(){
+        return this.userPrompt;
     }
 
     /**
@@ -181,13 +174,6 @@ public class AiSessionMsg implements DataEntity,Serializable{
      */
     public String getToolInfo(){
         return this.toolInfo;
-    }
-
-    /**
-     * 获取请求信息。
-     */
-    public String getRequestInfo(){
-        return this.requestInfo;
     }
 
     /**
@@ -271,14 +257,14 @@ public class AiSessionMsg implements DataEntity,Serializable{
     /**
      * 设置用户提问。
      */
-    public void setUserInfo(String userInfo){
-        if (!Objects.equals(this.userInfo, userInfo)){
+    public void setUserPrompt(String userPrompt){
+        if (!Objects.equals(this.userPrompt, userPrompt)){
             if (this.UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("user_info");
-            this.UPDATED_INFO.append("user_info:\"" + this.userInfo+ "\"=>\"" + userInfo + "\"\r\n");
-            this.userInfo = userInfo;
+            this.UPDATED_COLUMN.add("user_prompt");
+            this.UPDATED_INFO.append("user_prompt:\"" + this.userPrompt+ "\"=>\"" + userPrompt + "\"\r\n");
+            this.userPrompt = userPrompt;
         }
     }
 
@@ -293,20 +279,6 @@ public class AiSessionMsg implements DataEntity,Serializable{
             this.UPDATED_COLUMN.add("tool_info");
             this.UPDATED_INFO.append("tool_info:\"" + this.toolInfo+ "\"=>\"" + toolInfo + "\"\r\n");
             this.toolInfo = toolInfo;
-        }
-    }
-
-    /**
-     * 设置请求信息。
-     */
-    public void setRequestInfo(String requestInfo){
-        if (!Objects.equals(this.requestInfo, requestInfo)){
-            if (this.UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this.UPDATED_COLUMN.add("request_info");
-            this.UPDATED_INFO.append("request_info:\"" + this.requestInfo+ "\"=>\"" + requestInfo + "\"\r\n");
-            this.requestInfo = requestInfo;
         }
     }
 
@@ -416,9 +388,8 @@ public class AiSessionMsg implements DataEntity,Serializable{
         StringBuilder sb = new StringBuilder();
         sb.append("id:\"" + this.id + "\"\r\n");
         sb.append("session_id:\"" + this.sessionId + "\"\r\n");
-        sb.append("user_info:\"" + this.userInfo + "\"\r\n");
+        sb.append("user_prompt:\"" + this.userPrompt + "\"\r\n");
         sb.append("tool_info:\"" + this.toolInfo + "\"\r\n");
-        sb.append("request_info:\"" + this.requestInfo + "\"\r\n");
         sb.append("response_info:\"" + this.responseInfo + "\"\r\n");
         sb.append("request_tokens:\"" + this.requestTokens + "\"\r\n");
         sb.append("response_tokens:\"" + this.responseTokens + "\"\r\n");

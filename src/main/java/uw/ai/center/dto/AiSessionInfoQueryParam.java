@@ -33,13 +33,10 @@ public class AiSessionInfoQueryParam extends AuthPageQueryParam{
         return new HashMap<>() {{
             put( "id", "id" );
             put( "saasId", "saas_id" );
-            put( "mchId", "mch_id" );
             put( "userId", "user_id" );
             put( "userType", "user_type" );
-            put( "groupId", "group_id" );
-            put( "userName", "user_name" );
-            put( "nickName", "nick_name" );
-            put( "realName", "real_name" );
+            put( "userInfo", "user_info" );
+            put( "sessionType", "session_type" );
             put( "sessionName", "session_name" );
             put( "msgNum", "msg_num" );
             put( "windowSize", "window_size" );
@@ -59,13 +56,6 @@ public class AiSessionInfoQueryParam extends AuthPageQueryParam{
     private Long id;
 	
     /**
-    * 商户ID。
-    */
-    @QueryMeta(expr = "mch_id=?")
-    @Schema(title="商户ID", description = "商户ID")
-    private Long mchId;
-	
-    /**
     * 用户id。
     */
     @QueryMeta(expr = "user_id=?")
@@ -80,32 +70,18 @@ public class AiSessionInfoQueryParam extends AuthPageQueryParam{
     private Integer userType;
 	
     /**
-    * 用户组ID。
-    */
-    @QueryMeta(expr = "group_id=?")
-    @Schema(title="用户组ID", description = "用户组ID")
-    private Long groupId;
-	
-    /**
     * 用户名。
     */
-    @QueryMeta(expr = "user_name like ?")
+    @QueryMeta(expr = "user_info like ?")
     @Schema(title="用户名", description = "用户名")
-    private String userName;
+    private String userInfo;
 	
     /**
-    * 用户昵称。
+    * session类型。
     */
-    @QueryMeta(expr = "nick_name like ?")
-    @Schema(title="用户昵称", description = "用户昵称")
-    private String nickName;
-	
-    /**
-    * 真实名称。
-    */
-    @QueryMeta(expr = "real_name like ?")
-    @Schema(title="真实名称", description = "真实名称")
-    private String realName;
+    @QueryMeta(expr = "session_type=?")
+    @Schema(title="session类型", description = "session类型")
+    private Integer sessionType;
 	
     /**
     * session名称。
@@ -236,28 +212,6 @@ public class AiSessionInfoQueryParam extends AuthPageQueryParam{
     }
 	
     /**
-    * 获取商户ID。
-    */
-    public Long getMchId(){
-        return this.mchId;
-    }
-
-    /**
-    * 设置商户ID。
-    */
-    public void setMchId(Long mchId){
-        this.mchId = mchId;
-    }
-	
-    /**
-    * 设置商户ID链式调用。
-    */
-	public AiSessionInfoQueryParam mchId(Long mchId){
-        setMchId(mchId);
-        return this;
-    }
-	
-    /**
     * 获取用户id。
     */
     public Long getUserId(){
@@ -302,90 +256,46 @@ public class AiSessionInfoQueryParam extends AuthPageQueryParam{
     }
 	
     /**
-    * 获取用户组ID。
-    */
-    public Long getGroupId(){
-        return this.groupId;
-    }
-
-    /**
-    * 设置用户组ID。
-    */
-    public void setGroupId(Long groupId){
-        this.groupId = groupId;
-    }
-	
-    /**
-    * 设置用户组ID链式调用。
-    */
-	public AiSessionInfoQueryParam groupId(Long groupId){
-        setGroupId(groupId);
-        return this;
-    }
-	
-    /**
     * 获取用户名。
     */
-    public String getUserName(){
-        return this.userName;
+    public String getUserInfo(){
+        return this.userInfo;
     }
 
     /**
     * 设置用户名。
     */
-    public void setUserName(String userName){
-        this.userName = userName;
+    public void setUserInfo(String userInfo){
+        this.userInfo = userInfo;
     }
 	
     /**
     * 设置用户名链式调用。
     */
-    public AiSessionInfoQueryParam userName(String userName) {
-        setUserName(userName);
+    public AiSessionInfoQueryParam userInfo(String userInfo) {
+        setUserInfo(userInfo);
         return this;
     }
 	
     /**
-    * 获取用户昵称。
+    * 获取session类型。
     */
-    public String getNickName(){
-        return this.nickName;
+    public Integer getSessionType(){
+        return this.sessionType;
     }
 
     /**
-    * 设置用户昵称。
+    * 设置session类型。
     */
-    public void setNickName(String nickName){
-        this.nickName = nickName;
+    public void setSessionType(Integer sessionType){
+        this.sessionType = sessionType;
     }
 	
     /**
-    * 设置用户昵称链式调用。
+    * 设置session类型链式调用。
     */
-    public AiSessionInfoQueryParam nickName(String nickName) {
-        setNickName(nickName);
-        return this;
-    }
-	
-    /**
-    * 获取真实名称。
-    */
-    public String getRealName(){
-        return this.realName;
-    }
-
-    /**
-    * 设置真实名称。
-    */
-    public void setRealName(String realName){
-        this.realName = realName;
-    }
-	
-    /**
-    * 设置真实名称链式调用。
-    */
-    public AiSessionInfoQueryParam realName(String realName) {
-        setRealName(realName);
+	public AiSessionInfoQueryParam sessionType(Integer sessionType){
+        setSessionType(sessionType);
         return this;
     }
 	
