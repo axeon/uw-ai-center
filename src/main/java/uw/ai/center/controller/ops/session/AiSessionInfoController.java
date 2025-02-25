@@ -80,138 +80,6 @@ public class AiSessionInfoController {
     }
 
     /**
-     * 查询数据历史。
-     *
-     * @param
-     * @return
-     */
-    @GetMapping("/listDataHistory")
-    @Operation(summary = "查询数据历史", description = "查询数据历史")
-    @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.REQUEST)
-    public DataList<SysDataHistory> listDataHistory(SysDataHistoryQueryParam queryParam) throws TransactionException {
-        AuthServiceHelper.logRef(AiSessionInfo.class, queryParam.getEntityId());
-        queryParam.setEntityClass(AiSessionInfo.class);
-        return dao.list(SysDataHistory.class, queryParam);
-    }
-
-    /**
-     * 查询操作日志。
-     *
-     * @param
-     * @return
-     */
-    @GetMapping("/listCritLog")
-    @Operation(summary = "查询操作日志", description = "查询操作日志")
-    @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.REQUEST)
-    public DataList<SysCritLog> listCritLog(SysCritLogQueryParam queryParam) throws TransactionException {
-        AuthServiceHelper.logRef(AiSessionInfo.class, queryParam.getRefId());
-        queryParam.setRefTypeClass(AiSessionInfo.class);
-        return dao.list(SysCritLog.class, queryParam);
-    }
-
-    /**
-     * 新增session信息。
-     *
-     * @param aiSessionInfo
-     * @return
-     * @throws TransactionException
-     */
-    @PostMapping("/save")
-    @Operation(summary = "新增session信息", description = "新增session信息")
-    @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
-    public ResponseData<AiSessionInfo> save(@RequestBody AiSessionInfo aiSessionInfo) throws TransactionException {
-        long id = dao.getSequenceId(AiSessionInfo.class);
-        AuthServiceHelper.logRef(AiSessionInfo.class,id);
-        aiSessionInfo.setId(id);
-        aiSessionInfo.setSaasId(AuthServiceHelper.getSaasId());
-        aiSessionInfo.setCreateDate(new Date());
-        aiSessionInfo.setModifyDate(null);
-        aiSessionInfo.setState(1);
-        dao.save(aiSessionInfo);
-        //保存历史记录
-        SysDataHistoryHelper.saveHistory(aiSessionInfo.getId(),aiSessionInfo,"session信息","新增session信息");
-        return ResponseData.success(aiSessionInfo);
-    }
-
-    /**
-     * 修改session信息。
-     *
-     * @param aiSessionInfo
-     * @return
-     * @throws TransactionException
-     */
-    @PutMapping("/update")
-    @Operation(summary = "修改session信息", description = "修改session信息")
-    @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
-    public ResponseData<AiSessionInfo> update(@RequestBody AiSessionInfo aiSessionInfo, @Parameter(description = "备注") @RequestParam String remark) throws TransactionException {
-        AuthServiceHelper.logInfo(AiSessionInfo.class,aiSessionInfo.getId(),"修改session信息！操作备注："+remark);
-        AiSessionInfo aiSessionInfoDb = dao.queryForSingleObject(AiSessionInfo.class, new AuthIdQueryParam(aiSessionInfo.getId()));
-        if (aiSessionInfoDb == null) {
-            return ResponseData.warnMsg("未找到指定ID的session信息！");
-        }
-        aiSessionInfoDb.setMchId(aiSessionInfo.getMchId());
-        aiSessionInfoDb.setUserId(aiSessionInfo.getUserId());
-        aiSessionInfoDb.setUserType(aiSessionInfo.getUserType());
-        aiSessionInfoDb.setGroupId(aiSessionInfo.getGroupId());
-        aiSessionInfoDb.setUserName(aiSessionInfo.getUserName());
-        aiSessionInfoDb.setNickName(aiSessionInfo.getNickName());
-        aiSessionInfoDb.setRealName(aiSessionInfo.getRealName());
-        aiSessionInfoDb.setSessionName(aiSessionInfo.getSessionName());
-        aiSessionInfoDb.setModifyDate(new Date());
-        dao.update(aiSessionInfoDb);
-        SysDataHistoryHelper.saveHistory(aiSessionInfoDb.getId(),aiSessionInfoDb,"session信息","修改session信息！操作备注："+remark);
-        return ResponseData.success(aiSessionInfoDb);
-    }
-    
-    /**
-     * 启用session信息。
-     *
-     * @param id
-     * @throws TransactionException
-     */
-    @PutMapping("/enable")
-    @Operation(summary = "启用session信息", description = "启用session信息")
-    @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
-    public ResponseData enable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark) throws TransactionException {
-        AuthServiceHelper.logInfo(AiSessionInfo.class,id,"启用session信息！操作备注："+remark);
-        AiSessionInfo aiSessionInfo = dao.queryForSingleObject(AiSessionInfo.class, new AuthIdQueryParam(id));
-        if (aiSessionInfo == null) {
-            return ResponseData.warnMsg("未找到指定id的session信息！");
-        }
-        if (aiSessionInfo.getState()!=StateCommon.DISABLED.getValue()){
-            return ResponseData.warnMsg("启用session信息失败！当前状态不是禁用状态！");                
-        }
-        aiSessionInfo.setModifyDate(new Date());
-        aiSessionInfo.setState(StateCommon.ENABLED.getValue());
-        dao.update(aiSessionInfo);
-        return ResponseData.success();
-    }
-
-    /**
-     * 禁用session信息。
-     *
-     * @param id
-     * @throws TransactionException
-     */
-    @PutMapping("/disable")
-    @Operation(summary = "禁用session信息", description = "禁用session信息")
-    @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
-    public ResponseData disable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark) throws TransactionException {
-        AuthServiceHelper.logInfo(AiSessionInfo.class,id,"禁用session信息！操作备注："+remark);
-        AiSessionInfo aiSessionInfo = dao.queryForSingleObject(AiSessionInfo.class, new AuthIdQueryParam(id));
-        if (aiSessionInfo == null) {
-            return ResponseData.warnMsg("未找到指定id的session信息！");
-        }			
-        if (aiSessionInfo.getState()!=StateCommon.ENABLED.getValue()){
-            return ResponseData.warnMsg("禁用session信息失败！当前状态不是启用状态！");                
-        }            
-        aiSessionInfo.setModifyDate(new Date());
-        aiSessionInfo.setState(StateCommon.DISABLED.getValue());
-        dao.update(aiSessionInfo);
-        return ResponseData.success();
-    }
-
-    /**
      * 删除session信息。
      *
      * @param id
@@ -229,7 +97,7 @@ public class AiSessionInfoController {
         if (aiSessionInfo.getState()!=StateCommon.DISABLED.getValue()){
             return ResponseData.warnMsg("删除session信息失败！当前状态不是禁用状态！");
         }            
-        aiSessionInfo.setModifyDate(new Date());
+//        aiSessionInfo.setModifyDate(new Date());
         aiSessionInfo.setState(StateCommon.DELETED.getValue());
         dao.update(aiSessionInfo);
         return ResponseData.success();

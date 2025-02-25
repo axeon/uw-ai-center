@@ -41,11 +41,14 @@ public class AiSessionMemoryAdvisor implements ChatMemory {
      */
     @Override
     public List<Message> get(String conversationId, int lastN) {
+        if (lastN <= 0) {
+            return List.of();
+        }
         ConversationData conversationData = new ConversationData( conversationId );
         List<Message> messages = new ArrayList<>( lastN );
         if (conversationData.getSessionId() > 0) {
             try {
-                DataList<AiSessionMsg> msgList = dao.list( AiSessionMsg.class, "select * from ai_session_msg where session_id=? order by id desc limit ?",
+                DataList<AiSessionMsg> msgList = dao.list( AiSessionMsg.class, "select * from ai_session_msg where session_id=? order by id desc",
                         new Object[]{conversationData.getSessionId()}, 0, (int) Math.ceil( lastN / 2.0f ), false );
                 for (AiSessionMsg msg : msgList) {
                     messages.add( new UserMessage( msg.getUserInfo() ) );
