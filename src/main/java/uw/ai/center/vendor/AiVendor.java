@@ -72,17 +72,28 @@ public interface AiVendor {
         private String value;
 
         /**
+         * 配置类型。 数值，字符串，布尔值，浮点数，浮点数，日期，时间，日期时间,枚举.
+         */
+        private String type;
+
+        /**
+         * 配置名称。
+         */
+        private String name;
+
+        /**
          * 配置描述。
          */
         private String desc;
 
-
         public ConfigParam() {
         }
 
-        public ConfigParam(String key, String value, String desc) {
+        public ConfigParam(String key, String value, String type, String name, String desc) {
             this.key = key;
             this.value = value;
+            this.type = type;
+            this.name = name;
             this.desc = desc;
         }
 
@@ -90,25 +101,20 @@ public interface AiVendor {
             return key;
         }
 
-        public void setKey(String key) {
-            this.key = key;
-        }
-
         public String getValue() {
             return value;
         }
 
-        public void setValue(String value) {
-            this.value = value;
+        public String getType() {
+            return type;
+        }
+
+        public String getName() {
+            return name;
         }
 
         public String getDesc() {
             return desc;
         }
-
-        public void setDesc(String desc) {
-            this.desc = desc;
-        }
-
     }
 }

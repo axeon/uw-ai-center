@@ -40,9 +40,9 @@ public class AiVendorHelper {
     /**
      * 本地AisLinker实例缓存。
      */
-    private static final LoadingCache<Long, ChatClient> modelInstanceCache = Caffeine.newBuilder().maximumSize( 1000 ).build( new CacheLoader<Long, ChatClient>() {
+    private static final LoadingCache<Long, ChatClientWrapper> modelInstanceCache = Caffeine.newBuilder().maximumSize( 1000 ).build( new CacheLoader<Long, ChatClientWrapper>() {
         @Override
-        public @Nullable ChatClient load(Long configId) {
+        public @Nullable ChatClientWrapper load(Long configId) {
             AiModelConfigData aiModelConfigData = FusionCache.get( AiModelConfigData.class, configId );
             if (aiModelConfigData == null) {
                 return null;
@@ -92,7 +92,7 @@ public class AiVendorHelper {
      * @param configId
      * @return
      */
-    public static ChatClient getChatClient(long configId) {
+    public static ChatClientWrapper getChatClient(long configId) {
         return modelInstanceCache.get( configId );
     }
 
@@ -102,14 +102,38 @@ public class AiVendorHelper {
      * @param aiModelConfigData
      * @return
      */
-    private static ChatClient buildChatClient(AiModelConfigData aiModelConfigData) {
+    private static ChatClientWrapper buildChatClient(AiModelConfigData aiModelConfigData) {
         if (aiModelConfigData != null) {
             AiVendor aiVendor = VENDOR_MAP.get( aiModelConfigData.getVendorClass() );
             if (aiVendor != null) {
-                return aiVendor.buildChatClient( aiModelConfigData );
+                return new ChatClientWrapper( aiVendor.buildChatClient( aiModelConfigData ), aiModelConfigData );
             }
         }
         return null;
+    }
+
+    /**
+     * 聊天客户端包装类。
+     *
+     * @param chatClient 聊天客户端。
+     * @param configData 配置数据。
+     */
+    public record ChatClientWrapper(ChatClient chatClient, AiModelConfigData configData) {
+
+        public ChatClientWrapper(ChatClient chatClient, AiModelConfigData configData) {
+            this.chatClient = chatClient;
+            this.configData = configData;
+        }
+
+        @Override
+        public ChatClient chatClient() {
+            return chatClient;
+        }
+
+        @Override
+        public AiModelConfigData configData() {
+            return configData;
+        }
     }
 
 }

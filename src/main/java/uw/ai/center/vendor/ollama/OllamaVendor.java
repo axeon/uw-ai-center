@@ -54,7 +54,7 @@ public class OllamaVendor implements AiVendor {
      */
     @Override
     public List<ConfigParam> vendorParam() {
-        return List.of( new ConfigParam( "", "", "" ), new ConfigParam( "", "", "" ), new ConfigParam( "", "", "" ) );
+        return List.of();
     }
 
     /**
@@ -62,7 +62,7 @@ public class OllamaVendor implements AiVendor {
      */
     @Override
     public List<ConfigParam> modelParam() {
-        return List.of( new ConfigParam( "server", "http://localhost:11434", "服务器地址" ) );
+        return List.of( new ConfigParam( "server", "http://localhost:11434", "String", "服务器地址", "服务器地址" ) );
     }
 
     /**
@@ -92,6 +92,8 @@ public class OllamaVendor implements AiVendor {
                 // 实现 Logger 的 Advisor
                 .defaultAdvisors( new AiChatLoggerAdvisor() )
                 // 设置 ChatClient 中 ChatModel 的 Options 参数
-                .defaultOptions( OllamaOptions.builder().topP( 0.7 ).model( aiModelConfigData.getModelMain() ).build() ).build();
+                .defaultOptions( OllamaOptions.builder().topP( 0.7 ).model( aiModelConfigData.getModelMain() ).build() )
+                .build();
     }
+
 }

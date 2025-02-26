@@ -42,9 +42,7 @@ public class DeepSeekVendor implements AiVendor {
      */
     @Override
     public List<ConfigParam> vendorParam() {
-        return List.of( new ConfigParam( "", "", "" ),
-                new ConfigParam( "", "", "" ),
-                new ConfigParam( "", "", "" ) );
+        return List.of( );
     }
 
     /**

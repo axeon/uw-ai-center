@@ -2,9 +2,10 @@ package uw.ai.center.controller.open;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -14,7 +15,6 @@ import uw.ai.center.service.AiChatService;
 import uw.auth.service.AuthServiceHelper;
 import uw.auth.service.annotation.ResponseAdviceIgnore;
 import uw.common.dto.ResponseData;
-import uw.dao.DaoFactory;
 
 /**
  * 测试接口。
@@ -31,18 +31,18 @@ public class AiChatController {
      */
     @GetMapping("/generate")
     public ResponseData<String> generate(@RequestParam(defaultValue = "1") long config, @RequestParam(defaultValue = "你是谁？") String userPrompt) {
-        return AiChatService.generate( config, AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(),
+        return AiChatService.generate( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(), config,
                 userPrompt );
     }
 
     /**
      * ChatClient 流式调用
      */
-    @GetMapping("/chat")
-    public Flux<String> chat(HttpServletResponse response, @RequestParam(defaultValue = "1") long config, @RequestParam(defaultValue = "0") long sessionId, @RequestParam(defaultValue = "你是谁？") String userPrompt) {
+    @GetMapping(value="/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<ServerSentEvent<String>> chat(HttpServletResponse response, @RequestParam(defaultValue = "1") long config, @RequestParam(defaultValue = "0") long sessionId, @RequestParam(defaultValue = "你是谁？") String userPrompt) {
         response.setCharacterEncoding( "UTF-8" );
-        return AiChatService.chat( config, AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(),
-                sessionId, userPrompt );
+        return AiChatService.chat( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(), config,
+                sessionId, userPrompt ).map( s -> ServerSentEvent.builder( s ).build() );
     }
 }
 
