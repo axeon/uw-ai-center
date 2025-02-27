@@ -44,10 +44,9 @@ public class ChatRpcController {
      */
     @PostMapping(value = "/init")
     @MscPermDeclare(user = UserType.RPC)
-    public ResponseData<AiSessionInfo> initSession(@RequestParam(defaultValue = "1") long config, @RequestParam(defaultValue = "你是谁？") String userPrompt) {
+    public ResponseData<AiSessionInfo> initSession(@RequestParam(defaultValue = "1") long configId, @RequestParam(defaultValue = "你是谁？") String userPrompt) {
         return AiChatService.initSession( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(),
-                SessionType.CHAT.getValue(),
-                "", userPrompt, 0 );
+                configId, SessionType.CHAT.getValue(), userPrompt, null, null );
     }
 
     /**

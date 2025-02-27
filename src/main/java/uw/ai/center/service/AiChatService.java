@@ -37,7 +37,7 @@ public class AiChatService {
     /**
      * ChatClient 简单调用。
      */
-    public static ResponseData<String> generate(long saasId, long userId, int userType, String userInfo, long configId, String userPrompt) {
+    public static ResponseData<String> generate(long saasId, long userId, int userType, String userInfo, long configId, String userPrompt, String systemPrompt, String toolInfo) {
         // 获取ChatClient
         AiVendorHelper.ChatClientWrapper chatClientWrapper = AiVendorHelper.getChatClient( configId );
         if (chatClientWrapper == null) {
@@ -46,15 +46,15 @@ public class AiChatService {
         // 初始化会话信息
         AiSessionInfo sessionInfo = loadSession( saasId, userId, SessionType.COMMON.getValue(), null ).getData();
         if (sessionInfo == null) {
-            ResponseData<AiSessionInfo> responseData = initSession( saasId, userId, userType, userInfo, 0, userPrompt, "未知", 0 );
+            ResponseData<AiSessionInfo> responseData = initSession( saasId, userId, userType, userInfo, configId, SessionType.COMMON.getValue(), userPrompt,null, systemPrompt);
             if (responseData.isNotSuccess()) {
                 return responseData.prototype();
-            }else{
+            } else {
                 sessionInfo = responseData.getData();
             }
         }
         // 初始化会话消息
-        AiSessionMsg sessionMsg = initSessionMsg( sessionInfo.getId(), userPrompt );
+        AiSessionMsg sessionMsg = initSessionMsg( sessionInfo.getId(), systemPrompt, userPrompt, toolInfo );
         // 设置请求开始时间
         sessionMsg.setResponseStartDate( new Date() );
         ChatResponse chatResponse = chatClientWrapper.chatClient().prompt().user( userPrompt ).call().chatResponse();
@@ -72,22 +72,22 @@ public class AiChatService {
     /**
      * ChatClient 流式调用
      */
-    public static Flux<String> chat(long saasId, long userId, int userType, String userInfo, long configId, long sessionId, String userPrompt) {
-        // 获取ChatClient
-        AiVendorHelper.ChatClientWrapper chatClientWrapper = AiVendorHelper.getChatClient( configId );
-        if (chatClientWrapper == null) {
-            return Flux.just( ResponseData.errorMsg( "ChatClient获取失败" ).toString() );
-        }
+    public static Flux<String> chat(long saasId, long userId, long sessionId, String userPrompt) {
         // 初始化会话信息
         AiSessionInfo sessionInfo = null;
         if (sessionId > 0) {
             sessionInfo = loadSession( saasId, userId, SessionType.CHAT.getValue(), sessionId ).getData();
-            if (sessionInfo == null) {
-                return Flux.just( ResponseData.errorMsg( "会话不存在" ).toString() );
-            }
+        }
+        if (sessionInfo == null) {
+            return Flux.just( ResponseData.errorMsg( "会话不存在" ).toString() );
+        }
+        // 获取ChatClient
+        AiVendorHelper.ChatClientWrapper chatClientWrapper = AiVendorHelper.getChatClient( sessionInfo.getConfigId() );
+        if (chatClientWrapper == null) {
+            return Flux.just( ResponseData.errorMsg( "ChatClient获取失败" ).toString() );
         }
         // 初始化会话消息
-        AiSessionMsg sessionMsg = initSessionMsg( sessionInfo.getId(), userPrompt );
+        AiSessionMsg sessionMsg = initSessionMsg( sessionInfo.getId(), null, userPrompt,null );
         // 会话消息的会话ID和消息ID
         ConversationData conversationData = new ConversationData( sessionMsg.getSessionId(), sessionMsg.getId() );
         // 返回信息
@@ -174,7 +174,8 @@ public class AiChatService {
      * @param windowSize
      * @return
      */
-    public static ResponseData<AiSessionInfo>  initSession(long saasId, long userId, int userType, String userInfo, int sessionType, String sessionName, String systemPrompt, int windowSize) {
+    public static ResponseData<AiSessionInfo> initSession(long saasId, long userId, int userType, String userInfo, long configId, int sessionType, String sessionName,
+                                                           Integer windowSize,String systemPrompt) {
         long sessionId = dao.getSequenceId( AiSessionInfo.class );
         AiSessionInfo sessionInfo = new AiSessionInfo();
         sessionInfo.setId( sessionId );
@@ -182,6 +183,7 @@ public class AiChatService {
         sessionInfo.setUserId( userId );
         sessionInfo.setUserType( userType );
         sessionInfo.setUserInfo( userInfo );
+        sessionInfo.setConfigId( configId );
         sessionInfo.setSessionType( sessionType );
         sessionInfo.setSessionName( truncateWithEllipsis( sessionName, 200 ) );
         sessionInfo.setSystemPrompt( systemPrompt );
@@ -193,10 +195,10 @@ public class AiChatService {
         sessionInfo.setLastUpdate( null );
         sessionInfo.setState( StateCommon.ENABLED.getValue() );
         try {
-            return ResponseData.success(dao.save( sessionInfo ));
+            return ResponseData.success( dao.save( sessionInfo ) );
         } catch (Exception e) {
             logger.error( e.getMessage(), e );
-            return ResponseData.errorMsg(e.getMessage());
+            return ResponseData.errorMsg( e.getMessage() );
         }
     }
 
@@ -207,12 +209,14 @@ public class AiChatService {
      * @param userPrompt
      * @return
      */
-    public static AiSessionMsg initSessionMsg(long sessionId, String userPrompt) {
+    public static AiSessionMsg initSessionMsg(long sessionId, String systemPrompt, String userPrompt, String toolInfo) {
         long msgId = dao.getSequenceId( AiSessionMsg.class );
         AiSessionMsg sessionMsg = new AiSessionMsg();
         sessionMsg.setId( msgId );
         sessionMsg.setSessionId( sessionId );
+        sessionMsg.setSystemPrompt( systemPrompt );
         sessionMsg.setUserPrompt( userPrompt );
+        sessionMsg.setToolInfo( toolInfo );
         sessionMsg.setState( StateCommon.ENABLED.getValue() );
         sessionMsg.setRequestDate( new Date() );
         return sessionMsg;
