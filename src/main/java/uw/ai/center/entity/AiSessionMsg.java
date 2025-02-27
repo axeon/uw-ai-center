@@ -30,11 +30,25 @@ public class AiSessionMsg implements DataEntity,Serializable{
     private long id;
 
     /**
+     * saasId
+     */
+    @ColumnMeta(columnName="saas_id", dataType="long", dataSize=19, nullable=false, primaryKey=true)
+    @Schema(title = "saasId", description = "saasId")
+    private long saasId;
+
+    /**
      * sessionId
      */
     @ColumnMeta(columnName="session_id", dataType="long", dataSize=19, nullable=false)
     @Schema(title = "sessionId", description = "sessionId")
     private long sessionId;
+
+    /**
+     * 系统提问
+     */
+    @ColumnMeta(columnName="system_prompt", dataType="String", dataSize=2147483647, nullable=true)
+    @Schema(title = "系统提问", description = "系统提问")
+    private String systemPrompt;
 
     /**
      * 用户提问
@@ -156,10 +170,24 @@ public class AiSessionMsg implements DataEntity,Serializable{
     }
 
     /**
+     * 获取saasId。
+     */
+    public long getSaasId(){
+        return this.saasId;
+    }
+
+    /**
      * 获取sessionId。
      */
     public long getSessionId(){
         return this.sessionId;
+    }
+
+    /**
+     * 获取系统提问。
+     */
+    public String getSystemPrompt(){
+        return this.systemPrompt;
     }
 
     /**
@@ -241,6 +269,20 @@ public class AiSessionMsg implements DataEntity,Serializable{
     }
 
     /**
+     * 设置saasId。
+     */
+    public void setSaasId(long saasId){
+        if (!Objects.equals(this.saasId, saasId)){
+            if (this.UPDATED_COLUMN == null) {
+                _INIT_UPDATE_INFO();
+            }
+            this.UPDATED_COLUMN.add("saas_id");
+            this.UPDATED_INFO.append("saas_id:\"" + this.saasId+ "\"=>\"" + saasId + "\"\r\n");
+            this.saasId = saasId;
+        }
+    }
+
+    /**
      * 设置sessionId。
      */
     public void setSessionId(long sessionId){
@@ -251,6 +293,20 @@ public class AiSessionMsg implements DataEntity,Serializable{
             this.UPDATED_COLUMN.add("session_id");
             this.UPDATED_INFO.append("session_id:\"" + this.sessionId+ "\"=>\"" + sessionId + "\"\r\n");
             this.sessionId = sessionId;
+        }
+    }
+
+    /**
+     * 设置系统提问。
+     */
+    public void setSystemPrompt(String systemPrompt){
+        if (!Objects.equals(this.systemPrompt, systemPrompt)){
+            if (this.UPDATED_COLUMN == null) {
+                _INIT_UPDATE_INFO();
+            }
+            this.UPDATED_COLUMN.add("system_prompt");
+            this.UPDATED_INFO.append("system_prompt:\"" + this.systemPrompt+ "\"=>\"" + systemPrompt + "\"\r\n");
+            this.systemPrompt = systemPrompt;
         }
     }
 
@@ -387,7 +443,9 @@ public class AiSessionMsg implements DataEntity,Serializable{
     public String toString() {
         StringBuilder sb = new StringBuilder();
         sb.append("id:\"" + this.id + "\"\r\n");
+        sb.append("saas_id:\"" + this.saasId + "\"\r\n");
         sb.append("session_id:\"" + this.sessionId + "\"\r\n");
+        sb.append("system_prompt:\"" + this.systemPrompt + "\"\r\n");
         sb.append("user_prompt:\"" + this.userPrompt + "\"\r\n");
         sb.append("tool_info:\"" + this.toolInfo + "\"\r\n");
         sb.append("response_info:\"" + this.responseInfo + "\"\r\n");

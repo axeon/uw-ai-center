@@ -12,14 +12,14 @@ import uw.dao.annotation.ColumnMeta;
 import uw.dao.annotation.TableMeta;
 
 /**
- * AiSessionInfo实体类
- * session信息
+ * AiRagLib实体类
+ * rag文档库
  *
  * @author axeon
  */
-@TableMeta(tableName="ai_session_info",tableType="table")
-@Schema(title = "session信息", description = "session信息")
-public class AiSessionInfo implements DataEntity,Serializable{
+@TableMeta(tableName="ai_rag_lib",tableType="table")
+@Schema(title = "rag文档库", description = "rag文档库")
+public class AiRagLib implements DataEntity,Serializable{
 
 
     /**
@@ -58,60 +58,33 @@ public class AiSessionInfo implements DataEntity,Serializable{
     private String userInfo;
 
     /**
-     * 配置ID
+     * 文档库类型
      */
-    @ColumnMeta(columnName="config_id", dataType="long", dataSize=19, nullable=true)
-    @Schema(title = "配置ID", description = "配置ID")
-    private long configId;
+    @ColumnMeta(columnName="lib_type", dataType="int", dataSize=10, nullable=true)
+    @Schema(title = "文档库类型", description = "文档库类型")
+    private int libType;
 
     /**
-     * session类型
+     * 文档库名称
      */
-    @ColumnMeta(columnName="session_type", dataType="int", dataSize=10, nullable=true)
-    @Schema(title = "session类型", description = "session类型")
-    private int sessionType;
+    @ColumnMeta(columnName="lib_name", dataType="String", dataSize=200, nullable=true)
+    @Schema(title = "文档库名称", description = "文档库名称")
+    private String libName;
 
     /**
-     * session名称
+     * 文档库描述
      */
-    @ColumnMeta(columnName="session_name", dataType="String", dataSize=200, nullable=true)
-    @Schema(title = "session名称", description = "session名称")
-    private String sessionName;
+    @ColumnMeta(columnName="lib_desc", dataType="String", dataSize=65535, nullable=true)
+    @Schema(title = "文档库描述", description = "文档库描述")
+    private String libDesc;
 
     /**
-     * session大小
+     * 服务商配置
      */
-    @ColumnMeta(columnName="msg_num", dataType="int", dataSize=10, nullable=true)
-    @Schema(title = "session大小", description = "session大小")
-    private int msgNum;
-
-    /**
-     * 历史长度
-     */
-    @ColumnMeta(columnName="window_size", dataType="int", dataSize=10, nullable=true)
-    @Schema(title = "历史长度", description = "历史长度")
-    private int windowSize;
-
-    /**
-     * 请求token数
-     */
-    @ColumnMeta(columnName="request_tokens", dataType="long", dataSize=19, nullable=true)
-    @Schema(title = "请求token数", description = "请求token数")
-    private long requestTokens;
-
-    /**
-     * 响应token数
-     */
-    @ColumnMeta(columnName="response_tokens", dataType="long", dataSize=19, nullable=true)
-    @Schema(title = "响应token数", description = "响应token数")
-    private long responseTokens;
-
-    /**
-     * 系统信息
-     */
-    @ColumnMeta(columnName="system_prompt", dataType="String", dataSize=2000, nullable=true)
-    @Schema(title = "系统信息", description = "系统信息")
-    private String systemPrompt;
+    @ColumnMeta(columnName="lib_config", dataType="String", dataSize=1073741824, nullable=true)
+    @Schema(title = "服务商配置", description = "服务商配置")
+    @JsonRawValue(value = false)
+    private String libConfig;
 
     /**
      * 创建时间
@@ -126,13 +99,6 @@ public class AiSessionInfo implements DataEntity,Serializable{
     @ColumnMeta(columnName="modify_date", dataType="java.util.Date", dataSize=23, nullable=true)
     @Schema(title = "修改时间", description = "修改时间")
     private java.util.Date modifyDate;
-
-    /**
-     * 最后更新时间
-     */
-    @ColumnMeta(columnName="last_update", dataType="java.util.Date", dataSize=23, nullable=true)
-    @Schema(title = "最后更新时间", description = "最后更新时间")
-    private java.util.Date lastUpdate;
 
     /**
      * 状态
@@ -185,7 +151,7 @@ public class AiSessionInfo implements DataEntity,Serializable{
      */
     private void _INIT_UPDATE_INFO() {
         this.UPDATED_COLUMN = new HashSet<String>();
-        this.UPDATED_INFO = new StringBuilder("表ai_session_info主键\"" + 
+        this.UPDATED_INFO = new StringBuilder("表ai_rag_lib主键\"" + 
         this.id+ "\"更新为:\r\n");
     }
 
@@ -226,59 +192,31 @@ public class AiSessionInfo implements DataEntity,Serializable{
     }
 
     /**
-     * 获取配置ID。
+     * 获取文档库类型。
      */
-    public long getConfigId(){
-        return this.configId;
+    public int getLibType(){
+        return this.libType;
     }
 
     /**
-     * 获取session类型。
+     * 获取文档库名称。
      */
-    public int getSessionType(){
-        return this.sessionType;
+    public String getLibName(){
+        return this.libName;
     }
 
     /**
-     * 获取session名称。
+     * 获取文档库描述。
      */
-    public String getSessionName(){
-        return this.sessionName;
+    public String getLibDesc(){
+        return this.libDesc;
     }
 
     /**
-     * 获取session大小。
+     * 获取服务商配置。
      */
-    public int getMsgNum(){
-        return this.msgNum;
-    }
-
-    /**
-     * 获取历史长度。
-     */
-    public int getWindowSize(){
-        return this.windowSize;
-    }
-
-    /**
-     * 获取请求token数。
-     */
-    public long getRequestTokens(){
-        return this.requestTokens;
-    }
-
-    /**
-     * 获取响应token数。
-     */
-    public long getResponseTokens(){
-        return this.responseTokens;
-    }
-
-    /**
-     * 获取系统信息。
-     */
-    public String getSystemPrompt(){
-        return this.systemPrompt;
+    public String getLibConfig(){
+        return this.libConfig;
     }
 
     /**
@@ -293,13 +231,6 @@ public class AiSessionInfo implements DataEntity,Serializable{
      */
     public java.util.Date getModifyDate(){
         return this.modifyDate;
-    }
-
-    /**
-     * 获取最后更新时间。
-     */
-    public java.util.Date getLastUpdate(){
-        return this.lastUpdate;
     }
 
     /**
@@ -381,114 +312,58 @@ public class AiSessionInfo implements DataEntity,Serializable{
     }
 
     /**
-     * 设置配置ID。
+     * 设置文档库类型。
      */
-    public void setConfigId(long configId){
-        if (!Objects.equals(this.configId, configId)){
+    public void setLibType(int libType){
+        if (!Objects.equals(this.libType, libType)){
             if (this.UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("config_id");
-            this.UPDATED_INFO.append("config_id:\"" + this.configId+ "\"=>\"" + configId + "\"\r\n");
-            this.configId = configId;
+            this.UPDATED_COLUMN.add("lib_type");
+            this.UPDATED_INFO.append("lib_type:\"" + this.libType+ "\"=>\"" + libType + "\"\r\n");
+            this.libType = libType;
         }
     }
 
     /**
-     * 设置session类型。
+     * 设置文档库名称。
      */
-    public void setSessionType(int sessionType){
-        if (!Objects.equals(this.sessionType, sessionType)){
+    public void setLibName(String libName){
+        if (!Objects.equals(this.libName, libName)){
             if (this.UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("session_type");
-            this.UPDATED_INFO.append("session_type:\"" + this.sessionType+ "\"=>\"" + sessionType + "\"\r\n");
-            this.sessionType = sessionType;
+            this.UPDATED_COLUMN.add("lib_name");
+            this.UPDATED_INFO.append("lib_name:\"" + this.libName+ "\"=>\"" + libName + "\"\r\n");
+            this.libName = libName;
         }
     }
 
     /**
-     * 设置session名称。
+     * 设置文档库描述。
      */
-    public void setSessionName(String sessionName){
-        if (!Objects.equals(this.sessionName, sessionName)){
+    public void setLibDesc(String libDesc){
+        if (!Objects.equals(this.libDesc, libDesc)){
             if (this.UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("session_name");
-            this.UPDATED_INFO.append("session_name:\"" + this.sessionName+ "\"=>\"" + sessionName + "\"\r\n");
-            this.sessionName = sessionName;
+            this.UPDATED_COLUMN.add("lib_desc");
+            this.UPDATED_INFO.append("lib_desc:\"" + this.libDesc+ "\"=>\"" + libDesc + "\"\r\n");
+            this.libDesc = libDesc;
         }
     }
 
     /**
-     * 设置session大小。
+     * 设置服务商配置。
      */
-    public void setMsgNum(int msgNum){
-        if (!Objects.equals(this.msgNum, msgNum)){
+    public void setLibConfig(String libConfig){
+        if (!Objects.equals(this.libConfig, libConfig)){
             if (this.UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("msg_num");
-            this.UPDATED_INFO.append("msg_num:\"" + this.msgNum+ "\"=>\"" + msgNum + "\"\r\n");
-            this.msgNum = msgNum;
-        }
-    }
-
-    /**
-     * 设置历史长度。
-     */
-    public void setWindowSize(int windowSize){
-        if (!Objects.equals(this.windowSize, windowSize)){
-            if (this.UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this.UPDATED_COLUMN.add("window_size");
-            this.UPDATED_INFO.append("window_size:\"" + this.windowSize+ "\"=>\"" + windowSize + "\"\r\n");
-            this.windowSize = windowSize;
-        }
-    }
-
-    /**
-     * 设置请求token数。
-     */
-    public void setRequestTokens(long requestTokens){
-        if (!Objects.equals(this.requestTokens, requestTokens)){
-            if (this.UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this.UPDATED_COLUMN.add("request_tokens");
-            this.UPDATED_INFO.append("request_tokens:\"" + this.requestTokens+ "\"=>\"" + requestTokens + "\"\r\n");
-            this.requestTokens = requestTokens;
-        }
-    }
-
-    /**
-     * 设置响应token数。
-     */
-    public void setResponseTokens(long responseTokens){
-        if (!Objects.equals(this.responseTokens, responseTokens)){
-            if (this.UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this.UPDATED_COLUMN.add("response_tokens");
-            this.UPDATED_INFO.append("response_tokens:\"" + this.responseTokens+ "\"=>\"" + responseTokens + "\"\r\n");
-            this.responseTokens = responseTokens;
-        }
-    }
-
-    /**
-     * 设置系统信息。
-     */
-    public void setSystemPrompt(String systemPrompt){
-        if (!Objects.equals(this.systemPrompt, systemPrompt)){
-            if (this.UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this.UPDATED_COLUMN.add("system_prompt");
-            this.UPDATED_INFO.append("system_prompt:\"" + this.systemPrompt+ "\"=>\"" + systemPrompt + "\"\r\n");
-            this.systemPrompt = systemPrompt;
+            this.UPDATED_COLUMN.add("lib_config");
+            this.UPDATED_INFO.append("lib_config:\"" + this.libConfig+ "\"=>\"" + libConfig + "\"\r\n");
+            this.libConfig = libConfig;
         }
     }
 
@@ -521,20 +396,6 @@ public class AiSessionInfo implements DataEntity,Serializable{
     }
 
     /**
-     * 设置最后更新时间。
-     */
-    public void setLastUpdate(java.util.Date lastUpdate){
-        if (!Objects.equals(this.lastUpdate, lastUpdate)){
-            if (this.UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this.UPDATED_COLUMN.add("last_update");
-            this.UPDATED_INFO.append("last_update:\"" + this.lastUpdate+ "\"=>\"" + lastUpdate + "\"\r\n");
-            this.lastUpdate = lastUpdate;
-        }
-    }
-
-    /**
      * 设置状态。
      */
     public void setState(int state){
@@ -559,17 +420,12 @@ public class AiSessionInfo implements DataEntity,Serializable{
         sb.append("user_id:\"" + this.userId + "\"\r\n");
         sb.append("user_type:\"" + this.userType + "\"\r\n");
         sb.append("user_info:\"" + this.userInfo + "\"\r\n");
-        sb.append("config_id:\"" + this.configId + "\"\r\n");
-        sb.append("session_type:\"" + this.sessionType + "\"\r\n");
-        sb.append("session_name:\"" + this.sessionName + "\"\r\n");
-        sb.append("msg_num:\"" + this.msgNum + "\"\r\n");
-        sb.append("window_size:\"" + this.windowSize + "\"\r\n");
-        sb.append("request_tokens:\"" + this.requestTokens + "\"\r\n");
-        sb.append("response_tokens:\"" + this.responseTokens + "\"\r\n");
-        sb.append("system_prompt:\"" + this.systemPrompt + "\"\r\n");
+        sb.append("lib_type:\"" + this.libType + "\"\r\n");
+        sb.append("lib_name:\"" + this.libName + "\"\r\n");
+        sb.append("lib_desc:\"" + this.libDesc + "\"\r\n");
+        sb.append("lib_config:\"" + this.libConfig + "\"\r\n");
         sb.append("create_date:\"" + this.createDate + "\"\r\n");
         sb.append("modify_date:\"" + this.modifyDate + "\"\r\n");
-        sb.append("last_update:\"" + this.lastUpdate + "\"\r\n");
         sb.append("state:\"" + this.state + "\"\r\n");
         return sb.toString();
     }

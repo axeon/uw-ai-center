@@ -36,6 +36,7 @@ public class AiSessionInfoQueryParam extends AuthPageQueryParam{
             put( "userId", "user_id" );
             put( "userType", "user_type" );
             put( "userInfo", "user_info" );
+            put( "configId", "config_id" );
             put( "sessionType", "session_type" );
             put( "sessionName", "session_name" );
             put( "msgNum", "msg_num" );
@@ -43,6 +44,7 @@ public class AiSessionInfoQueryParam extends AuthPageQueryParam{
             put( "requestTokens", "request_tokens" );
             put( "responseTokens", "response_tokens" );
             put( "createDate", "create_date" );
+            put( "modifyDate", "modify_date" );
             put( "lastUpdate", "last_update" );
             put( "state", "state" );
         }};
@@ -75,6 +77,13 @@ public class AiSessionInfoQueryParam extends AuthPageQueryParam{
     @QueryMeta(expr = "user_info like ?")
     @Schema(title="用户名", description = "用户名")
     private String userInfo;
+	
+    /**
+    * 配置ID。
+    */
+    @QueryMeta(expr = "config_id=?")
+    @Schema(title="配置ID", description = "配置ID")
+    private Long configId;
 	
     /**
     * session类型。
@@ -152,6 +161,13 @@ public class AiSessionInfoQueryParam extends AuthPageQueryParam{
     @QueryMeta(expr = "create_date between ? and ?")
     @Schema(title="创建时间范围", description = "创建时间范围")
     private Date[] createDateRange;
+
+    /**
+    * 修改时间范围。
+    */
+    @QueryMeta(expr = "modify_date between ? and ?")
+    @Schema(title="修改时间范围", description = "修改时间范围")
+    private Date[] modifyDateRange;
 
     /**
     * 最后更新时间范围。
@@ -274,6 +290,28 @@ public class AiSessionInfoQueryParam extends AuthPageQueryParam{
     */
     public AiSessionInfoQueryParam userInfo(String userInfo) {
         setUserInfo(userInfo);
+        return this;
+    }
+	
+    /**
+    * 获取配置ID。
+    */
+    public Long getConfigId(){
+        return this.configId;
+    }
+
+    /**
+    * 设置配置ID。
+    */
+    public void setConfigId(Long configId){
+        this.configId = configId;
+    }
+	
+    /**
+    * 设置配置ID链式调用。
+    */
+	public AiSessionInfoQueryParam configId(Long configId){
+        setConfigId(configId);
         return this;
     }
 	
@@ -516,6 +554,28 @@ public class AiSessionInfoQueryParam extends AuthPageQueryParam{
     */
     public AiSessionInfoQueryParam createDateRange(Date[] createDateRange) {
         setCreateDateRange(createDateRange);
+        return this;
+    }
+	
+    /**
+    * 获取修改时间范围。
+    */
+    public Date[] getModifyDateRange(){
+        return this.modifyDateRange;
+    }
+
+    /**
+    * 设置修改时间范围。
+    */
+    public void setModifyDateRange(Date[] modifyDateRange){
+        this.modifyDateRange = modifyDateRange;
+    }
+	
+    /**
+    * 设置修改时间范围链式调用。
+    */
+    public AiSessionInfoQueryParam modifyDateRange(Date[] modifyDateRange) {
+        setModifyDateRange(modifyDateRange);
         return this;
     }
 	

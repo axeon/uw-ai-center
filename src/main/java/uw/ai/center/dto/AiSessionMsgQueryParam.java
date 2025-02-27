@@ -1,7 +1,7 @@
 package uw.ai.center.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import uw.dao.PageQueryParam;
+import uw.app.common.dto.AuthPageQueryParam;
 import uw.dao.annotation.QueryMeta;
 
 import java.util.Date;
@@ -12,8 +12,16 @@ import java.util.Map;
 * session消息列表查询参数。
 */
 @Schema(title = "session消息列表查询参数", description = "session消息列表查询参数")
-public class AiSessionMsgQueryParam extends PageQueryParam{
+public class AiSessionMsgQueryParam extends AuthPageQueryParam{
 
+    public AiSessionMsgQueryParam() {
+        super();
+    }
+
+    public AiSessionMsgQueryParam(Long saasId) {
+        super(saasId);
+    }
+	
     /**
      * 允许的排序属性。
      * key:排序名 value:排序字段
@@ -24,6 +32,7 @@ public class AiSessionMsgQueryParam extends PageQueryParam{
     public Map<String, String> ALLOWED_SORT_PROPERTY() {
         return new HashMap<>() {{
             put( "id", "id" );
+            put( "saasId", "saas_id" );
             put( "sessionId", "session_id" );
             put( "requestTokens", "request_tokens" );
             put( "responseTokens", "response_tokens" );
