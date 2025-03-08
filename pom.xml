@@ -10,7 +10,7 @@
     <parent>
         <groupId>com.umtone</groupId>
         <artifactId>uw-base</artifactId>
-        <version>2025.0118.1006</version>
+        <version>2025.0308.1000</version>
         <relativePath/>
     </parent>
 
@@ -28,7 +28,7 @@
 
     <properties>
         <java.version>21</java.version>
-        <spring-ai.version>1.0.0-M5</spring-ai.version>
+        <spring-ai.version>1.0.0-M6</spring-ai.version>
     </properties>
 
     <dependencies>
@@ -63,6 +63,11 @@
         </dependency>
         <dependency>
             <groupId>com.umtone</groupId>
+            <artifactId>uw-ai</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.umtone</groupId>
             <artifactId>uw-app-common</artifactId>
         </dependency>
         <dependency>
@@ -72,10 +77,6 @@
         <dependency>
             <groupId>com.umtone</groupId>
             <artifactId>uw-mfa</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.msgpack</groupId>
-            <artifactId>msgpack-core</artifactId>
         </dependency>
         <dependency>
             <groupId>com.umtone</groupId>

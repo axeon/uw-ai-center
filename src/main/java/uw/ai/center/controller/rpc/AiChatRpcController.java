@@ -23,7 +23,7 @@ import uw.dao.DataList;
 @RequestMapping("/rpc/chat")
 @Primary
 @ResponseAdviceIgnore
-public class ChatRpcController {
+public class AiChatRpcController {
 
     /**
      * ChatClient 简单调用

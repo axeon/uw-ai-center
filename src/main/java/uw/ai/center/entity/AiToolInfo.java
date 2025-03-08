@@ -12,14 +12,14 @@ import uw.dao.annotation.ColumnMeta;
 import uw.dao.annotation.TableMeta;
 
 /**
- * AiToolConfig实体类
- * AI工具配置
+ * AiToolInfo实体类
+ * AI工具信息
  *
  * @author axeon
  */
-@TableMeta(tableName="ai_tool_config",tableType="table")
-@Schema(title = "AI工具配置", description = "AI工具配置")
-public class AiToolConfig implements DataEntity,Serializable{
+@TableMeta(tableName="ai_tool_info",tableType="table")
+@Schema(title = "AI工具信息", description = "AI工具信息")
+public class AiToolInfo implements DataEntity,Serializable{
 
 
     /**
@@ -37,11 +37,11 @@ public class AiToolConfig implements DataEntity,Serializable{
     private String appName;
 
     /**
-     * 工具代码
+     * 工具类
      */
-    @ColumnMeta(columnName="tool_code", dataType="String", dataSize=100, nullable=true)
-    @Schema(title = "工具代码", description = "工具代码")
-    private String toolCode;
+    @ColumnMeta(columnName="tool_class", dataType="String", dataSize=100, nullable=false)
+    @Schema(title = "工具类", description = "工具类")
+    private String toolClass;
 
     /**
      * 工具版本
@@ -67,18 +67,18 @@ public class AiToolConfig implements DataEntity,Serializable{
     /**
      * 工具参数配置
      */
-    @ColumnMeta(columnName="tool_param", dataType="String", dataSize=1073741824, nullable=true)
+    @ColumnMeta(columnName="tool_input", dataType="String", dataSize=1073741824, nullable=true)
     @Schema(title = "工具参数配置", description = "工具参数配置")
     @JsonRawValue(value = false)
-    private String toolParam;
+    private String toolInput;
 
     /**
      * 工具返回配置
      */
-    @ColumnMeta(columnName="tool_return", dataType="String", dataSize=1073741824, nullable=true)
+    @ColumnMeta(columnName="tool_output", dataType="String", dataSize=1073741824, nullable=true)
     @Schema(title = "工具返回配置", description = "工具返回配置")
     @JsonRawValue(value = false)
-    private String toolReturn;
+    private String toolOutput;
 
     /**
      * 创建时间
@@ -145,7 +145,7 @@ public class AiToolConfig implements DataEntity,Serializable{
      */
     private void _INIT_UPDATE_INFO() {
         this.UPDATED_COLUMN = new HashSet<String>();
-        this.UPDATED_INFO = new StringBuilder("表ai_tool_config主键\"" + 
+        this.UPDATED_INFO = new StringBuilder("表ai_tool_info主键\"" + 
         this.id+ "\"更新为:\r\n");
     }
 
@@ -165,10 +165,10 @@ public class AiToolConfig implements DataEntity,Serializable{
     }
 
     /**
-     * 获取工具代码。
+     * 获取工具类。
      */
-    public String getToolCode(){
-        return this.toolCode;
+    public String getToolClass(){
+        return this.toolClass;
     }
 
     /**
@@ -195,15 +195,15 @@ public class AiToolConfig implements DataEntity,Serializable{
     /**
      * 获取工具参数配置。
      */
-    public String getToolParam(){
-        return this.toolParam;
+    public String getToolInput(){
+        return this.toolInput;
     }
 
     /**
      * 获取工具返回配置。
      */
-    public String getToolReturn(){
-        return this.toolReturn;
+    public String getToolOutput(){
+        return this.toolOutput;
     }
 
     /**
@@ -257,16 +257,16 @@ public class AiToolConfig implements DataEntity,Serializable{
     }
 
     /**
-     * 设置工具代码。
+     * 设置工具类。
      */
-    public void setToolCode(String toolCode){
-        if (!Objects.equals(this.toolCode, toolCode)){
+    public void setToolClass(String toolClass){
+        if (!Objects.equals(this.toolClass, toolClass)){
             if (this.UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("tool_code");
-            this.UPDATED_INFO.append("tool_code:\"" + this.toolCode+ "\"=>\"" + toolCode + "\"\r\n");
-            this.toolCode = toolCode;
+            this.UPDATED_COLUMN.add("tool_class");
+            this.UPDATED_INFO.append("tool_class:\"" + this.toolClass+ "\"=>\"" + toolClass + "\"\r\n");
+            this.toolClass = toolClass;
         }
     }
 
@@ -315,28 +315,28 @@ public class AiToolConfig implements DataEntity,Serializable{
     /**
      * 设置工具参数配置。
      */
-    public void setToolParam(String toolParam){
-        if (!Objects.equals(this.toolParam, toolParam)){
+    public void setToolInput(String toolInput){
+        if (!Objects.equals(this.toolInput, toolInput)){
             if (this.UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("tool_param");
-            this.UPDATED_INFO.append("tool_param:\"" + this.toolParam+ "\"=>\"" + toolParam + "\"\r\n");
-            this.toolParam = toolParam;
+            this.UPDATED_COLUMN.add("tool_input");
+            this.UPDATED_INFO.append("tool_input:\"" + this.toolInput+ "\"=>\"" + toolInput + "\"\r\n");
+            this.toolInput = toolInput;
         }
     }
 
     /**
      * 设置工具返回配置。
      */
-    public void setToolReturn(String toolReturn){
-        if (!Objects.equals(this.toolReturn, toolReturn)){
+    public void setToolOutput(String toolOutput){
+        if (!Objects.equals(this.toolOutput, toolOutput)){
             if (this.UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("tool_return");
-            this.UPDATED_INFO.append("tool_return:\"" + this.toolReturn+ "\"=>\"" + toolReturn + "\"\r\n");
-            this.toolReturn = toolReturn;
+            this.UPDATED_COLUMN.add("tool_output");
+            this.UPDATED_INFO.append("tool_output:\"" + this.toolOutput+ "\"=>\"" + toolOutput + "\"\r\n");
+            this.toolOutput = toolOutput;
         }
     }
 
@@ -390,12 +390,12 @@ public class AiToolConfig implements DataEntity,Serializable{
         StringBuilder sb = new StringBuilder();
         sb.append("id:\"" + this.id + "\"\r\n");
         sb.append("app_name:\"" + this.appName + "\"\r\n");
-        sb.append("tool_code:\"" + this.toolCode + "\"\r\n");
+        sb.append("tool_class:\"" + this.toolClass + "\"\r\n");
         sb.append("tool_version:\"" + this.toolVersion + "\"\r\n");
         sb.append("tool_name:\"" + this.toolName + "\"\r\n");
         sb.append("tool_desc:\"" + this.toolDesc + "\"\r\n");
-        sb.append("tool_param:\"" + this.toolParam + "\"\r\n");
-        sb.append("tool_return:\"" + this.toolReturn + "\"\r\n");
+        sb.append("tool_input:\"" + this.toolInput + "\"\r\n");
+        sb.append("tool_output:\"" + this.toolOutput + "\"\r\n");
         sb.append("create_date:\"" + this.createDate + "\"\r\n");
         sb.append("modify_date:\"" + this.modifyDate + "\"\r\n");
         sb.append("state:\"" + this.state + "\"\r\n");

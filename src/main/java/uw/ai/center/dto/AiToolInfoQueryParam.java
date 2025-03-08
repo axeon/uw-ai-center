@@ -9,10 +9,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
-* AI工具配置列表查询参数。
+* AI工具信息列表查询参数。
 */
-@Schema(title = "AI工具配置列表查询参数", description = "AI工具配置列表查询参数")
-public class AiToolConfigQueryParam extends PageQueryParam{
+@Schema(title = "AI工具信息列表查询参数", description = "AI工具信息列表查询参数")
+public class AiToolInfoQueryParam extends PageQueryParam{
 
     /**
      * 允许的排序属性。
@@ -25,7 +25,7 @@ public class AiToolConfigQueryParam extends PageQueryParam{
         return new HashMap<>() {{
             put( "id", "id" );
             put( "appName", "app_name" );
-            put( "toolCode", "tool_code" );
+            put( "toolClass", "tool_class" );
             put( "toolVersion", "tool_version" );
             put( "toolName", "tool_name" );
             put( "createDate", "create_date" );
@@ -49,11 +49,11 @@ public class AiToolConfigQueryParam extends PageQueryParam{
     private String appName;
 	
     /**
-    * 工具代码。
+    * 工具类。
     */
-    @QueryMeta(expr = "tool_code like ?")
-    @Schema(title="工具代码", description = "工具代码")
-    private String toolCode;
+    @QueryMeta(expr = "tool_class like ?")
+    @Schema(title="工具类", description = "工具类")
+    private String toolClass;
 	
     /**
     * 工具版本。
@@ -129,7 +129,7 @@ public class AiToolConfigQueryParam extends PageQueryParam{
     /**
     * 设置ID链式调用。
     */
-	public AiToolConfigQueryParam id(Long id){
+	public AiToolInfoQueryParam id(Long id){
         setId(id);
         return this;
     }
@@ -151,30 +151,30 @@ public class AiToolConfigQueryParam extends PageQueryParam{
     /**
     * 设置应用名链式调用。
     */
-    public AiToolConfigQueryParam appName(String appName) {
+    public AiToolInfoQueryParam appName(String appName) {
         setAppName(appName);
         return this;
     }
 	
     /**
-    * 获取工具代码。
+    * 获取工具类。
     */
-    public String getToolCode(){
-        return this.toolCode;
+    public String getToolClass(){
+        return this.toolClass;
     }
 
     /**
-    * 设置工具代码。
+    * 设置工具类。
     */
-    public void setToolCode(String toolCode){
-        this.toolCode = toolCode;
+    public void setToolClass(String toolClass){
+        this.toolClass = toolClass;
     }
 	
     /**
-    * 设置工具代码链式调用。
+    * 设置工具类链式调用。
     */
-    public AiToolConfigQueryParam toolCode(String toolCode) {
-        setToolCode(toolCode);
+    public AiToolInfoQueryParam toolClass(String toolClass) {
+        setToolClass(toolClass);
         return this;
     }
 	
@@ -195,7 +195,7 @@ public class AiToolConfigQueryParam extends PageQueryParam{
     /**
     * 设置工具版本链式调用。
     */
-    public AiToolConfigQueryParam toolVersion(String toolVersion) {
+    public AiToolInfoQueryParam toolVersion(String toolVersion) {
         setToolVersion(toolVersion);
         return this;
     }
@@ -217,7 +217,7 @@ public class AiToolConfigQueryParam extends PageQueryParam{
     /**
     * 设置工具名称链式调用。
     */
-    public AiToolConfigQueryParam toolName(String toolName) {
+    public AiToolInfoQueryParam toolName(String toolName) {
         setToolName(toolName);
         return this;
     }
@@ -239,7 +239,7 @@ public class AiToolConfigQueryParam extends PageQueryParam{
     /**
     * 设置创建时间范围链式调用。
     */
-    public AiToolConfigQueryParam createDateRange(Date[] createDateRange) {
+    public AiToolInfoQueryParam createDateRange(Date[] createDateRange) {
         setCreateDateRange(createDateRange);
         return this;
     }
@@ -261,7 +261,7 @@ public class AiToolConfigQueryParam extends PageQueryParam{
     /**
     * 设置修改时间范围链式调用。
     */
-    public AiToolConfigQueryParam modifyDateRange(Date[] modifyDateRange) {
+    public AiToolInfoQueryParam modifyDateRange(Date[] modifyDateRange) {
         setModifyDateRange(modifyDateRange);
         return this;
     }
@@ -283,7 +283,7 @@ public class AiToolConfigQueryParam extends PageQueryParam{
     /**
     * 设置状态链式调用。
     */
-    public AiToolConfigQueryParam state(Integer state) {
+    public AiToolInfoQueryParam state(Integer state) {
         setState(state);
         return this;
     }
@@ -305,7 +305,7 @@ public class AiToolConfigQueryParam extends PageQueryParam{
     /**
     * 设置数组状态链式调用。
     */
-    public AiToolConfigQueryParam states(Integer[] states) {
+    public AiToolInfoQueryParam states(Integer[] states) {
         setStates(states);
         return this;
     }
@@ -327,7 +327,7 @@ public class AiToolConfigQueryParam extends PageQueryParam{
     /**
     * 设置大于等于状态链式调用。
     */
-    public AiToolConfigQueryParam stateGte(Integer stateGte) {
+    public AiToolInfoQueryParam stateGte(Integer stateGte) {
         setStateGte(stateGte);
         return this;
     }
@@ -349,7 +349,7 @@ public class AiToolConfigQueryParam extends PageQueryParam{
     /**
     * 获取小于等于状态链式调用。
     */
-    public AiToolConfigQueryParam stateLte(Integer stateLte) {
+    public AiToolInfoQueryParam stateLte(Integer stateLte) {
         setStateLte(stateLte);
         return this;
     }

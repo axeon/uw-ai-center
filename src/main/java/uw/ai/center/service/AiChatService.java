@@ -58,10 +58,10 @@ public class AiChatService {
         // 设置请求开始时间
         sessionMsg.setResponseStartDate( new Date() );
         ChatResponse chatResponse = chatClientWrapper.chatClient().prompt().user( userPrompt ).call().chatResponse();
-        String responseData = chatResponse.getResult().getOutput().getContent();
+        String responseData = chatResponse.getResult().getOutput().getText();
         Usage tokenUsage = chatResponse.getMetadata().getUsage();
         sessionMsg.setRequestTokens( tokenUsage.getPromptTokens() );
-        sessionMsg.setResponseTokens( tokenUsage.getGenerationTokens() );
+        sessionMsg.setResponseTokens( tokenUsage.getCompletionTokens() );
         sessionMsg.setResponseEndDate( new Date() );
         sessionMsg.setResponseInfo( responseData );
         // 保存会话信息
@@ -101,13 +101,13 @@ public class AiChatService {
             ChatResponse lastResponse = lastResponseRef.get();
             Usage tokenUsage = lastResponse.getMetadata().getUsage();
             sessionMsg.setRequestTokens( tokenUsage.getPromptTokens() );
-            sessionMsg.setResponseTokens( tokenUsage.getGenerationTokens() );
+            sessionMsg.setResponseTokens( tokenUsage.getCompletionTokens() );
             sessionMsg.setResponseEndDate( new Date() );
             sessionMsg.setResponseInfo( responseData.toString() );
             // 保存会话信息
             saveSessionMsg( sessionMsg );
         } ).map( x -> {
-            String content = x.getResult().getOutput().getContent();
+            String content = x.getResult().getOutput().getText();
             responseData.append( content );
             lastResponseRef.set( x );
             return content;
