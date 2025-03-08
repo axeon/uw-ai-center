@@ -64,7 +64,6 @@
         <dependency>
             <groupId>com.umtone</groupId>
             <artifactId>uw-ai</artifactId>
-            <version>1.0.0</version>
         </dependency>
         <dependency>
             <groupId>com.umtone</groupId>
