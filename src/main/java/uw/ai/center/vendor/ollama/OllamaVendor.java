@@ -34,6 +34,14 @@ public class OllamaVendor implements AiVendor {
     }
 
     /**
+     * 供应商描述
+     */
+    @Override
+    public String vendorDesc() {
+        return "Ollama";
+    }
+
+    /**
      * 链接器版本
      */
     @Override

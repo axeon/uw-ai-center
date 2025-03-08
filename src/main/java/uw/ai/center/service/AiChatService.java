@@ -11,6 +11,7 @@ import uw.ai.center.dto.AiSessionInfoQueryParam;
 import uw.ai.center.dto.AiSessionMsgQueryParam;
 import uw.ai.center.entity.AiSessionInfo;
 import uw.ai.center.entity.AiSessionMsg;
+import uw.ai.center.tool.AiToolCallbackProvider;
 import uw.ai.center.vendor.AiVendorHelper;
 import uw.ai.center.vo.ConversationData;
 import uw.common.constant.StateCommon;
@@ -57,7 +58,7 @@ public class AiChatService {
         AiSessionMsg sessionMsg = initSessionMsg( sessionInfo.getId(), systemPrompt, userPrompt, toolInfo );
         // 设置请求开始时间
         sessionMsg.setResponseStartDate( new Date() );
-        ChatResponse chatResponse = chatClientWrapper.chatClient().prompt().user( userPrompt ).call().chatResponse();
+        ChatResponse chatResponse = chatClientWrapper.chatClient().prompt().user( userPrompt ).tools( new AiToolCallbackProvider() ).call().chatResponse();
         String responseData = chatResponse.getResult().getOutput().getText();
         Usage tokenUsage = chatResponse.getMetadata().getUsage();
         sessionMsg.setRequestTokens( tokenUsage.getPromptTokens() );
@@ -94,7 +95,7 @@ public class AiChatService {
         StringBuilder responseData = new StringBuilder();
         // 最后一个ChatResponse信息
         AtomicReference<ChatResponse> lastResponseRef = new AtomicReference<>();
-        Flux<String> chatResponse = chatClientWrapper.chatClient().prompt().user( userPrompt ).advisors( spec -> spec.param( CHAT_MEMORY_CONVERSATION_ID_KEY,
+        Flux<String> chatResponse = chatClientWrapper.chatClient().prompt().user( userPrompt ).tools( new AiToolCallbackProvider() ).advisors( spec -> spec.param( CHAT_MEMORY_CONVERSATION_ID_KEY,
                 conversationData.toString() ).param( CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10 ) ).stream().chatResponse().doFirst( () -> {
             sessionMsg.setResponseStartDate( new Date() );
         } ).doOnComplete( () -> {

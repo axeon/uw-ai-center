@@ -22,6 +22,14 @@ public class DeepSeekVendor implements AiVendor {
     }
 
     /**
+     * 供应商描述
+     */
+    @Override
+    public String vendorDesc() {
+        return "DeepSeek";
+    }
+
+    /**
      * 链接器版本
      */
     @Override

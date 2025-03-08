@@ -2,7 +2,6 @@ package uw.ai.center.tool;
 
 import org.springframework.ai.model.function.FunctionCallback;
 import org.springframework.ai.tool.ToolCallbackProvider;
-import uw.dao.DaoFactory;
 
 /**
  * AiToolCallbackProvider。

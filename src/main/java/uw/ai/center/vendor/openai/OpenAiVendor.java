@@ -25,6 +25,14 @@ public class OpenAiVendor implements AiVendor {
     }
 
     /**
+     * 供应商描述
+     */
+    @Override
+    public String vendorDesc() {
+        return "OpenAi";
+    }
+
+    /**
      * 链接器版本
      */
     @Override

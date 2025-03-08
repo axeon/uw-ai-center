@@ -36,7 +36,6 @@ public class AiVendorHelper {
         put( OpenAiVendor.class.getName(), new OpenAiVendor() );
     }};
 
-
     /**
      * 本地AisLinker实例缓存。
      */

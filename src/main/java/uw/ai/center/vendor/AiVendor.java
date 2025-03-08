@@ -17,6 +17,11 @@ public interface AiVendor {
     String vendorName();
 
     /**
+     * 供应商描述
+     */
+    String vendorDesc();
+
+    /**
      * 供应商版本
      */
     String vendorVersion();
