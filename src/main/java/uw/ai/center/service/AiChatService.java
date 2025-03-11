@@ -1,8 +1,10 @@
 package uw.ai.center.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatResponse;
 import reactor.core.publisher.Flux;
@@ -11,9 +13,10 @@ import uw.ai.center.dto.AiSessionInfoQueryParam;
 import uw.ai.center.dto.AiSessionMsgQueryParam;
 import uw.ai.center.entity.AiSessionInfo;
 import uw.ai.center.entity.AiSessionMsg;
-import uw.ai.center.tool.AiToolCallbackProvider;
+import uw.ai.center.tool.AiToolHelper;
 import uw.ai.center.vendor.AiVendorHelper;
 import uw.ai.center.vo.ConversationData;
+import uw.ai.vo.AiToolCallInfo;
 import uw.common.constant.StateCommon;
 import uw.common.dto.ResponseData;
 import uw.dao.DaoFactory;
@@ -22,6 +25,7 @@ import uw.dao.TransactionException;
 import uw.httpclient.json.JsonInterfaceHelper;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -39,16 +43,18 @@ public class AiChatService {
     /**
      * ChatClient 简单调用。
      */
-    public static ResponseData<String> generate(long saasId, long userId, int userType, String userInfo, long configId, String userPrompt, String systemPrompt, String toolInfo) {
+    public static ResponseData<String> generate(long saasId, long userId, int userType, String userInfo, long configId, String userPrompt, String systemPrompt,
+                                                List<AiToolCallInfo> toolList) {
         // 获取ChatClient
         AiVendorHelper.ChatClientWrapper chatClientWrapper = AiVendorHelper.getChatClient( configId );
         if (chatClientWrapper == null) {
-            return ResponseData.errorMsg( "ChatClient获取失败" );
+            return ResponseData.errorMsg( "ChatClient获取失败!" );
         }
         // 初始化会话信息
         AiSessionInfo sessionInfo = loadSession( saasId, userId, SessionType.COMMON.getValue(), null ).getData();
         if (sessionInfo == null) {
-            ResponseData<AiSessionInfo> responseData = initSession( saasId, userId, userType, userInfo, configId, SessionType.COMMON.getValue(), userPrompt,null, systemPrompt);
+            ResponseData<AiSessionInfo> responseData = initSession( saasId, userId, userType, userInfo, configId, SessionType.COMMON.getValue(), userPrompt, null, systemPrompt,
+                    null );
             if (responseData.isNotSuccess()) {
                 return responseData.prototype();
             } else {
@@ -56,12 +62,16 @@ public class AiChatService {
             }
         }
         // 初始化会话消息
-        AiSessionMsg sessionMsg = initSessionMsg( sessionInfo.getId(), systemPrompt, userPrompt, toolInfo );
+        AiSessionMsg sessionMsg = initSessionMsg( sessionInfo.getId(), systemPrompt, userPrompt, toolList );
         // 设置请求开始时间
         sessionMsg.setResponseStartDate( new Date() );
-
-        ChatResponse chatResponse = chatClientWrapper.chatClient().prompt().user( userPrompt ).
-                tools( new AiToolCallbackProvider() ).toolContext( Map.of("saasId", saasId, "userId", userId, "userType", userType, "userInfo", userInfo) ).call().chatResponse();
+        ChatClient.ChatClientRequestSpec chatClientRequestSpec = chatClientWrapper.chatClient().prompt().user( userPrompt );
+        // 设置工具调用
+        if (toolList != null && !toolList.isEmpty()) {
+            chatClientRequestSpec.tools( AiToolHelper.getToolCallbacks( toolList ) );
+            chatClientRequestSpec.toolContext( Map.of( "saasId", saasId, "userId", userId, "userType", userType, "userInfo", userInfo ) );
+        }
+        ChatResponse chatResponse = chatClientRequestSpec.call().chatResponse();
         String responseData = chatResponse.getResult().getOutput().getText();
         Usage tokenUsage = chatResponse.getMetadata().getUsage();
         sessionMsg.setRequestTokens( tokenUsage.getPromptTokens() );
@@ -73,14 +83,59 @@ public class AiChatService {
         return ResponseData.success( responseData );
     }
 
+
+    /**
+     * 初始化session.
+     *
+     * @param saasId
+     * @param userId
+     * @param userType
+     * @param userInfo
+     * @param sessionName
+     * @param systemPrompt
+     * @param windowSize
+     * @return
+     */
+    public static ResponseData<AiSessionInfo> initSession(long saasId, long userId, int userType, String userInfo, long configId, int sessionType, String sessionName,
+                                                          Integer windowSize, String systemPrompt, List<AiToolCallInfo> toolList) {
+        long sessionId = dao.getSequenceId( AiSessionInfo.class );
+        AiSessionInfo sessionInfo = new AiSessionInfo();
+        sessionInfo.setId( sessionId );
+        sessionInfo.setSaasId( saasId );
+        sessionInfo.setUserId( userId );
+        sessionInfo.setUserType( userType );
+        sessionInfo.setUserInfo( userInfo );
+        sessionInfo.setConfigId( configId );
+        sessionInfo.setSessionType( sessionType );
+        sessionInfo.setSessionName( truncateWithEllipsis( sessionName, 200 ) );
+        sessionInfo.setSystemPrompt( systemPrompt );
+        sessionInfo.setMsgNum( 0 );
+        sessionInfo.setWindowSize( windowSize );
+        sessionInfo.setToolInfo( JsonInterfaceHelper.JSON_CONVERTER.toString( toolList ) );
+        sessionInfo.setRequestTokens( 0 );
+        sessionInfo.setResponseTokens( 0 );
+        sessionInfo.setCreateDate( new java.util.Date() );
+        sessionInfo.setLastUpdate( null );
+        sessionInfo.setState( StateCommon.ENABLED.getValue() );
+        try {
+            return ResponseData.success( dao.save( sessionInfo ) );
+        } catch (Exception e) {
+            logger.error( e.getMessage(), e );
+            return ResponseData.errorMsg( e.getMessage() );
+        }
+    }
+
     /**
      * ChatClient 流式调用
      */
-    public static Flux<String> chat(long saasId, long userId, long sessionId, String userPrompt) {
+    public static Flux<String> chat(long saasId, long userId, int userType, String userInfo, long sessionId, String userPrompt, String systemPrompt,
+                                    List<AiToolCallInfo> toolList) {
         // 初始化会话信息
-        AiSessionInfo sessionInfo = null;
+        AiSessionInfo sessionInfo;
         if (sessionId > 0) {
             sessionInfo = loadSession( saasId, userId, SessionType.CHAT.getValue(), sessionId ).getData();
+        } else {
+            sessionInfo = null;
         }
         if (sessionInfo == null) {
             return Flux.just( ResponseData.errorMsg( "会话不存在" ).toString() );
@@ -91,31 +146,45 @@ public class AiChatService {
             return Flux.just( ResponseData.errorMsg( "ChatClient获取失败" ).toString() );
         }
         // 初始化会话消息
-        AiSessionMsg sessionMsg = initSessionMsg( sessionInfo.getId(), null, userPrompt,null );
+        AiSessionMsg sessionMsg = initSessionMsg( sessionInfo.getId(), systemPrompt, userPrompt, toolList );
         // 会话消息的会话ID和消息ID
         ConversationData conversationData = new ConversationData( sessionMsg.getSessionId(), sessionMsg.getId() );
         // 返回信息
         StringBuilder responseData = new StringBuilder();
         // 最后一个ChatResponse信息
         AtomicReference<ChatResponse> lastResponseRef = new AtomicReference<>();
-        Flux<String> chatResponse = chatClientWrapper.chatClient().prompt().user( userPrompt ).tools( new AiToolCallbackProvider() ).advisors( spec -> spec.param( CHAT_MEMORY_CONVERSATION_ID_KEY,
-                conversationData.toString() ).param( CHAT_MEMORY_RETRIEVE_SIZE_KEY, 10 ) ).stream().chatResponse().doFirst( () -> {
-            sessionMsg.setResponseStartDate( new Date() );
-        } ).doOnComplete( () -> {
-            ChatResponse lastResponse = lastResponseRef.get();
-            Usage tokenUsage = lastResponse.getMetadata().getUsage();
-            sessionMsg.setRequestTokens( tokenUsage.getPromptTokens() );
-            sessionMsg.setResponseTokens( tokenUsage.getCompletionTokens() );
-            sessionMsg.setResponseEndDate( new Date() );
-            sessionMsg.setResponseInfo( responseData.toString() );
-            // 保存会话信息
-            saveSessionMsg( sessionMsg );
-        } ).map( x -> {
-            String content = x.getResult().getOutput().getText();
-            responseData.append( content );
-            lastResponseRef.set( x );
-            return content;
-        } );
+        ChatClient.ChatClientRequestSpec chatClientRequestSpec = chatClientWrapper.chatClient().prompt().user( userPrompt );
+        //如果本次没有传工具类，则检查是否有会话中的工具类。
+        if (toolList == null || toolList.isEmpty()) {
+            if (StringUtils.isNotBlank( sessionInfo.getToolInfo() )) {
+                toolList = JsonInterfaceHelper.JSON_CONVERTER.parse( sessionInfo.getToolInfo(), new TypeReference<List<AiToolCallInfo>>() {
+                } );
+            }
+        }
+        // 设置工具
+        if (toolList != null && !toolList.isEmpty()) {
+            chatClientRequestSpec.tools( AiToolHelper.getToolCallbacks( toolList ) );
+            chatClientRequestSpec.toolContext( Map.of( "saasId", saasId, "userId", userId, "userType", userType, "userInfo", userInfo ) );
+        }
+        Flux<String> chatResponse =
+                chatClientRequestSpec.advisors( spec -> spec.param( CHAT_MEMORY_CONVERSATION_ID_KEY,
+                        conversationData.toString() ).param( CHAT_MEMORY_RETRIEVE_SIZE_KEY, sessionInfo.getWindowSize() ) ).stream().chatResponse().doFirst( () -> {
+                    sessionMsg.setResponseStartDate( new Date() );
+                } ).doOnComplete( () -> {
+                    ChatResponse lastResponse = lastResponseRef.get();
+                    Usage tokenUsage = lastResponse.getMetadata().getUsage();
+                    sessionMsg.setRequestTokens( tokenUsage.getPromptTokens() );
+                    sessionMsg.setResponseTokens( tokenUsage.getCompletionTokens() );
+                    sessionMsg.setResponseEndDate( new Date() );
+                    sessionMsg.setResponseInfo( responseData.toString() );
+                    // 保存会话信息
+                    saveSessionMsg( sessionMsg );
+                } ).map( x -> {
+                    String content = x.getResult().getOutput().getText();
+                    responseData.append( content );
+                    lastResponseRef.set( x );
+                    return content;
+                } );
         return Flux.concat( Flux.just( JsonInterfaceHelper.JSON_CONVERTER.toString( sessionInfo ) ), chatResponse );
     }
 
@@ -166,45 +235,6 @@ public class AiChatService {
         }
     }
 
-    /**
-     * 初始化session.
-     *
-     * @param saasId
-     * @param userId
-     * @param userType
-     * @param userInfo
-     * @param sessionName
-     * @param systemPrompt
-     * @param windowSize
-     * @return
-     */
-    public static ResponseData<AiSessionInfo> initSession(long saasId, long userId, int userType, String userInfo, long configId, int sessionType, String sessionName,
-                                                           Integer windowSize,String systemPrompt) {
-        long sessionId = dao.getSequenceId( AiSessionInfo.class );
-        AiSessionInfo sessionInfo = new AiSessionInfo();
-        sessionInfo.setId( sessionId );
-        sessionInfo.setSaasId( saasId );
-        sessionInfo.setUserId( userId );
-        sessionInfo.setUserType( userType );
-        sessionInfo.setUserInfo( userInfo );
-        sessionInfo.setConfigId( configId );
-        sessionInfo.setSessionType( sessionType );
-        sessionInfo.setSessionName( truncateWithEllipsis( sessionName, 200 ) );
-        sessionInfo.setSystemPrompt( systemPrompt );
-        sessionInfo.setMsgNum( 0 );
-        sessionInfo.setWindowSize( windowSize );
-        sessionInfo.setRequestTokens( 0 );
-        sessionInfo.setResponseTokens( 0 );
-        sessionInfo.setCreateDate( new java.util.Date() );
-        sessionInfo.setLastUpdate( null );
-        sessionInfo.setState( StateCommon.ENABLED.getValue() );
-        try {
-            return ResponseData.success( dao.save( sessionInfo ) );
-        } catch (Exception e) {
-            logger.error( e.getMessage(), e );
-            return ResponseData.errorMsg( e.getMessage() );
-        }
-    }
 
     /**
      * 初始化sessionMsg.
@@ -213,14 +243,14 @@ public class AiChatService {
      * @param userPrompt
      * @return
      */
-    public static AiSessionMsg initSessionMsg(long sessionId, String systemPrompt, String userPrompt, String toolInfo) {
+    public static AiSessionMsg initSessionMsg(long sessionId, String systemPrompt, String userPrompt, List<AiToolCallInfo> toolList) {
         long msgId = dao.getSequenceId( AiSessionMsg.class );
         AiSessionMsg sessionMsg = new AiSessionMsg();
         sessionMsg.setId( msgId );
         sessionMsg.setSessionId( sessionId );
         sessionMsg.setSystemPrompt( systemPrompt );
         sessionMsg.setUserPrompt( userPrompt );
-        sessionMsg.setToolInfo( toolInfo );
+        sessionMsg.setToolInfo( JsonInterfaceHelper.JSON_CONVERTER.toString( toolList ) );
         sessionMsg.setState( StateCommon.ENABLED.getValue() );
         sessionMsg.setRequestDate( new Date() );
         return sessionMsg;

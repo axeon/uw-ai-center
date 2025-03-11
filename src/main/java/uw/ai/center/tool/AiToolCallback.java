@@ -21,8 +21,14 @@ public class AiToolCallback implements ToolCallback {
      */
     private final AiToolInfo aiToolInfo;
 
-    public AiToolCallback(AiToolInfo aiToolInfo) {
+    /**
+     * 是否直接返回结果，不返回提示。
+     */
+    private final boolean returnDirect;
+
+    public AiToolCallback(AiToolInfo aiToolInfo,boolean returnDirect) {
         this.aiToolInfo = aiToolInfo;
+        this.returnDirect = returnDirect;
     }
 
     /**
@@ -30,6 +36,14 @@ public class AiToolCallback implements ToolCallback {
      */
     public AiToolInfo getAiToolInfo() {
         return aiToolInfo;
+    }
+
+    /**
+     * 是否直接返回结果，不返回提示。
+     * @return
+     */
+    public boolean isReturnDirect() {
+        return returnDirect;
     }
 
     /**
@@ -45,7 +59,7 @@ public class AiToolCallback implements ToolCallback {
      */
     @Override
     public ToolMetadata getToolMetadata() {
-        return ToolMetadata.builder().returnDirect( false ).build();
+        return ToolMetadata.builder().returnDirect( returnDirect ).build();
     }
 
     /**

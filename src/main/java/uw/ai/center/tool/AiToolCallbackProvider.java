@@ -11,7 +11,7 @@ public class AiToolCallbackProvider implements ToolCallbackProvider {
 
     @Override
     public FunctionCallback[] getToolCallbacks() {
-        return AiToolHelper.getToolCallbacks();
+        return AiToolHelper.getAllToolCallbacks();
     }
 
 

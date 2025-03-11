@@ -109,9 +109,16 @@ public class AiSessionInfo implements DataEntity,Serializable{
     /**
      * 系统信息
      */
-    @ColumnMeta(columnName="system_prompt", dataType="String", dataSize=2000, nullable=true)
+    @ColumnMeta(columnName="system_prompt", dataType="String", dataSize=2147483647, nullable=true)
     @Schema(title = "系统信息", description = "系统信息")
     private String systemPrompt;
+
+    /**
+     * 工具信息
+     */
+    @ColumnMeta(columnName="tool_info", dataType="String", dataSize=2147483647, nullable=true)
+    @Schema(title = "工具信息", description = "工具信息")
+    private String toolInfo;
 
     /**
      * 创建时间
@@ -279,6 +286,13 @@ public class AiSessionInfo implements DataEntity,Serializable{
      */
     public String getSystemPrompt(){
         return this.systemPrompt;
+    }
+
+    /**
+     * 获取工具信息。
+     */
+    public String getToolInfo(){
+        return this.toolInfo;
     }
 
     /**
@@ -493,6 +507,20 @@ public class AiSessionInfo implements DataEntity,Serializable{
     }
 
     /**
+     * 设置工具信息。
+     */
+    public void setToolInfo(String toolInfo){
+        if (!Objects.equals(this.toolInfo, toolInfo)){
+            if (this.UPDATED_COLUMN == null) {
+                _INIT_UPDATE_INFO();
+            }
+            this.UPDATED_COLUMN.add("tool_info");
+            this.UPDATED_INFO.append("tool_info:\"" + this.toolInfo+ "\"=>\"" + toolInfo + "\"\r\n");
+            this.toolInfo = toolInfo;
+        }
+    }
+
+    /**
      * 设置创建时间。
      */
     public void setCreateDate(java.util.Date createDate){
@@ -567,6 +595,7 @@ public class AiSessionInfo implements DataEntity,Serializable{
         sb.append("request_tokens:\"" + this.requestTokens + "\"\r\n");
         sb.append("response_tokens:\"" + this.responseTokens + "\"\r\n");
         sb.append("system_prompt:\"" + this.systemPrompt + "\"\r\n");
+        sb.append("tool_info:\"" + this.toolInfo + "\"\r\n");
         sb.append("create_date:\"" + this.createDate + "\"\r\n");
         sb.append("modify_date:\"" + this.modifyDate + "\"\r\n");
         sb.append("last_update:\"" + this.lastUpdate + "\"\r\n");

@@ -33,57 +33,12 @@ public class AiChatController {
      * ChatClient 简单调用
      */
     @GetMapping("/generate")
-    public ResponseData<String> generate(@RequestParam(defaultValue = "1") long configId, @RequestParam(defaultValue = "你是谁？") String userPrompt) {
+    public ResponseData<String> generate(@RequestParam(defaultValue = "1") long configId, @RequestParam(defaultValue = "你是谁？") String userPrompt,
+                                         @RequestParam(defaultValue = "") String systemPrompt, @RequestParam(defaultValue = "") String toolList) {
         return AiChatService.generate( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), "guest", configId,
-                userPrompt, null, null );
+                userPrompt, systemPrompt, null );
     }
 
-
-    /**
-     * ChatClient 初始化会话.
-     *
-     * @param configId
-     * @param userPrompt
-     * @return
-     */
-    @PostMapping(value = "/initSession")
-    public ResponseData<AiSessionInfo> initSession(@RequestParam(defaultValue = "1") long configId, @RequestParam(defaultValue = "你是谁？") String userPrompt) {
-        return AiChatService.initSession( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(),
-                configId, SessionType.CHAT.getValue(),
-                userPrompt, 0, null );
-    }
-
-    /**
-     * ChatClient 列出会话列表.
-     *
-     * @param queryParam
-     * @return
-     */
-    @GetMapping("/listSessionInfo")
-    public ResponseData<DataList<AiSessionInfo>> listSessionInfo(AiSessionInfoQueryParam queryParam) {
-        return AiChatService.listSessionInfo( queryParam );
-    }
-
-    /**
-     * ChatClient 列出会话消息.
-     *
-     * @param queryParam
-     * @return
-     */
-    @GetMapping("/listSessionMsg")
-    public ResponseData<DataList<AiSessionMsg>> listSessionMsg(AiSessionMsgQueryParam queryParam) {
-        return AiChatService.listSessionMsg( queryParam );
-    }
-
-    /**
-     * ChatClient 流式调用
-     */
-    @GetMapping(value = "/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<ServerSentEvent<String>> chat(HttpServletResponse response, @RequestParam(defaultValue = "0") long sessionId,
-                                              @RequestParam(defaultValue = "你是谁？") String userPrompt) {
-        response.setCharacterEncoding( "UTF-8" );
-        return AiChatService.chat( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), sessionId, userPrompt ).map( s -> ServerSentEvent.builder( s ).build() );
-    }
 }
 
 

@@ -13,7 +13,7 @@ import java.time.ZonedDateTime;
  * 时区日期工具。
  */
 @Component
-public class TimeZoneDateTool implements AiTool<TimeZoneDateTool.ToolParam, ResponseData> {
+public class TimeZoneDateTool implements AiTool<TimeZoneDateTool.ToolParam, ResponseData<String>> {
 
     /**
      * 定义工具名称。
@@ -42,7 +42,7 @@ public class TimeZoneDateTool implements AiTool<TimeZoneDateTool.ToolParam, Resp
      */
     @Override
     public String toolVersion() {
-        return "0.0.3";
+        return "0.0.5";
     }
 
 
@@ -53,7 +53,7 @@ public class TimeZoneDateTool implements AiTool<TimeZoneDateTool.ToolParam, Resp
      * @return the function result
      */
     @Override
-    public ResponseData apply(TimeZoneDateTool.ToolParam toolParam) {
+    public ResponseData<String> apply(TimeZoneDateTool.ToolParam toolParam) {
         ZoneId zoneId = ZoneId.of( toolParam.getTimeZone() );
         ZonedDateTime zonedNow = ZonedDateTime.now( zoneId );
         String data = zonedNow.toString() + "@" + toolParam.getTimeZone();
@@ -65,7 +65,7 @@ public class TimeZoneDateTool implements AiTool<TimeZoneDateTool.ToolParam, Resp
      */
     public static class ToolParam extends AiToolParam {
 
-        @Schema(description ="时区，默认为UTC", required = true)
+        @Schema(description ="时区，默认为UTC", requiredMode = Schema.RequiredMode.REQUIRED)
         private String timeZone = ZoneId.systemDefault().getId();
 
         public String getTimeZone() {

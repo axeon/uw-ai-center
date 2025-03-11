@@ -5,7 +5,10 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 import uw.ai.center.constant.SessionType;
 import uw.ai.center.dto.AiSessionInfoQueryParam;
@@ -13,6 +16,9 @@ import uw.ai.center.dto.AiSessionMsgQueryParam;
 import uw.ai.center.entity.AiSessionInfo;
 import uw.ai.center.entity.AiSessionMsg;
 import uw.ai.center.service.AiChatService;
+import uw.ai.vo.AiChatGenerateParam;
+import uw.ai.vo.AiChatMsgParam;
+import uw.ai.vo.AiChatSessionParam;
 import uw.auth.service.AuthServiceHelper;
 import uw.auth.service.annotation.ResponseAdviceIgnore;
 import uw.common.dto.ResponseData;
@@ -28,25 +34,32 @@ public class AiChatRpcController {
     /**
      * ChatClient 简单调用
      */
-    @GetMapping("/generate")
-    public ResponseData<String> generate(@RequestParam(defaultValue = "1") long configId, @RequestParam(defaultValue = "你是谁？") String userPrompt) {
-        return AiChatService.generate( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(), configId,
-                userPrompt, null, null );
+    @PostMapping("/generate")
+    public ResponseData<String> generate(AiChatGenerateParam param) {
+        return AiChatService.generate( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(),
+                param.getConfigId(), param.getUserPrompt(), param.getSystemPrompt(), param.getToolList() );
     }
 
 
     /**
+     * ChatClient 流式调用
+     */
+    @PostMapping(value = "/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public Flux<ServerSentEvent<String>> chat(HttpServletResponse response, AiChatMsgParam param) {
+        response.setCharacterEncoding( "UTF-8" );
+        return AiChatService.chat( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(),
+                param.getSessionId(), param.getUserPrompt(), param.getUserPrompt(), param.getToolList() ).map( s -> ServerSentEvent.builder( s ).build() );
+    }
+
+    /**
      * ChatClient 初始化会话.
      *
-     * @param configId
-     * @param userPrompt
      * @return
      */
     @PostMapping(value = "/initSession")
-    public ResponseData<AiSessionInfo> initSession(@RequestParam(defaultValue = "1") long configId, @RequestParam(defaultValue = "你是谁？") String userPrompt) {
+    public ResponseData<AiSessionInfo> initSession(AiChatSessionParam param) {
         return AiChatService.initSession( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(),
-                configId, SessionType.CHAT.getValue(),
-                userPrompt, 0, null );
+                param.getConfigId(), SessionType.CHAT.getValue(), param.getUserPrompt(), 0, param.getSystemPrompt(), param.getToolList() );
     }
 
     /**
@@ -71,13 +84,4 @@ public class AiChatRpcController {
         return AiChatService.listSessionMsg( queryParam );
     }
 
-    /**
-     * ChatClient 流式调用
-     */
-    @GetMapping(value = "/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<ServerSentEvent<String>> chat(HttpServletResponse response, @RequestParam(defaultValue = "0") long sessionId,
-                                              @RequestParam(defaultValue = "你是谁？") String userPrompt) {
-        response.setCharacterEncoding( "UTF-8" );
-        return AiChatService.chat( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), sessionId, userPrompt ).map( s -> ServerSentEvent.builder( s ).build() );
-    }
 }
