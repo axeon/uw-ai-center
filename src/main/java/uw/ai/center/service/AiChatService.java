@@ -22,6 +22,7 @@ import uw.dao.TransactionException;
 import uw.httpclient.json.JsonInterfaceHelper;
 
 import java.util.Date;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor.CHAT_MEMORY_CONVERSATION_ID_KEY;
@@ -58,7 +59,9 @@ public class AiChatService {
         AiSessionMsg sessionMsg = initSessionMsg( sessionInfo.getId(), systemPrompt, userPrompt, toolInfo );
         // 设置请求开始时间
         sessionMsg.setResponseStartDate( new Date() );
-        ChatResponse chatResponse = chatClientWrapper.chatClient().prompt().user( userPrompt ).tools( new AiToolCallbackProvider() ).call().chatResponse();
+
+        ChatResponse chatResponse = chatClientWrapper.chatClient().prompt().user( userPrompt ).
+                tools( new AiToolCallbackProvider() ).toolContext( Map.of("saasId", saasId, "userId", userId, "userType", userType, "userInfo", userInfo) ).call().chatResponse();
         String responseData = chatResponse.getResult().getOutput().getText();
         Usage tokenUsage = chatResponse.getMetadata().getUsage();
         sessionMsg.setRequestTokens( tokenUsage.getPromptTokens() );

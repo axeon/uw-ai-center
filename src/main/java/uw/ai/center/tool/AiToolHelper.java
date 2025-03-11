@@ -2,14 +2,10 @@ package uw.ai.center.tool;
 
 import org.springframework.ai.model.function.FunctionCallback;
 import org.springframework.ai.tool.ToolCallback;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
-import org.springframework.util.LinkedMultiValueMap;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 import uw.ai.center.entity.AiToolInfo;
+import uw.ai.vo.AiToolExecuteParam;
 import uw.common.constant.StateCommon;
 import uw.common.dto.ResponseData;
 import uw.dao.DaoFactory;
@@ -40,15 +36,15 @@ public class AiToolHelper {
      *
      * @return
      */
-    public static FunctionCallback[] getToolCallbacks() {
-        FunctionCallback[] functionCallbacks = new FunctionCallback[0];
+    public static ToolCallback[] getToolCallbacks() {
+        ToolCallback[] toolCallbacks = new ToolCallback[0];
         try {
             DataList<AiToolInfo> dataList = dao.list( AiToolInfo.class, "select * from ai_tool_info where state=?", new Object[]{StateCommon.ENABLED.getValue()} );
-            functionCallbacks = dataList.results().stream().map( AiToolCallback::new ).toArray( ToolCallback[]::new );
+            toolCallbacks = dataList.results().stream().map( AiToolCallback::new ).toArray( ToolCallback[]::new );
         } catch (TransactionException e) {
             throw new RuntimeException( e );
         }
-        return functionCallbacks;
+        return toolCallbacks;
     }
 
     /**
@@ -59,21 +55,13 @@ public class AiToolHelper {
      * @return
      */
     public static ResponseData toolCallback(AiToolInfo aiToolInfo, String toolInput) {
-        // 创建表单数据
-        MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
-        formData.add( "toolClass", aiToolInfo.getToolClass() );
-        formData.add( "toolInput", toolInput );
-
-        // 设置请求头
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType( MediaType.APPLICATION_FORM_URLENCODED );
-
-        // 创建HttpEntity对象
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>( formData, headers );
-
-        String url = "http://" + aiToolInfo.getAppName() + "/rpc/ai/tool/run";
+        AiToolExecuteParam param = new AiToolExecuteParam();
+        param.setToolId( aiToolInfo.getId() );
+        param.setToolClass( aiToolInfo.getToolClass() );
+        param.setToolInput( toolInput );
+        String url = "http://" + aiToolInfo.getAppName() + "/rpc/ai/tool/execute";
         // 发送POST请求并获取响应
-        ResponseData responseData = tokenRestTemplate.postForObject( url, request, ResponseData.class );
+        ResponseData responseData = tokenRestTemplate.postForEntity( url, param, ResponseData.class ).getBody();
         return responseData;
     }
 }
