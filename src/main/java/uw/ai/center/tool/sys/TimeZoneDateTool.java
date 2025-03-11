@@ -1,15 +1,13 @@
 package uw.ai.center.tool.sys;
 
-import com.fasterxml.jackson.core.type.TypeReference;
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.stereotype.Component;
 import uw.ai.tool.AiTool;
 import uw.ai.tool.AiToolParam;
 import uw.common.dto.ResponseData;
-import uw.common.util.DateUtils;
 
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
-import java.util.Date;
 
 /**
  * 时区日期工具。
@@ -44,7 +42,7 @@ public class TimeZoneDateTool implements AiTool<TimeZoneDateTool.ToolParam, Resp
      */
     @Override
     public String toolVersion() {
-        return "0.0.1";
+        return "0.0.3";
     }
 
 
@@ -57,7 +55,7 @@ public class TimeZoneDateTool implements AiTool<TimeZoneDateTool.ToolParam, Resp
     @Override
     public ResponseData apply(TimeZoneDateTool.ToolParam toolParam) {
         ZoneId zoneId = ZoneId.of( toolParam.getTimeZone() );
-        ZonedDateTime zonedNow = ZonedDateTime.now( zoneId);
+        ZonedDateTime zonedNow = ZonedDateTime.now( zoneId );
         String data = zonedNow.toString() + "@" + toolParam.getTimeZone();
         return ResponseData.success( data );
     }
@@ -67,7 +65,8 @@ public class TimeZoneDateTool implements AiTool<TimeZoneDateTool.ToolParam, Resp
      */
     public static class ToolParam extends AiToolParam {
 
-        private String timeZone;
+        @Schema(description ="时区，默认为UTC", required = true)
+        private String timeZone = ZoneId.systemDefault().getId();
 
         public String getTimeZone() {
             return timeZone;
