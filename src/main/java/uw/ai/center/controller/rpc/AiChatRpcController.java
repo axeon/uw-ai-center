@@ -5,10 +5,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Flux;
 import uw.ai.center.constant.SessionType;
 import uw.ai.center.dto.AiSessionInfoQueryParam;
@@ -16,6 +14,7 @@ import uw.ai.center.dto.AiSessionMsgQueryParam;
 import uw.ai.center.entity.AiSessionInfo;
 import uw.ai.center.entity.AiSessionMsg;
 import uw.ai.center.service.AiChatService;
+import uw.ai.rpc.AiChatRpc;
 import uw.ai.vo.AiChatGenerateParam;
 import uw.ai.vo.AiChatMsgParam;
 import uw.ai.vo.AiChatSessionParam;
@@ -29,26 +28,26 @@ import uw.dao.DataList;
 @RequestMapping("/rpc/chat")
 @Primary
 @ResponseAdviceIgnore
-public class AiChatRpcController {
+public class AiChatRpcController implements AiChatRpc {
 
     /**
      * ChatClient 简单调用
      */
+    @Override
     @PostMapping("/generate")
     public ResponseData<String> generate(AiChatGenerateParam param) {
         return AiChatService.generate( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(),
-                param.getConfigId(), param.getUserPrompt(), param.getSystemPrompt(), param.getToolList() );
+                param.getConfigId(), param.getUserPrompt(), param.getSystemPrompt(), param.getToolList(), null );
     }
-
 
     /**
      * ChatClient 流式调用
      */
     @PostMapping(value = "/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    public Flux<ServerSentEvent<String>> chat(HttpServletResponse response, AiChatMsgParam param) {
+    public Flux<ServerSentEvent<String>> chat(HttpServletResponse response, AiChatMsgParam param, @RequestPart(required = false) MultipartFile file) {
         response.setCharacterEncoding( "UTF-8" );
         return AiChatService.chat( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(),
-                param.getSessionId(), param.getUserPrompt(), param.getUserPrompt(), param.getToolList() ).map( s -> ServerSentEvent.builder( s ).build() );
+                param.getSessionId(), param.getUserPrompt(), param.getUserPrompt(), param.getToolList(), file ).map( s -> ServerSentEvent.builder( s ).build() );
     }
 
     /**

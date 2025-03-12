@@ -5,8 +5,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.chat.prompt.PromptTemplate;
+import org.springframework.ai.document.Document;
+import org.springframework.ai.reader.tika.TikaDocumentReader;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Flux;
 import uw.ai.center.constant.SessionType;
 import uw.ai.center.dto.AiSessionInfoQueryParam;
@@ -24,6 +30,8 @@ import uw.dao.DataList;
 import uw.dao.TransactionException;
 import uw.httpclient.json.JsonInterfaceHelper;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +52,7 @@ public class AiChatService {
      * ChatClient 简单调用。
      */
     public static ResponseData<String> generate(long saasId, long userId, int userType, String userInfo, long configId, String userPrompt, String systemPrompt,
-                                                List<AiToolCallInfo> toolList) {
+                                                List<AiToolCallInfo> toolList, MultipartFile file) {
         // 获取ChatClient
         AiVendorHelper.ChatClientWrapper chatClientWrapper = AiVendorHelper.getChatClient( configId );
         if (chatClientWrapper == null) {
@@ -59,6 +67,15 @@ public class AiChatService {
                 return responseData.prototype();
             } else {
                 sessionInfo = responseData.getData();
+            }
+        }
+        // 构建文档信息
+        if (file != null) {
+            ResponseData<String> readFileContent = readFileContent( file );
+            if (readFileContent.isNotSuccess()) {
+                return readFileContent;
+            } else {
+                systemPrompt = buildSystemContextInfo( systemPrompt, readFileContent.getData() );
             }
         }
         // 初始化会话消息
@@ -129,7 +146,7 @@ public class AiChatService {
      * ChatClient 流式调用
      */
     public static Flux<String> chat(long saasId, long userId, int userType, String userInfo, long sessionId, String userPrompt, String systemPrompt,
-                                    List<AiToolCallInfo> toolList) {
+                                    List<AiToolCallInfo> toolList, MultipartFile file) {
         // 初始化会话信息
         AiSessionInfo sessionInfo;
         if (sessionId > 0) {
@@ -165,6 +182,15 @@ public class AiChatService {
         if (toolList != null && !toolList.isEmpty()) {
             chatClientRequestSpec.tools( AiToolHelper.getToolCallbacks( toolList ) );
             chatClientRequestSpec.toolContext( Map.of( "saasId", saasId, "userId", userId, "userType", userType, "userInfo", userInfo ) );
+        }
+        // 构建文档信息
+        if (file != null) {
+            ResponseData<String> readFileContent = readFileContent( file );
+            if (readFileContent.isNotSuccess()) {
+                return Flux.just(readFileContent.toString());
+            } else {
+                systemPrompt = buildSystemContextInfo( systemPrompt, readFileContent.getData() );
+            }
         }
         Flux<String> chatResponse =
                 chatClientRequestSpec.advisors( spec -> spec.param( CHAT_MEMORY_CONVERSATION_ID_KEY,
@@ -294,4 +320,51 @@ public class AiChatService {
         }
     }
 
+    /**
+     * 读取文件内容。
+     *
+     * @param file
+     * @return
+     */
+    public static ResponseData<String> readFileContent(MultipartFile file) {
+        if (file == null) {
+            return ResponseData.errorMsg( "文件为空!" );
+        }
+        try (InputStream inputStream = file.getInputStream()) {
+            TikaDocumentReader reader = new TikaDocumentReader( new InputStreamResource( inputStream ) );
+            List<Document> documents = reader.get(); // 假设返回List<Document>
+            if (!documents.isEmpty()) {
+                StringBuilder content = new StringBuilder( 8192 );
+                for (Document document : documents) {
+                    content.append( document.getText() ).append( "\n" );
+                }
+                return ResponseData.success( content.toString() );
+            } else {
+                return ResponseData.warnMsg( "文件内容为空，无法提取文本!" );
+            }
+        } catch (IOException e) {
+            logger.error( "处理文件时发生错误!{}", e.getMessage(), e );
+            return ResponseData.errorMsg( "处理文件时发生错误!" + e.getMessage() );
+        }
+    }
+
+    /**
+     * 使用系统上下文信息。
+     *
+     * @param contextInfo
+     */
+    public static String buildSystemContextInfo(String systemPrompt, String contextInfo) {
+        Message message = new PromptTemplate( """
+                已下内容是额外的知识，在你回答问题时可以参考下面的内容
+                ---------------------
+                {context}
+                ---------------------
+                """ )
+                .createMessage( Map.of( "context", contextInfo ) );
+        if (StringUtils.isNotBlank( systemPrompt )) {
+            return systemPrompt + "\n" + message.getText();
+        } else {
+            return message.getText();
+        }
+    }
 }
