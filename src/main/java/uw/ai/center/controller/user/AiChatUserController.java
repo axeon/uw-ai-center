@@ -1,4 +1,4 @@
-package uw.ai.center.controller.rpc;
+package uw.ai.center.controller.user;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -22,16 +22,16 @@ import uw.ai.vo.AiChatSessionParam;
 import uw.auth.service.AuthServiceHelper;
 import uw.auth.service.annotation.MscPermDeclare;
 import uw.auth.service.annotation.ResponseAdviceIgnore;
-import uw.auth.service.constant.UserType;
+import uw.auth.service.constant.ActionLog;
+import uw.auth.service.constant.AuthType;
 import uw.common.dto.ResponseData;
 import uw.dao.DataList;
 
 @RestController
-@Tag(name = "ChatRPC接口")
-@RequestMapping("/rpc/chat")
-@Primary
+@Tag(name = "ChatUser接口")
+@RequestMapping("/user/chat")
 @ResponseAdviceIgnore
-public class AiChatRpcController implements AiChatRpc {
+public class AiChatUserController implements AiChatRpc {
 
     /**
      * ChatClient 简单调用
@@ -39,7 +39,7 @@ public class AiChatRpcController implements AiChatRpc {
     @Override
     @PostMapping("/generate")
     @Operation(summary = "生成数据", description = "生成数据")
-    @MscPermDeclare(user = UserType.RPC)
+    @MscPermDeclare(auth = AuthType.NONE, log = ActionLog.BASE)
     public ResponseData<String> generate(AiChatGenerateParam param) {
         return AiChatService.generate( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(),
                 param.getConfigId(), param.getUserPrompt(), param.getSystemPrompt(), param.getToolList(), null );
@@ -50,7 +50,7 @@ public class AiChatRpcController implements AiChatRpc {
      */
     @PostMapping(value = "/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     @Operation(summary = "聊天", description = "聊天")
-    @MscPermDeclare(user = UserType.RPC)
+    @MscPermDeclare(auth = AuthType.NONE, log = ActionLog.BASE)
     public Flux<ServerSentEvent<String>> chat(HttpServletResponse response, AiChatMsgParam param, @RequestPart(required = false) MultipartFile file) {
         response.setCharacterEncoding( "UTF-8" );
         return AiChatService.chat( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(),
@@ -64,7 +64,7 @@ public class AiChatRpcController implements AiChatRpc {
      */
     @PostMapping(value = "/initSession")
     @Operation(summary = "初始化会话", description = "初始化会话")
-    @MscPermDeclare(user = UserType.RPC)
+    @MscPermDeclare(auth = AuthType.NONE, log = ActionLog.BASE)
     public ResponseData<AiSessionInfo> initSession(AiChatSessionParam param) {
         return AiChatService.initSession( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(),
                 param.getConfigId(), SessionType.CHAT.getValue(), param.getUserPrompt(), 0, param.getSystemPrompt(), param.getToolList() );
@@ -78,7 +78,7 @@ public class AiChatRpcController implements AiChatRpc {
      */
     @GetMapping("/listSessionInfo")
     @Operation(summary = "列出会话信息", description = "列出会话信息")
-    @MscPermDeclare(user = UserType.RPC)
+    @MscPermDeclare(auth = AuthType.NONE, log = ActionLog.BASE)
     public ResponseData<DataList<AiSessionInfo>> listSessionInfo(AiSessionInfoQueryParam queryParam) {
         return AiChatService.listSessionInfo( queryParam );
     }
@@ -91,7 +91,7 @@ public class AiChatRpcController implements AiChatRpc {
      */
     @GetMapping("/listSessionMsg")
     @Operation(summary = "列出会话消息", description = "列出会话消息")
-    @MscPermDeclare(user = UserType.RPC)
+    @MscPermDeclare(auth = AuthType.NONE, log = ActionLog.BASE)
     public ResponseData<DataList<AiSessionMsg>> listSessionMsg(AiSessionMsgQueryParam queryParam) {
         return AiChatService.listSessionMsg( queryParam );
     }

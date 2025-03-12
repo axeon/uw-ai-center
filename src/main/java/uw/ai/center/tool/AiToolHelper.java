@@ -68,7 +68,7 @@ public class AiToolHelper {
         try {
             Map<String, AiToolInfo> map = FusionCache.get( TOOL_CACHE_NAME, TOOL_CACHE_NAME );
             if (map != null) {
-                toolCallbacks = map.values().stream().map( x->new AiToolCallback( x , false ) ).toArray( ToolCallback[]::new );
+                toolCallbacks = map.values().stream().map( x -> new AiToolCallback( x, false ) ).toArray( ToolCallback[]::new );
             }
         } catch (Exception e) {
             logger.error( "获取ToolCallback失败！{}", e.getMessage(), e );
@@ -85,11 +85,11 @@ public class AiToolHelper {
         ToolCallback[] toolCallbacks = new ToolCallback[0];
         try {
             Map<String, AiToolInfo> map = FusionCache.get( TOOL_CACHE_NAME, TOOL_CACHE_NAME );
-            List<ToolCallback> list = new ArrayList<ToolCallback>(aiToolCallInfoList.size());
+            List<ToolCallback> list = new ArrayList<ToolCallback>( aiToolCallInfoList.size() );
             for (AiToolCallInfo aiToolCallInfo : aiToolCallInfoList) {
                 AiToolInfo aiToolInfo = map.get( aiToolCallInfo.getToolCode() );
                 if (aiToolInfo != null) {
-                    list.add( new AiToolCallback( aiToolInfo , aiToolCallInfo.isReturnDirect()) );
+                    list.add( new AiToolCallback( aiToolInfo, aiToolCallInfo.isReturnDirect() ) );
                 }
             }
             return list.toArray( toolCallbacks );
@@ -116,5 +116,14 @@ public class AiToolHelper {
         // 发送POST请求并获取响应
         ResponseData responseData = tokenRestTemplate.postForEntity( url, param, ResponseData.class ).getBody();
         return responseData;
+    }
+
+    /**
+     * 刷新工具缓存。
+     *
+     * @return
+     */
+    public static boolean invalidateToolCache() {
+        return FusionCache.invalidate( TOOL_CACHE_NAME, TOOL_CACHE_NAME );
     }
 }

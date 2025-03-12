@@ -1,5 +1,6 @@
 package uw.ai.center.controller.rpc;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -7,9 +8,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Primary;
 import org.springframework.web.bind.annotation.*;
 import uw.ai.center.entity.AiToolInfo;
+import uw.ai.center.tool.AiToolHelper;
 import uw.ai.rpc.AiToolRpc;
 import uw.ai.vo.AiToolMeta;
+import uw.auth.service.annotation.MscPermDeclare;
 import uw.auth.service.annotation.ResponseAdviceIgnore;
+import uw.auth.service.constant.UserType;
 import uw.common.constant.StateCommon;
 import uw.common.dto.ResponseData;
 import uw.dao.DaoFactory;
@@ -36,6 +40,8 @@ public class AiToolRpcController implements AiToolRpc {
 
     @Override
     @GetMapping("/listToolMeta")
+    @Operation(summary = "列出tool列表", description = "列出tool列表")
+    @MscPermDeclare(user = UserType.RPC)
     public ResponseData<List<AiToolMeta>> listToolMeta(@RequestParam String appName)  {
         try {
             List<AiToolInfo> dataList = null;
@@ -60,6 +66,7 @@ public class AiToolRpcController implements AiToolRpc {
      */
     @Override
     @PostMapping(value = "/updateToolMeta")
+    @MscPermDeclare(user = UserType.RPC)
     public ResponseData updateToolMeta(@RequestBody AiToolMeta aiToolMeta) {
         if (aiToolMeta == null) {
             return ResponseData.warnMsg( "参数错误！" );
@@ -96,6 +103,7 @@ public class AiToolRpcController implements AiToolRpc {
                 aiToolConfig.setModifyDate( new java.util.Date() );
                 dao.update( aiToolConfig );
             }
+            AiToolHelper.invalidateToolCache();
             return ResponseData.success();
         } catch (Throwable e) {
             logger.error( "更新tool配置信息失败！", e );

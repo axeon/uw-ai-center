@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 import uw.ai.center.dto.AiToolInfoQueryParam;
 import uw.ai.center.entity.AiToolInfo;
+import uw.ai.center.tool.AiToolHelper;
 import uw.app.common.dto.SysCritLogQueryParam;
 import uw.app.common.dto.SysDataHistoryQueryParam;
 import uw.app.common.entity.SysCritLog;
@@ -109,29 +110,6 @@ public class AiToolInfoController {
     }
 
     /**
-     * 新增AI工具信息。
-     *
-     * @param aiToolConfig
-     * @return
-     * @throws TransactionException
-     */
-    @PostMapping("/save")
-    @Operation(summary = "新增AI工具信息", description = "新增AI工具信息")
-    @MscPermDeclare(user = UserType.OPS, auth = AuthType.PERM, log = ActionLog.CRIT)
-    public ResponseData<AiToolInfo> save(@RequestBody AiToolInfo aiToolConfig) throws TransactionException {
-        long id = dao.getSequenceId( AiToolInfo.class);
-        AuthServiceHelper.logRef( AiToolInfo.class,id);
-        aiToolConfig.setId(id);
-        aiToolConfig.setCreateDate(new Date());
-        aiToolConfig.setModifyDate(null);
-        aiToolConfig.setState(1);
-        dao.save(aiToolConfig);
-        //保存历史记录
-        SysDataHistoryHelper.saveHistory(aiToolConfig.getId(),aiToolConfig,"AI工具信息","新增AI工具信息");
-        return ResponseData.success(aiToolConfig);
-    }
-
-    /**
      * 修改AI工具信息。
      *
      * @param aiToolConfig
@@ -156,6 +134,7 @@ public class AiToolInfoController {
         aiToolConfigDb.setToolOutput(aiToolConfig.getToolOutput());
         aiToolConfigDb.setModifyDate(new Date());
         dao.update(aiToolConfigDb);
+        AiToolHelper.invalidateToolCache();
         SysDataHistoryHelper.saveHistory(aiToolConfigDb.getId(),aiToolConfigDb,"AI工具信息","修改AI工具信息！操作备注："+remark);
         return ResponseData.success(aiToolConfigDb);
     }
@@ -181,6 +160,7 @@ public class AiToolInfoController {
         aiToolConfig.setModifyDate(new Date());
         aiToolConfig.setState(StateCommon.ENABLED.getValue());
         dao.update(aiToolConfig);
+        AiToolHelper.invalidateToolCache();
         return ResponseData.success();
     }
 
@@ -205,6 +185,7 @@ public class AiToolInfoController {
         aiToolConfig.setModifyDate(new Date());
         aiToolConfig.setState(StateCommon.DISABLED.getValue());
         dao.update(aiToolConfig);
+        AiToolHelper.invalidateToolCache();
         return ResponseData.success();
     }
 
