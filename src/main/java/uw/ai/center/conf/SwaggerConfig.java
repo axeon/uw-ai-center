@@ -41,20 +41,6 @@ public class SwaggerConfig {
     }
 
     /**
-     * rootAPI接口。
-     *
-     * @return
-     */
-    @Bean
-    public GroupedOpenApi rootApi() {
-        return GroupedOpenApi.builder()
-                .group("rootApi")
-                .packagesToScan("uw.ai.center.controller.root")
-                .addOpenApiCustomizer(customOpenAPI())
-                .build();
-    }
-
-    /**
      * ops API接口。
      *
      * @return
@@ -92,34 +78,6 @@ public class SwaggerConfig {
         return GroupedOpenApi.builder()
                 .group("saasApi")
                 .packagesToScan("uw.ai.center.controller.saas")
-                .addOpenApiCustomizer(customOpenAPI())
-                .build();
-    }
-
-    /**
-     * mchAPI接口。
-     *
-     * @return
-     */
-    @Bean
-    public GroupedOpenApi mchApi() {
-        return GroupedOpenApi.builder()
-                .group("mchApi")
-                .packagesToScan("uw.ai.center.controller.mch")
-                .addOpenApiCustomizer(customOpenAPI())
-                .build();
-    }
-
-    /**
-     * auth API接口。
-     *
-     * @return
-     */
-    @Bean
-    public GroupedOpenApi authApi() {
-        return GroupedOpenApi.builder()
-                .group("authApi")
-                .packagesToScan("uw.ai.center.controller.auth")
                 .addOpenApiCustomizer(customOpenAPI())
                 .build();
     }
