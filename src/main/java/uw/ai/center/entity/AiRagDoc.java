@@ -26,70 +26,70 @@ public class AiRagDoc implements DataEntity,Serializable{
      * ID
      */
     @ColumnMeta(columnName="id", dataType="long", dataSize=19, nullable=false, primaryKey=true)
-    @Schema(title = "ID", description = "ID")
+    @Schema(title = "ID", description = "ID", maxLength=19, nullable=false )
     private long id;
 
     /**
      * saasId
      */
     @ColumnMeta(columnName="saas_id", dataType="long", dataSize=19, nullable=false, primaryKey=true)
-    @Schema(title = "saasId", description = "saasId")
+    @Schema(title = "saasId", description = "saasId", maxLength=19, nullable=false )
     private long saasId;
 
     /**
      * libId
      */
     @ColumnMeta(columnName="lib_id", dataType="long", dataSize=19, nullable=false)
-    @Schema(title = "libId", description = "libId")
+    @Schema(title = "libId", description = "libId", maxLength=19, nullable=false )
     private long libId;
 
     /**
      * 文档类型
      */
     @ColumnMeta(columnName="doc_type", dataType="int", dataSize=10, nullable=true)
-    @Schema(title = "文档类型", description = "文档类型")
+    @Schema(title = "文档类型", description = "文档类型", maxLength=10, nullable=true )
     private int docType;
 
     /**
      * 文档名称
      */
     @ColumnMeta(columnName="doc_name", dataType="String", dataSize=200, nullable=true)
-    @Schema(title = "文档名称", description = "文档名称")
+    @Schema(title = "文档名称", description = "文档名称", maxLength=200, nullable=true )
     private String docName;
 
     /**
      * 文档描述
      */
     @ColumnMeta(columnName="doc_desc", dataType="String", dataSize=65535, nullable=true)
-    @Schema(title = "文档描述", description = "文档描述")
+    @Schema(title = "文档描述", description = "文档描述", maxLength=65535, nullable=true )
     private String docDesc;
 
     /**
      * 文档大小
      */
     @ColumnMeta(columnName="doc_size", dataType="long", dataSize=19, nullable=false)
-    @Schema(title = "文档大小", description = "文档大小")
+    @Schema(title = "文档大小", description = "文档大小", maxLength=19, nullable=false )
     private long docSize;
 
     /**
      * 创建时间
      */
     @ColumnMeta(columnName="create_date", dataType="java.util.Date", dataSize=23, nullable=true)
-    @Schema(title = "创建时间", description = "创建时间")
+    @Schema(title = "创建时间", description = "创建时间", maxLength=23, nullable=true )
     private java.util.Date createDate;
 
     /**
      * 修改时间
      */
     @ColumnMeta(columnName="modify_date", dataType="java.util.Date", dataSize=23, nullable=true)
-    @Schema(title = "修改时间", description = "修改时间")
+    @Schema(title = "修改时间", description = "修改时间", maxLength=23, nullable=true )
     private java.util.Date modifyDate;
 
     /**
      * 状态
      */
     @ColumnMeta(columnName="state", dataType="int", dataSize=10, nullable=true)
-    @Schema(title = "状态", description = "状态")
+    @Schema(title = "状态", description = "状态", maxLength=10, nullable=true )
     private int state;
 
     /**

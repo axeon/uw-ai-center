@@ -26,63 +26,63 @@ public class AiRagLib implements DataEntity,Serializable{
      * ID
      */
     @ColumnMeta(columnName="id", dataType="long", dataSize=19, nullable=false, primaryKey=true)
-    @Schema(title = "ID", description = "ID")
+    @Schema(title = "ID", description = "ID", maxLength=19, nullable=false )
     private long id;
 
     /**
      * saasId
      */
     @ColumnMeta(columnName="saas_id", dataType="long", dataSize=19, nullable=false, primaryKey=true)
-    @Schema(title = "saasId", description = "saasId")
+    @Schema(title = "saasId", description = "saasId", maxLength=19, nullable=false )
     private long saasId;
 
     /**
      * 用户id
      */
     @ColumnMeta(columnName="user_id", dataType="long", dataSize=19, nullable=false)
-    @Schema(title = "用户id", description = "用户id")
+    @Schema(title = "用户id", description = "用户id", maxLength=19, nullable=false )
     private long userId;
 
     /**
      * 用户类型
      */
     @ColumnMeta(columnName="user_type", dataType="int", dataSize=10, nullable=true)
-    @Schema(title = "用户类型", description = "用户类型")
+    @Schema(title = "用户类型", description = "用户类型", maxLength=10, nullable=true )
     private int userType;
 
     /**
      * 用户名
      */
     @ColumnMeta(columnName="user_info", dataType="String", dataSize=200, nullable=true)
-    @Schema(title = "用户名", description = "用户名")
+    @Schema(title = "用户名", description = "用户名", maxLength=200, nullable=true )
     private String userInfo;
 
     /**
      * 文档库类型
      */
     @ColumnMeta(columnName="lib_type", dataType="int", dataSize=10, nullable=true)
-    @Schema(title = "文档库类型", description = "文档库类型")
+    @Schema(title = "文档库类型", description = "文档库类型", maxLength=10, nullable=true )
     private int libType;
 
     /**
      * 文档库名称
      */
     @ColumnMeta(columnName="lib_name", dataType="String", dataSize=200, nullable=true)
-    @Schema(title = "文档库名称", description = "文档库名称")
+    @Schema(title = "文档库名称", description = "文档库名称", maxLength=200, nullable=true )
     private String libName;
 
     /**
      * 文档库描述
      */
     @ColumnMeta(columnName="lib_desc", dataType="String", dataSize=65535, nullable=true)
-    @Schema(title = "文档库描述", description = "文档库描述")
+    @Schema(title = "文档库描述", description = "文档库描述", maxLength=65535, nullable=true )
     private String libDesc;
 
     /**
      * 服务商配置
      */
     @ColumnMeta(columnName="lib_config", dataType="String", dataSize=1073741824, nullable=true)
-    @Schema(title = "服务商配置", description = "服务商配置")
+    @Schema(title = "服务商配置", description = "服务商配置", maxLength=1073741824, nullable=true )
     @JsonRawValue(value = false)
     private String libConfig;
 
@@ -90,21 +90,21 @@ public class AiRagLib implements DataEntity,Serializable{
      * 创建时间
      */
     @ColumnMeta(columnName="create_date", dataType="java.util.Date", dataSize=23, nullable=true)
-    @Schema(title = "创建时间", description = "创建时间")
+    @Schema(title = "创建时间", description = "创建时间", maxLength=23, nullable=true )
     private java.util.Date createDate;
 
     /**
      * 修改时间
      */
     @ColumnMeta(columnName="modify_date", dataType="java.util.Date", dataSize=23, nullable=true)
-    @Schema(title = "修改时间", description = "修改时间")
+    @Schema(title = "修改时间", description = "修改时间", maxLength=23, nullable=true )
     private java.util.Date modifyDate;
 
     /**
      * 状态
      */
     @ColumnMeta(columnName="state", dataType="int", dataSize=10, nullable=true)
-    @Schema(title = "状态", description = "状态")
+    @Schema(title = "状态", description = "状态", maxLength=10, nullable=true )
     private int state;
 
     /**

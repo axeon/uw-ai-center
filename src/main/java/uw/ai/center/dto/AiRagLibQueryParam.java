@@ -50,7 +50,14 @@ public class AiRagLibQueryParam extends AuthPageQueryParam{
     @QueryMeta(expr = "id=?")
     @Schema(title="ID", description = "ID")
     private Long id;
-	
+
+    /**
+    * 数组ID。
+    */
+    @QueryMeta(expr = "id in (?)")
+    @Schema(title="数组ID", description = "ID数组，可同时匹配多个。")
+    private Long[] ids;
+
     /**
     * 用户id。
     */
@@ -132,25 +139,47 @@ public class AiRagLibQueryParam extends AuthPageQueryParam{
     /**
     * 获取ID。
     */
-    public Long getId(){
+    public Long getId() {
         return this.id;
     }
 
     /**
     * 设置ID。
     */
-    public void setId(Long id){
+    public void setId(Long id) {
         this.id = id;
     }
-	
+
     /**
     * 设置ID链式调用。
     */
-	public AiRagLibQueryParam id(Long id){
+    public AiRagLibQueryParam id(Long id) {
         setId(id);
         return this;
     }
-	
+
+    /**
+    * 获取数组ID。
+    */
+    public Long[] getIds() {
+        return this.ids;
+    }
+
+    /**
+    * 设置数组ID。
+    */
+    public void setIds(Long[] ids) {
+        this.ids = ids;
+    }
+
+    /**
+    * 设置数组ID链式调用。
+    */
+    public AiRagLibQueryParam ids(Long[] ids) {
+        setIds(ids);
+        return this;
+    }
+
     /**
     * 获取用户id。
     */

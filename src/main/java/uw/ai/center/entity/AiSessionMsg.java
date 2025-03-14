@@ -26,91 +26,91 @@ public class AiSessionMsg implements DataEntity,Serializable{
      * ID
      */
     @ColumnMeta(columnName="id", dataType="long", dataSize=19, nullable=false, primaryKey=true)
-    @Schema(title = "ID", description = "ID")
+    @Schema(title = "ID", description = "ID", maxLength=19, nullable=false )
     private long id;
 
     /**
      * saasId
      */
     @ColumnMeta(columnName="saas_id", dataType="long", dataSize=19, nullable=false, primaryKey=true)
-    @Schema(title = "saasId", description = "saasId")
+    @Schema(title = "saasId", description = "saasId", maxLength=19, nullable=false )
     private long saasId;
 
     /**
      * sessionId
      */
     @ColumnMeta(columnName="session_id", dataType="long", dataSize=19, nullable=false)
-    @Schema(title = "sessionId", description = "sessionId")
+    @Schema(title = "sessionId", description = "sessionId", maxLength=19, nullable=false )
     private long sessionId;
 
     /**
      * 系统提问
      */
     @ColumnMeta(columnName="system_prompt", dataType="String", dataSize=2147483647, nullable=true)
-    @Schema(title = "系统提问", description = "系统提问")
+    @Schema(title = "系统提问", description = "系统提问", maxLength=2147483647, nullable=true )
     private String systemPrompt;
 
     /**
      * 用户提问
      */
     @ColumnMeta(columnName="user_prompt", dataType="String", dataSize=2147483647, nullable=true)
-    @Schema(title = "用户提问", description = "用户提问")
+    @Schema(title = "用户提问", description = "用户提问", maxLength=2147483647, nullable=true )
     private String userPrompt;
 
     /**
      * 工具信息
      */
     @ColumnMeta(columnName="tool_info", dataType="String", dataSize=2147483647, nullable=true)
-    @Schema(title = "工具信息", description = "工具信息")
+    @Schema(title = "工具信息", description = "工具信息", maxLength=2147483647, nullable=true )
     private String toolInfo;
 
     /**
      * 返回信息
      */
     @ColumnMeta(columnName="response_info", dataType="String", dataSize=2147483647, nullable=true)
-    @Schema(title = "返回信息", description = "返回信息")
+    @Schema(title = "返回信息", description = "返回信息", maxLength=2147483647, nullable=true )
     private String responseInfo;
 
     /**
      * 请求token数
      */
     @ColumnMeta(columnName="request_tokens", dataType="long", dataSize=19, nullable=true)
-    @Schema(title = "请求token数", description = "请求token数")
+    @Schema(title = "请求token数", description = "请求token数", maxLength=19, nullable=true )
     private long requestTokens;
 
     /**
      * 响应token数
      */
     @ColumnMeta(columnName="response_tokens", dataType="long", dataSize=19, nullable=true)
-    @Schema(title = "响应token数", description = "响应token数")
+    @Schema(title = "响应token数", description = "响应token数", maxLength=19, nullable=true )
     private long responseTokens;
 
     /**
      * 创建时间
      */
     @ColumnMeta(columnName="request_date", dataType="java.util.Date", dataSize=23, nullable=true)
-    @Schema(title = "创建时间", description = "创建时间")
+    @Schema(title = "创建时间", description = "创建时间", maxLength=23, nullable=true )
     private java.util.Date requestDate;
 
     /**
      * 回应开始时间
      */
     @ColumnMeta(columnName="response_start_date", dataType="java.util.Date", dataSize=23, nullable=true)
-    @Schema(title = "回应开始时间", description = "回应开始时间")
+    @Schema(title = "回应开始时间", description = "回应开始时间", maxLength=23, nullable=true )
     private java.util.Date responseStartDate;
 
     /**
      * 回应结束时间
      */
     @ColumnMeta(columnName="response_end_date", dataType="java.util.Date", dataSize=23, nullable=true)
-    @Schema(title = "回应结束时间", description = "回应结束时间")
+    @Schema(title = "回应结束时间", description = "回应结束时间", maxLength=23, nullable=true )
     private java.util.Date responseEndDate;
 
     /**
      * 状态
      */
     @ColumnMeta(columnName="state", dataType="int", dataSize=10, nullable=true)
-    @Schema(title = "状态", description = "状态")
+    @Schema(title = "状态", description = "状态", maxLength=10, nullable=true )
     private int state;
 
     /**

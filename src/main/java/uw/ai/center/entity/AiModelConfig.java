@@ -26,84 +26,84 @@ public class AiModelConfig implements DataEntity,Serializable{
      * ID
      */
     @ColumnMeta(columnName="id", dataType="long", dataSize=19, nullable=false, primaryKey=true)
-    @Schema(title = "ID", description = "ID")
+    @Schema(title = "ID", description = "ID", maxLength=19, nullable=false )
     private long id;
 
     /**
      * SAAS ID
      */
     @ColumnMeta(columnName="saas_id", dataType="long", dataSize=19, nullable=false, primaryKey=true)
-    @Schema(title = "SAAS ID", description = "SAAS ID")
+    @Schema(title = "SAAS ID", description = "SAAS ID", maxLength=19, nullable=false )
     private long saasId;
 
     /**
      * 商户ID
      */
     @ColumnMeta(columnName="mch_id", dataType="long", dataSize=19, nullable=false)
-    @Schema(title = "商户ID", description = "商户ID")
+    @Schema(title = "商户ID", description = "商户ID", maxLength=19, nullable=false )
     private long mchId;
 
     /**
      * 服务商类
      */
     @ColumnMeta(columnName="vendor_class", dataType="String", dataSize=200, nullable=false)
-    @Schema(title = "服务商类", description = "服务商类")
+    @Schema(title = "服务商类", description = "服务商类", maxLength=200, nullable=false )
     private String vendorClass;
 
     /**
      * 服务商代码
      */
     @ColumnMeta(columnName="config_code", dataType="String", dataSize=100, nullable=true)
-    @Schema(title = "服务商代码", description = "服务商代码")
+    @Schema(title = "服务商代码", description = "服务商代码", maxLength=100, nullable=true )
     private String configCode;
 
     /**
      * 服务商名称
      */
     @ColumnMeta(columnName="config_name", dataType="String", dataSize=200, nullable=true)
-    @Schema(title = "服务商名称", description = "服务商名称")
+    @Schema(title = "服务商名称", description = "服务商名称", maxLength=200, nullable=true )
     private String configName;
 
     /**
      * 服务商描述
      */
     @ColumnMeta(columnName="config_desc", dataType="String", dataSize=65535, nullable=true)
-    @Schema(title = "服务商描述", description = "服务商描述")
+    @Schema(title = "服务商描述", description = "服务商描述", maxLength=65535, nullable=true )
     private String configDesc;
 
     /**
      * api地址
      */
     @ColumnMeta(columnName="api_url", dataType="String", dataSize=100, nullable=true)
-    @Schema(title = "api地址", description = "api地址")
+    @Schema(title = "api地址", description = "api地址", maxLength=100, nullable=true )
     private String apiUrl;
 
     /**
      * api key
      */
     @ColumnMeta(columnName="api_key", dataType="String", dataSize=100, nullable=true)
-    @Schema(title = "api key", description = "api key")
+    @Schema(title = "api key", description = "api key", maxLength=100, nullable=true )
     private String apiKey;
 
     /**
      * 主模型
      */
     @ColumnMeta(columnName="model_main", dataType="String", dataSize=100, nullable=true)
-    @Schema(title = "主模型", description = "主模型")
+    @Schema(title = "主模型", description = "主模型", maxLength=100, nullable=true )
     private String modelMain;
 
     /**
      * 嵌入模型
      */
     @ColumnMeta(columnName="model_embed", dataType="String", dataSize=100, nullable=true)
-    @Schema(title = "嵌入模型", description = "嵌入模型")
+    @Schema(title = "嵌入模型", description = "嵌入模型", maxLength=100, nullable=true )
     private String modelEmbed;
 
     /**
      * 服务商配置
      */
     @ColumnMeta(columnName="vendor_data", dataType="String", dataSize=1073741824, nullable=true)
-    @Schema(title = "服务商配置", description = "服务商配置")
+    @Schema(title = "服务商配置", description = "服务商配置", maxLength=1073741824, nullable=true )
     @JsonRawValue(value = false)
     private String vendorData;
 
@@ -111,7 +111,7 @@ public class AiModelConfig implements DataEntity,Serializable{
      * 模型配置
      */
     @ColumnMeta(columnName="model_data", dataType="String", dataSize=1073741824, nullable=true)
-    @Schema(title = "模型配置", description = "模型配置")
+    @Schema(title = "模型配置", description = "模型配置", maxLength=1073741824, nullable=true )
     @JsonRawValue(value = false)
     private String modelData;
 
@@ -119,7 +119,7 @@ public class AiModelConfig implements DataEntity,Serializable{
      * 嵌入配置
      */
     @ColumnMeta(columnName="embed_data", dataType="String", dataSize=1073741824, nullable=true)
-    @Schema(title = "嵌入配置", description = "嵌入配置")
+    @Schema(title = "嵌入配置", description = "嵌入配置", maxLength=1073741824, nullable=true )
     @JsonRawValue(value = false)
     private String embedData;
 
@@ -127,21 +127,21 @@ public class AiModelConfig implements DataEntity,Serializable{
      * 创建时间
      */
     @ColumnMeta(columnName="create_date", dataType="java.util.Date", dataSize=23, nullable=true)
-    @Schema(title = "创建时间", description = "创建时间")
+    @Schema(title = "创建时间", description = "创建时间", maxLength=23, nullable=true )
     private java.util.Date createDate;
 
     /**
      * 修改时间
      */
     @ColumnMeta(columnName="modify_date", dataType="java.util.Date", dataSize=23, nullable=true)
-    @Schema(title = "修改时间", description = "修改时间")
+    @Schema(title = "修改时间", description = "修改时间", maxLength=23, nullable=true )
     private java.util.Date modifyDate;
 
     /**
      * 状态
      */
     @ColumnMeta(columnName="state", dataType="int", dataSize=10, nullable=true)
-    @Schema(title = "状态", description = "状态")
+    @Schema(title = "状态", description = "状态", maxLength=10, nullable=true )
     private int state;
 
     /**

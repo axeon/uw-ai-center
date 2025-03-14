@@ -26,126 +26,126 @@ public class AiSessionInfo implements DataEntity,Serializable{
      * ID
      */
     @ColumnMeta(columnName="id", dataType="long", dataSize=19, nullable=false, primaryKey=true)
-    @Schema(title = "ID", description = "ID")
+    @Schema(title = "ID", description = "ID", maxLength=19, nullable=false )
     private long id;
 
     /**
      * saasId
      */
     @ColumnMeta(columnName="saas_id", dataType="long", dataSize=19, nullable=false, primaryKey=true)
-    @Schema(title = "saasId", description = "saasId")
+    @Schema(title = "saasId", description = "saasId", maxLength=19, nullable=false )
     private long saasId;
 
     /**
      * 用户id
      */
     @ColumnMeta(columnName="user_id", dataType="long", dataSize=19, nullable=false)
-    @Schema(title = "用户id", description = "用户id")
+    @Schema(title = "用户id", description = "用户id", maxLength=19, nullable=false )
     private long userId;
 
     /**
      * 用户类型
      */
     @ColumnMeta(columnName="user_type", dataType="int", dataSize=10, nullable=true)
-    @Schema(title = "用户类型", description = "用户类型")
+    @Schema(title = "用户类型", description = "用户类型", maxLength=10, nullable=true )
     private int userType;
 
     /**
      * 用户名
      */
     @ColumnMeta(columnName="user_info", dataType="String", dataSize=200, nullable=true)
-    @Schema(title = "用户名", description = "用户名")
+    @Schema(title = "用户名", description = "用户名", maxLength=200, nullable=true )
     private String userInfo;
 
     /**
      * 配置ID
      */
     @ColumnMeta(columnName="config_id", dataType="long", dataSize=19, nullable=true)
-    @Schema(title = "配置ID", description = "配置ID")
+    @Schema(title = "配置ID", description = "配置ID", maxLength=19, nullable=true )
     private long configId;
 
     /**
      * session类型
      */
     @ColumnMeta(columnName="session_type", dataType="int", dataSize=10, nullable=true)
-    @Schema(title = "session类型", description = "session类型")
+    @Schema(title = "session类型", description = "session类型", maxLength=10, nullable=true )
     private int sessionType;
 
     /**
      * session名称
      */
     @ColumnMeta(columnName="session_name", dataType="String", dataSize=200, nullable=true)
-    @Schema(title = "session名称", description = "session名称")
+    @Schema(title = "session名称", description = "session名称", maxLength=200, nullable=true )
     private String sessionName;
 
     /**
      * session大小
      */
     @ColumnMeta(columnName="msg_num", dataType="int", dataSize=10, nullable=true)
-    @Schema(title = "session大小", description = "session大小")
+    @Schema(title = "session大小", description = "session大小", maxLength=10, nullable=true )
     private int msgNum;
 
     /**
      * 历史长度
      */
     @ColumnMeta(columnName="window_size", dataType="int", dataSize=10, nullable=true)
-    @Schema(title = "历史长度", description = "历史长度")
+    @Schema(title = "历史长度", description = "历史长度", maxLength=10, nullable=true )
     private int windowSize;
 
     /**
      * 请求token数
      */
     @ColumnMeta(columnName="request_tokens", dataType="long", dataSize=19, nullable=true)
-    @Schema(title = "请求token数", description = "请求token数")
+    @Schema(title = "请求token数", description = "请求token数", maxLength=19, nullable=true )
     private long requestTokens;
 
     /**
      * 响应token数
      */
     @ColumnMeta(columnName="response_tokens", dataType="long", dataSize=19, nullable=true)
-    @Schema(title = "响应token数", description = "响应token数")
+    @Schema(title = "响应token数", description = "响应token数", maxLength=19, nullable=true )
     private long responseTokens;
 
     /**
      * 系统信息
      */
     @ColumnMeta(columnName="system_prompt", dataType="String", dataSize=2147483647, nullable=true)
-    @Schema(title = "系统信息", description = "系统信息")
+    @Schema(title = "系统信息", description = "系统信息", maxLength=2147483647, nullable=true )
     private String systemPrompt;
 
     /**
      * 工具信息
      */
     @ColumnMeta(columnName="tool_info", dataType="String", dataSize=2147483647, nullable=true)
-    @Schema(title = "工具信息", description = "工具信息")
+    @Schema(title = "工具信息", description = "工具信息", maxLength=2147483647, nullable=true )
     private String toolInfo;
 
     /**
      * 创建时间
      */
     @ColumnMeta(columnName="create_date", dataType="java.util.Date", dataSize=23, nullable=true)
-    @Schema(title = "创建时间", description = "创建时间")
+    @Schema(title = "创建时间", description = "创建时间", maxLength=23, nullable=true )
     private java.util.Date createDate;
 
     /**
      * 修改时间
      */
     @ColumnMeta(columnName="modify_date", dataType="java.util.Date", dataSize=23, nullable=true)
-    @Schema(title = "修改时间", description = "修改时间")
+    @Schema(title = "修改时间", description = "修改时间", maxLength=23, nullable=true )
     private java.util.Date modifyDate;
 
     /**
      * 最后更新时间
      */
     @ColumnMeta(columnName="last_update", dataType="java.util.Date", dataSize=23, nullable=true)
-    @Schema(title = "最后更新时间", description = "最后更新时间")
+    @Schema(title = "最后更新时间", description = "最后更新时间", maxLength=23, nullable=true )
     private java.util.Date lastUpdate;
 
     /**
      * 状态
      */
     @ColumnMeta(columnName="state", dataType="int", dataSize=10, nullable=true)
-    @Schema(title = "状态", description = "状态")
+    @Schema(title = "状态", description = "状态", maxLength=10, nullable=true )
     private int state;
 
     /**

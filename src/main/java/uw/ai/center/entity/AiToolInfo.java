@@ -26,49 +26,49 @@ public class AiToolInfo implements DataEntity,Serializable{
      * ID
      */
     @ColumnMeta(columnName="id", dataType="long", dataSize=19, nullable=false, primaryKey=true)
-    @Schema(title = "ID", description = "ID")
+    @Schema(title = "ID", description = "ID", maxLength=19, nullable=false )
     private long id;
 
     /**
      * 应用名
      */
     @ColumnMeta(columnName="app_name", dataType="String", dataSize=200, nullable=false)
-    @Schema(title = "应用名", description = "应用名")
+    @Schema(title = "应用名", description = "应用名", maxLength=200, nullable=false )
     private String appName;
 
     /**
      * 工具类
      */
     @ColumnMeta(columnName="tool_class", dataType="String", dataSize=100, nullable=false)
-    @Schema(title = "工具类", description = "工具类")
+    @Schema(title = "工具类", description = "工具类", maxLength=100, nullable=false )
     private String toolClass;
 
     /**
      * 工具版本
      */
     @ColumnMeta(columnName="tool_version", dataType="String", dataSize=100, nullable=true)
-    @Schema(title = "工具版本", description = "工具版本")
+    @Schema(title = "工具版本", description = "工具版本", maxLength=100, nullable=true )
     private String toolVersion;
 
     /**
      * 工具名称
      */
     @ColumnMeta(columnName="tool_name", dataType="String", dataSize=200, nullable=true)
-    @Schema(title = "工具名称", description = "工具名称")
+    @Schema(title = "工具名称", description = "工具名称", maxLength=200, nullable=true )
     private String toolName;
 
     /**
      * 工具描述
      */
     @ColumnMeta(columnName="tool_desc", dataType="String", dataSize=65535, nullable=true)
-    @Schema(title = "工具描述", description = "工具描述")
+    @Schema(title = "工具描述", description = "工具描述", maxLength=65535, nullable=true )
     private String toolDesc;
 
     /**
      * 工具参数配置
      */
     @ColumnMeta(columnName="tool_input", dataType="String", dataSize=1073741824, nullable=true)
-    @Schema(title = "工具参数配置", description = "工具参数配置")
+    @Schema(title = "工具参数配置", description = "工具参数配置", maxLength=1073741824, nullable=true )
     @JsonRawValue(value = false)
     private String toolInput;
 
@@ -76,7 +76,7 @@ public class AiToolInfo implements DataEntity,Serializable{
      * 工具返回配置
      */
     @ColumnMeta(columnName="tool_output", dataType="String", dataSize=1073741824, nullable=true)
-    @Schema(title = "工具返回配置", description = "工具返回配置")
+    @Schema(title = "工具返回配置", description = "工具返回配置", maxLength=1073741824, nullable=true )
     @JsonRawValue(value = false)
     private String toolOutput;
 
@@ -84,21 +84,21 @@ public class AiToolInfo implements DataEntity,Serializable{
      * 创建时间
      */
     @ColumnMeta(columnName="create_date", dataType="java.util.Date", dataSize=23, nullable=true)
-    @Schema(title = "创建时间", description = "创建时间")
+    @Schema(title = "创建时间", description = "创建时间", maxLength=23, nullable=true )
     private java.util.Date createDate;
 
     /**
      * 修改时间
      */
     @ColumnMeta(columnName="modify_date", dataType="java.util.Date", dataSize=23, nullable=true)
-    @Schema(title = "修改时间", description = "修改时间")
+    @Schema(title = "修改时间", description = "修改时间", maxLength=23, nullable=true )
     private java.util.Date modifyDate;
 
     /**
      * 状态
      */
     @ColumnMeta(columnName="state", dataType="int", dataSize=10, nullable=true)
-    @Schema(title = "状态", description = "状态")
+    @Schema(title = "状态", description = "状态", maxLength=10, nullable=true )
     private int state;
 
     /**
