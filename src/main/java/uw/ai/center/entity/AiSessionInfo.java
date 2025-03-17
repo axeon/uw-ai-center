@@ -109,15 +109,15 @@ public class AiSessionInfo implements DataEntity,Serializable{
     /**
      * 系统信息
      */
-    @ColumnMeta(columnName="system_prompt", dataType="String", dataSize=2147483647, nullable=true)
-    @Schema(title = "系统信息", description = "系统信息", maxLength=2147483647, nullable=true )
+    @ColumnMeta(columnName="system_prompt", dataType="String", dataSize=2147483646, nullable=true)
+    @Schema(title = "系统信息", description = "系统信息", maxLength=2147483646, nullable=true )
     private String systemPrompt;
 
     /**
      * 工具信息
      */
-    @ColumnMeta(columnName="tool_info", dataType="String", dataSize=2147483647, nullable=true)
-    @Schema(title = "工具信息", description = "工具信息", maxLength=2147483647, nullable=true )
+    @ColumnMeta(columnName="tool_info", dataType="String", dataSize=2147483646, nullable=true)
+    @Schema(title = "工具信息", description = "工具信息", maxLength=2147483646, nullable=true )
     private String toolInfo;
 
     /**

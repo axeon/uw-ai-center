@@ -46,29 +46,29 @@ public class AiSessionMsg implements DataEntity,Serializable{
     /**
      * 系统提问
      */
-    @ColumnMeta(columnName="system_prompt", dataType="String", dataSize=2147483647, nullable=true)
-    @Schema(title = "系统提问", description = "系统提问", maxLength=2147483647, nullable=true )
+    @ColumnMeta(columnName="system_prompt", dataType="String", dataSize=2147483646, nullable=true)
+    @Schema(title = "系统提问", description = "系统提问", maxLength=2147483646, nullable=true )
     private String systemPrompt;
 
     /**
      * 用户提问
      */
-    @ColumnMeta(columnName="user_prompt", dataType="String", dataSize=2147483647, nullable=true)
-    @Schema(title = "用户提问", description = "用户提问", maxLength=2147483647, nullable=true )
+    @ColumnMeta(columnName="user_prompt", dataType="String", dataSize=2147483646, nullable=true)
+    @Schema(title = "用户提问", description = "用户提问", maxLength=2147483646, nullable=true )
     private String userPrompt;
 
     /**
      * 工具信息
      */
-    @ColumnMeta(columnName="tool_info", dataType="String", dataSize=2147483647, nullable=true)
-    @Schema(title = "工具信息", description = "工具信息", maxLength=2147483647, nullable=true )
+    @ColumnMeta(columnName="tool_info", dataType="String", dataSize=2147483646, nullable=true)
+    @Schema(title = "工具信息", description = "工具信息", maxLength=2147483646, nullable=true )
     private String toolInfo;
 
     /**
      * 返回信息
      */
-    @ColumnMeta(columnName="response_info", dataType="String", dataSize=2147483647, nullable=true)
-    @Schema(title = "返回信息", description = "返回信息", maxLength=2147483647, nullable=true )
+    @ColumnMeta(columnName="response_info", dataType="String", dataSize=2147483646, nullable=true)
+    @Schema(title = "返回信息", description = "返回信息", maxLength=2147483646, nullable=true )
     private String responseInfo;
 
     /**
