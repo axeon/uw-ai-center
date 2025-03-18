@@ -31,18 +31,17 @@ import uw.dao.DataList;
 @Tag(name = "ChatUser接口")
 @RequestMapping("/user/chat")
 @ResponseAdviceIgnore
-public class AiChatUserController implements AiChatRpc {
+public class AiChatUserController {
 
     /**
      * ChatClient 简单调用
      */
-    @Override
     @PostMapping("/generate")
     @Operation(summary = "生成数据", description = "生成数据")
     @MscPermDeclare(auth = AuthType.NONE, log = ActionLog.BASE)
-    public ResponseData<String> generate(AiChatGenerateParam param) {
+    public ResponseData<String> generate(AiChatGenerateParam param, @RequestPart(required = false) MultipartFile file) {
         return AiChatService.generate( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(),
-                param.getConfigId(), param.getUserPrompt(), param.getSystemPrompt(), param.getToolList(), null );
+                param.getConfigId(), param.getUserPrompt(), param.getSystemPrompt(), param.getToolList(), file );
     }
 
     /**

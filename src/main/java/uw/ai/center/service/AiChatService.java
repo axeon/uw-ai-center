@@ -127,7 +127,9 @@ public class AiChatService {
         sessionInfo.setSessionName( truncateWithEllipsis( sessionName, 200 ) );
         sessionInfo.setSystemPrompt( systemPrompt );
         sessionInfo.setMsgNum( 0 );
-        sessionInfo.setWindowSize( windowSize );
+        if (windowSize != null) {
+            sessionInfo.setWindowSize( windowSize );
+        }
         sessionInfo.setToolInfo( JsonInterfaceHelper.JSON_CONVERTER.toString( toolList ) );
         sessionInfo.setRequestTokens( 0 );
         sessionInfo.setResponseTokens( 0 );
