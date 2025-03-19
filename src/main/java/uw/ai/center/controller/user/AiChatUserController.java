@@ -39,7 +39,7 @@ public class AiChatUserController {
     @PostMapping("/generate")
     @Operation(summary = "生成数据", description = "生成数据")
     @MscPermDeclare(auth = AuthType.NONE, log = ActionLog.BASE)
-    public ResponseData<String> generate(AiChatGenerateParam param, @RequestPart(required = false) MultipartFile file) {
+    public ResponseData<String> generate(@RequestBody AiChatGenerateParam param, @RequestPart(required = false) MultipartFile file) {
         return AiChatService.generate( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(),
                 param.getConfigId(), param.getUserPrompt(), param.getSystemPrompt(), param.getToolList(), file );
     }
@@ -50,7 +50,7 @@ public class AiChatUserController {
     @PostMapping(value = "/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     @Operation(summary = "聊天", description = "聊天")
     @MscPermDeclare(auth = AuthType.NONE, log = ActionLog.BASE)
-    public Flux<ServerSentEvent<String>> chat(HttpServletResponse response, AiChatMsgParam param, @RequestPart(required = false) MultipartFile file) {
+    public Flux<ServerSentEvent<String>> chat(HttpServletResponse response, @RequestBody AiChatMsgParam param, @RequestPart(required = false) MultipartFile file) {
         response.setCharacterEncoding( "UTF-8" );
         return AiChatService.chat( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(),
                 param.getSessionId(), param.getUserPrompt(), param.getUserPrompt(), param.getToolList(), file ).map( s -> ServerSentEvent.builder( s ).build() );
@@ -64,7 +64,7 @@ public class AiChatUserController {
     @PostMapping(value = "/initSession")
     @Operation(summary = "初始化会话", description = "初始化会话")
     @MscPermDeclare(auth = AuthType.NONE, log = ActionLog.BASE)
-    public ResponseData<AiSessionInfo> initSession(AiChatSessionParam param) {
+    public ResponseData<AiSessionInfo> initSession(@RequestBody AiChatSessionParam param) {
         return AiChatService.initSession( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(),
                 param.getConfigId(), SessionType.CHAT.getValue(), param.getUserPrompt(), 0, param.getSystemPrompt(), param.getToolList() );
     }
