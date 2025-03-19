@@ -213,7 +213,7 @@ public class AiChatService {
                     lastResponseRef.set( x );
                     return content;
                 } );
-        return Flux.concat( Flux.just( JsonInterfaceHelper.JSON_CONVERTER.toString( sessionInfo ) ), chatResponse );
+        return Flux.concat( Flux.just( "<session>"+JsonInterfaceHelper.JSON_CONVERTER.toString( sessionInfo )+"</session>\n" ), chatResponse );
     }
 
 
