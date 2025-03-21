@@ -16,11 +16,11 @@ import uw.common.dto.ResponseData;
 import uw.httpclient.json.JsonInterfaceHelper;
 
 /**
- * 测试接口。
+ * AiChat接口。
  */
 @RestController
-@RequestMapping("/open/ai")
-@Tag(name = "AI接口")
+@RequestMapping("/open/ai/chat")
+@Tag(name = "AiChat接口")
 @ResponseAdviceIgnore
 public class AiChatController {
     private static final Logger logger = LoggerFactory.getLogger( AiChatController.class );
@@ -34,23 +34,6 @@ public class AiChatController {
         return AiChatService.generate( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), "guest", configId, userPrompt, systemPrompt
                 , null, null );
     }
-
-    /**
-     * 翻译列表。
-     */
-    @PostMapping("/translateList")
-    public ResponseData<String> translateList(@RequestBody TranslateListParam param) {
-        return AiTranslateService.translateList( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), "guest", param );
-    }
-
-    /**
-     * 翻译Map。
-     */
-    @PostMapping("/translateMap")
-    public ResponseData<String> translateMap(@RequestBody TranslateMapParam param) {
-        return AiTranslateService.translateMap( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), "guest", param );
-    }
-
 
 }
 

@@ -19,7 +19,7 @@ public class AiTranslateService {
     /**
      * 翻译结果数据转换器。
      */
-    private static final BeanOutputConverter<TranslateResultData> BEAN_OUTPUT_CONVERTER = new BeanOutputConverter<>( TranslateResultData.class );
+    private static final BeanOutputConverter<TranslateResultData[]> BEAN_OUTPUT_CONVERTER = new BeanOutputConverter<>( TranslateResultData[].class );
 
 
     /**
@@ -32,13 +32,13 @@ public class AiTranslateService {
      * @param param
      * @return
      */
-    public static ResponseData<TranslateResultData> translateListEntity(long saasId, long userId, int userType, String userInfo, TranslateListParam param) {
+    public static ResponseData<TranslateResultData[]> translateListEntity(long saasId, long userId, int userType, String userInfo, TranslateListParam param) {
         ResponseData<String> responseData = translateList( saasId, userId, userType, userInfo, param );
         if (responseData.isNotSuccess()) {
             return responseData.prototype();
         } else {
-            TranslateResultData translateResultData = BEAN_OUTPUT_CONVERTER.convert( responseData.getData() );
-            return ResponseData.success( translateResultData );
+            TranslateResultData[] data = BEAN_OUTPUT_CONVERTER.convert( responseData.getData() );
+            return ResponseData.success( data );
         }
     }
 
@@ -53,13 +53,13 @@ public class AiTranslateService {
      * @param param
      * @return
      */
-    public static ResponseData<TranslateResultData> translateMapEntity(long saasId, long userId, int userType, String userInfo, TranslateMapParam param) {
+    public static ResponseData<TranslateResultData[]> translateMapEntity(long saasId, long userId, int userType, String userInfo, TranslateMapParam param) {
         ResponseData<String> responseData = translateMap( saasId, userId, userType, userInfo, param );
         if (responseData.isNotSuccess()) {
             return responseData.prototype();
         } else {
-            TranslateResultData translateResultData = BEAN_OUTPUT_CONVERTER.convert( responseData.getData() );
-            return ResponseData.success( translateResultData );
+            TranslateResultData[] data = BEAN_OUTPUT_CONVERTER.convert( responseData.getData() );
+            return ResponseData.success( data );
         }
     }
 
