@@ -15,17 +15,17 @@ public class TranslateResultData {
      * 翻译结果列表。
      */
     @Schema(title = "翻译结果列表", description = "翻译结果列表")
-    private List<TranslateResult> resultList;
+    private List<TranslateResult> result;
 
     public TranslateResultData() {
     }
 
-    public List<TranslateResult> getResultList() {
-        return resultList;
+    public List<TranslateResult> getResult() {
+        return result;
     }
 
-    public void setResultList(List<TranslateResult> resultList) {
-        this.resultList = resultList;
+    public void setResult(List<TranslateResult> result) {
+        this.result = result;
     }
 
 
@@ -44,14 +44,14 @@ public class TranslateResultData {
          * 翻译结果。
          */
         @Schema(title = "翻译结果", description = "翻译结果。key是源语言，value是翻译结果。")
-        private Map<String,String> translationMap;
+        private Map<String,String> dataMap;
 
         public TranslateResult() {
         }
 
-        public TranslateResult(String lang, Map<String, String> translationMap) {
+        public TranslateResult(String lang, Map<String, String> dataMap) {
             this.lang = lang;
-            this.translationMap = translationMap;
+            this.dataMap = dataMap;
         }
 
         public String getLang() {
@@ -62,12 +62,12 @@ public class TranslateResultData {
             this.lang = lang;
         }
 
-        public Map<String, String> getTranslationMap() {
-            return translationMap;
+        public Map<String, String> getDataMap() {
+            return dataMap;
         }
 
-        public void setTranslationMap(Map<String, String> translationMap) {
-            this.translationMap = translationMap;
+        public void setDataMap(Map<String, String> dataMap) {
+            this.dataMap = dataMap;
         }
     }
 }
