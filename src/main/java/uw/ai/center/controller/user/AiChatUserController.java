@@ -64,7 +64,7 @@ public class AiChatUserController {
     @PostMapping(value = "/initSession")
     @Operation(summary = "初始化会话", description = "初始化会话")
     @MscPermDeclare(auth = AuthType.NONE, log = ActionLog.BASE)
-    public ResponseData<AiSessionInfo> initSession(@RequestBody AiChatSessionParam param) {
+    public ResponseData<AiSessionInfo> initSession(AiChatSessionParam param) {
         return AiChatService.initSession( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(),
                 param.getConfigId(), SessionType.CHAT.getValue(), param.getUserPrompt(), 0, param.getSystemPrompt(), param.getToolList() );
     }
