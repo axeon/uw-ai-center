@@ -7,7 +7,7 @@ import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.UserMessage;
 import uw.ai.center.entity.AiSessionMsg;
-import uw.ai.center.vo.ConversationData;
+import uw.ai.center.vo.SessionConversationData;
 import uw.common.constant.StateCommon;
 import uw.dao.DaoFactory;
 import uw.dao.DataList;
@@ -44,7 +44,7 @@ public class AiSessionMemoryAdvisor implements ChatMemory {
         if (lastN <= 0) {
             return List.of();
         }
-        ConversationData conversationData = new ConversationData( conversationId );
+        SessionConversationData conversationData = new SessionConversationData( conversationId );
         List<Message> messages = new ArrayList<>( lastN );
         if (conversationData.getSessionId() > 0) {
             try {
@@ -69,7 +69,7 @@ public class AiSessionMemoryAdvisor implements ChatMemory {
      */
     @Override
     public void clear(String conversationId) {
-        ConversationData conversationData = new ConversationData( conversationId );
+        SessionConversationData conversationData = new SessionConversationData( conversationId );
         try {
             dao.executeCommand( "update ai_session_msg set state=? where session_id=? and state=?", new Object[]{StateCommon.DELETED.getValue(), conversationData.getSessionId(),
                     StateCommon.ENABLED.getValue()} );

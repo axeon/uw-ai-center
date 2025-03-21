@@ -4,7 +4,7 @@ package uw.ai.center.vo;
  * 会话Id数据。
  * 本质上由 sessionId:sessionMsgId组成。
  */
-public class ConversationData {
+public class SessionConversationData {
 
     /**
      * 会话ID。
@@ -16,7 +16,7 @@ public class ConversationData {
      */
     private long msgId;
 
-    public ConversationData(String conversationId) {
+    public SessionConversationData(String conversationId) {
         int pos  = conversationId.indexOf(":");
         if (pos > 0) {
             sessionId = Long.parseLong(conversationId.substring(0, pos));
@@ -24,7 +24,7 @@ public class ConversationData {
         }
     }
 
-    public ConversationData(long sessionId, long msgId) {
+    public SessionConversationData(long sessionId, long msgId) {
         this.sessionId = sessionId;
         this.msgId = msgId;
     }

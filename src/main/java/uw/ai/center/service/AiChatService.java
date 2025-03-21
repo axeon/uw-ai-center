@@ -21,7 +21,7 @@ import uw.ai.center.entity.AiSessionInfo;
 import uw.ai.center.entity.AiSessionMsg;
 import uw.ai.center.tool.AiToolHelper;
 import uw.ai.center.vendor.AiVendorHelper;
-import uw.ai.center.vo.ConversationData;
+import uw.ai.center.vo.SessionConversationData;
 import uw.ai.vo.AiToolCallInfo;
 import uw.common.constant.StateCommon;
 import uw.common.dto.ResponseData;
@@ -82,7 +82,7 @@ public class AiChatService {
         AiSessionMsg sessionMsg = initSessionMsg( sessionInfo.getId(), systemPrompt, userPrompt, toolList );
         // 设置请求开始时间
         sessionMsg.setResponseStartDate( new Date() );
-        ChatClient.ChatClientRequestSpec chatClientRequestSpec = chatClientWrapper.chatClient().prompt().user( userPrompt );
+        ChatClient.ChatClientRequestSpec chatClientRequestSpec = chatClientWrapper.chatClient().prompt().system( systemPrompt ).user( userPrompt );
         // 设置工具调用
         if (toolList != null && !toolList.isEmpty()) {
             chatClientRequestSpec.tools( AiToolHelper.getToolCallbacks( toolList ) );
@@ -167,7 +167,7 @@ public class AiChatService {
         // 初始化会话消息
         AiSessionMsg sessionMsg = initSessionMsg( sessionInfo.getId(), systemPrompt, userPrompt, toolList );
         // 会话消息的会话ID和消息ID
-        ConversationData conversationData = new ConversationData( sessionMsg.getSessionId(), sessionMsg.getId() );
+        SessionConversationData conversationData = new SessionConversationData( sessionMsg.getSessionId(), sessionMsg.getId() );
         // 返回信息
         StringBuilder responseData = new StringBuilder();
         // 最后一个ChatResponse信息

@@ -96,4 +96,18 @@ public class SwaggerConfig {
                 .build();
     }
 
+    /**
+     * open API接口。
+     *
+     * @return
+     */
+    @Bean
+    public GroupedOpenApi openApi() {
+        return GroupedOpenApi.builder()
+                .group("openApi")
+                .packagesToScan("uw.ai.center.controller.open")
+                .addOpenApiCustomizer(customOpenAPI())
+                .build();
+    }
+
 }
