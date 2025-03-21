@@ -7,7 +7,6 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Flux;
 import uw.ai.center.constant.SessionType;
 import uw.ai.center.dto.AiSessionInfoQueryParam;
@@ -51,7 +50,7 @@ public class AiChatRpcController implements AiChatRpc {
     @PostMapping(value = "/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     @Operation(summary = "聊天", description = "聊天")
     @MscPermDeclare(user = UserType.RPC)
-    public Flux<ServerSentEvent<String>> chat(HttpServletResponse response, AiChatMsgParam param, @RequestPart(required = false) MultipartFile file) {
+    public Flux<ServerSentEvent<String>> chat(HttpServletResponse response, AiChatMsgParam param) {
         response.setCharacterEncoding( "UTF-8" );
         return AiChatService.chat( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(),
                 param.getSessionId(), param.getUserPrompt(), param.getUserPrompt(), param.getToolList(), param.getFileList() ).map( s -> ServerSentEvent.builder( s ).build() );

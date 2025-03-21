@@ -5,21 +5,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
 import uw.ai.center.service.AiChatService;
-import uw.ai.center.service.AiTranslateService;
-import uw.ai.center.vo.TranslateListParam;
-import uw.ai.center.vo.TranslateMapParam;
-import uw.ai.center.vo.TranslateResultData;
-import uw.ai.util.BeanOutputConverter;
 import uw.auth.service.AuthServiceHelper;
 import uw.auth.service.annotation.ResponseAdviceIgnore;
 import uw.common.dto.ResponseData;
-import uw.httpclient.json.JsonInterfaceHelper;
 
 /**
  * AiChat接口。
  */
 @RestController
-@RequestMapping("/open/ai/chat")
+@RequestMapping("/open/chat")
 @Tag(name = "AiChat接口")
 @ResponseAdviceIgnore
 public class AiChatController {

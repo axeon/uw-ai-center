@@ -2,9 +2,9 @@ package uw.ai.center.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uw.ai.center.vo.TranslateListParam;
-import uw.ai.center.vo.TranslateMapParam;
-import uw.ai.center.vo.TranslateResultData;
+import uw.ai.vo.AiTranslateListParam;
+import uw.ai.vo.AiTranslateMapParam;
+import uw.ai.vo.AiTranslateResultData;
 import uw.ai.util.BeanOutputConverter;
 import uw.common.dto.ResponseData;
 import uw.httpclient.json.JsonInterfaceHelper;
@@ -19,7 +19,7 @@ public class AiTranslateService {
     /**
      * 翻译结果数据转换器。
      */
-    private static final BeanOutputConverter<TranslateResultData[]> BEAN_OUTPUT_CONVERTER = new BeanOutputConverter<>( TranslateResultData[].class );
+    private static final BeanOutputConverter<AiTranslateResultData[]> BEAN_OUTPUT_CONVERTER = new BeanOutputConverter<>( AiTranslateResultData[].class );
 
 
     /**
@@ -32,12 +32,12 @@ public class AiTranslateService {
      * @param param
      * @return
      */
-    public static ResponseData<TranslateResultData[]> translateListEntity(long saasId, long userId, int userType, String userInfo, TranslateListParam param) {
+    public static ResponseData<AiTranslateResultData[]> translateListEntity(long saasId, long userId, int userType, String userInfo, AiTranslateListParam param) {
         ResponseData<String> responseData = translateList( saasId, userId, userType, userInfo, param );
         if (responseData.isNotSuccess()) {
             return responseData.prototype();
         } else {
-            TranslateResultData[] data = BEAN_OUTPUT_CONVERTER.convert( responseData.getData() );
+            AiTranslateResultData[] data = BEAN_OUTPUT_CONVERTER.convert( responseData.getData() );
             return ResponseData.success( data );
         }
     }
@@ -53,12 +53,12 @@ public class AiTranslateService {
      * @param param
      * @return
      */
-    public static ResponseData<TranslateResultData[]> translateMapEntity(long saasId, long userId, int userType, String userInfo, TranslateMapParam param) {
+    public static ResponseData<AiTranslateResultData[]> translateMapEntity(long saasId, long userId, int userType, String userInfo, AiTranslateMapParam param) {
         ResponseData<String> responseData = translateMap( saasId, userId, userType, userInfo, param );
         if (responseData.isNotSuccess()) {
             return responseData.prototype();
         } else {
-            TranslateResultData[] data = BEAN_OUTPUT_CONVERTER.convert( responseData.getData() );
+            AiTranslateResultData[] data = BEAN_OUTPUT_CONVERTER.convert( responseData.getData() );
             return ResponseData.success( data );
         }
     }
@@ -66,7 +66,7 @@ public class AiTranslateService {
     /**
      * 翻译列表。
      */
-    public static ResponseData<String> translateList(long saasId, long userId, int userType, String userInfo, TranslateListParam param) {
+    public static ResponseData<String> translateList(long saasId, long userId, int userType, String userInfo, AiTranslateListParam param) {
         String TRANSLATE_USER_PROMPT_TEMPLATE = """
                 请帮我把以下JSON数组中的文字分别翻译成 %s 语言。
                 %s
@@ -84,7 +84,7 @@ public class AiTranslateService {
     /**
      * 翻译Map。
      */
-    public static ResponseData<String> translateMap(long saasId, long userId, int userType, String userInfo, TranslateMapParam param) {
+    public static ResponseData<String> translateMap(long saasId, long userId, int userType, String userInfo, AiTranslateMapParam param) {
         String TRANSLATE_USER_PROMPT_TEMPLATE = """
                 请帮我把以下JSON Map的Value中文字分别翻译成 %s 语言。
                 %s
