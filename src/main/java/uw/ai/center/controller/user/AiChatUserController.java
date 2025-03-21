@@ -39,9 +39,9 @@ public class AiChatUserController {
     @PostMapping("/generate")
     @Operation(summary = "生成数据", description = "生成数据")
     @MscPermDeclare(auth = AuthType.NONE, log = ActionLog.BASE)
-    public ResponseData<String> generate(@RequestBody AiChatGenerateParam param, @RequestPart(required = false) MultipartFile file) {
+    public ResponseData<String> generate(AiChatGenerateParam param) {
         return AiChatService.generate( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(),
-                param.getConfigId(), param.getUserPrompt(), param.getSystemPrompt(), param.getToolList(), file );
+                param.getConfigId(), param.getUserPrompt(), param.getSystemPrompt(), param.getToolList(),  param.getFiles() );
     }
 
     /**
@@ -50,10 +50,10 @@ public class AiChatUserController {
     @PostMapping(value = "/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     @Operation(summary = "聊天", description = "聊天")
     @MscPermDeclare(auth = AuthType.NONE, log = ActionLog.BASE)
-    public Flux<ServerSentEvent<String>> chat(HttpServletResponse response, @RequestBody AiChatMsgParam param, @RequestPart(required = false) MultipartFile file) {
+    public Flux<ServerSentEvent<String>> chat(HttpServletResponse response, AiChatMsgParam param) {
         response.setCharacterEncoding( "UTF-8" );
         return AiChatService.chat( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(),
-                param.getSessionId(), param.getUserPrompt(), param.getUserPrompt(), param.getToolList(), file ).map( s -> ServerSentEvent.builder( s ).build() );
+                param.getSessionId(), param.getUserPrompt(), param.getUserPrompt(), param.getToolList(), param.getFiles() ).map( s -> ServerSentEvent.builder( s ).build() );
     }
 
     /**

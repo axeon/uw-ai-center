@@ -52,7 +52,7 @@ public class AiChatService {
      * ChatClient 简单调用。
      */
     public static ResponseData<String> generate(long saasId, long userId, int userType, String userInfo, long configId, String userPrompt, String systemPrompt,
-                                                List<AiToolCallInfo> toolList, MultipartFile file) {
+                                                List<AiToolCallInfo> toolList, MultipartFile[] files) {
         // 获取ChatClient
         AiVendorHelper.ChatClientWrapper chatClientWrapper = AiVendorHelper.getChatClient( configId );
         if (chatClientWrapper == null) {
@@ -70,8 +70,8 @@ public class AiChatService {
             }
         }
         // 构建文档信息
-        if (file != null) {
-            ResponseData<String> readFileContent = readFileContent( file );
+        if (files != null) {
+            ResponseData<String> readFileContent = readFileContent( files );
             if (readFileContent.isNotSuccess()) {
                 return readFileContent;
             } else {
@@ -148,7 +148,7 @@ public class AiChatService {
      * ChatClient 流式调用
      */
     public static Flux<String> chat(long saasId, long userId, int userType, String userInfo, long sessionId, String userPrompt, String systemPrompt,
-                                    List<AiToolCallInfo> toolList, MultipartFile file) {
+                                    List<AiToolCallInfo> toolList, MultipartFile[] files) {
         // 初始化会话信息
         AiSessionInfo sessionInfo;
         if (sessionId > 0) {
@@ -186,10 +186,10 @@ public class AiChatService {
             chatClientRequestSpec.toolContext( Map.of( "saasId", saasId, "userId", userId, "userType", userType, "userInfo", userInfo ) );
         }
         // 构建文档信息
-        if (file != null) {
-            ResponseData<String> readFileContent = readFileContent( file );
+        if (files != null) {
+            ResponseData<String> readFileContent = readFileContent( files );
             if (readFileContent.isNotSuccess()) {
-                return Flux.just(readFileContent.toString());
+                return Flux.just( readFileContent.toString() );
             } else {
                 systemPrompt = buildSystemContextInfo( systemPrompt, readFileContent.getData() );
             }
@@ -213,7 +213,7 @@ public class AiChatService {
                     lastResponseRef.set( x );
                     return content;
                 } );
-        return Flux.concat( Flux.just( "<session>"+JsonInterfaceHelper.JSON_CONVERTER.toString( sessionInfo )+"</session>\n" ), chatResponse );
+        return Flux.concat( Flux.just( "<session>" + JsonInterfaceHelper.JSON_CONVERTER.toString( sessionInfo ) + "</session>\n" ), chatResponse );
     }
 
 
@@ -325,29 +325,31 @@ public class AiChatService {
     /**
      * 读取文件内容。
      *
-     * @param file
+     * @param files
      * @return
      */
-    public static ResponseData<String> readFileContent(MultipartFile file) {
-        if (file == null) {
+    public static ResponseData<String> readFileContent(MultipartFile[] files) {
+        if (files == null) {
             return ResponseData.errorMsg( "文件为空!" );
         }
-        try (InputStream inputStream = file.getInputStream()) {
-            TikaDocumentReader reader = new TikaDocumentReader( new InputStreamResource( inputStream ) );
-            List<Document> documents = reader.get(); // 假设返回List<Document>
-            if (!documents.isEmpty()) {
-                StringBuilder content = new StringBuilder( 8192 );
-                for (Document document : documents) {
-                    content.append( document.getText() ).append( "\n" );
+        StringBuilder content = new StringBuilder( 8192 );
+        for (MultipartFile file : files) {
+            try (InputStream inputStream = file.getInputStream()) {
+                TikaDocumentReader reader = new TikaDocumentReader( new InputStreamResource( inputStream ) );
+                List<Document> documents = reader.get(); // 假设返回List<Document>
+                if (!documents.isEmpty()) {
+                    for (Document document : documents) {
+                        content.append( document.getText() ).append( "\n" );
+                    }
+                } else {
+                    return ResponseData.warnMsg( "文件[" + file.getName() + "]内容为空，无法提取文本!" );
                 }
-                return ResponseData.success( content.toString() );
-            } else {
-                return ResponseData.warnMsg( "文件内容为空，无法提取文本!" );
+            } catch (IOException e) {
+                logger.error( "处理文件[{}]时发生错误!{}", file.getName(), e.getMessage(), e );
+                return ResponseData.errorMsg( "处理文件[" + file.getName() + "]时发生错误!" + e.getMessage() );
             }
-        } catch (IOException e) {
-            logger.error( "处理文件时发生错误!{}", e.getMessage(), e );
-            return ResponseData.errorMsg( "处理文件时发生错误!" + e.getMessage() );
         }
+        return ResponseData.success( content.toString() );
     }
 
     /**
