@@ -3,11 +3,9 @@ package uw.ai.center.controller.user;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Flux;
 import uw.ai.center.constant.SessionType;
 import uw.ai.center.dto.AiSessionInfoQueryParam;
@@ -15,7 +13,6 @@ import uw.ai.center.dto.AiSessionMsgQueryParam;
 import uw.ai.center.entity.AiSessionInfo;
 import uw.ai.center.entity.AiSessionMsg;
 import uw.ai.center.service.AiChatService;
-import uw.ai.rpc.AiChatRpc;
 import uw.ai.vo.AiChatGenerateParam;
 import uw.ai.vo.AiChatMsgParam;
 import uw.ai.vo.AiChatSessionParam;
@@ -41,7 +38,7 @@ public class AiChatUserController {
     @MscPermDeclare(auth = AuthType.NONE, log = ActionLog.BASE)
     public ResponseData<String> generate(AiChatGenerateParam param) {
         return AiChatService.generate( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(),
-                param.getConfigId(), param.getUserPrompt(), param.getSystemPrompt(), param.getToolList(),  param.getFiles() );
+                param.getConfigId(), param.getUserPrompt(), param.getSystemPrompt(), param.getToolList(),  param.getFileList() );
     }
 
     /**
@@ -53,7 +50,7 @@ public class AiChatUserController {
     public Flux<ServerSentEvent<String>> chat(HttpServletResponse response, AiChatMsgParam param) {
         response.setCharacterEncoding( "UTF-8" );
         return AiChatService.chat( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(),
-                param.getSessionId(), param.getUserPrompt(), param.getUserPrompt(), param.getToolList(), param.getFiles() ).map( s -> ServerSentEvent.builder( s ).build() );
+                param.getSessionId(), param.getUserPrompt(), param.getUserPrompt(), param.getToolList(), param.getFileList() ).map( s -> ServerSentEvent.builder( s ).build() );
     }
 
     /**
