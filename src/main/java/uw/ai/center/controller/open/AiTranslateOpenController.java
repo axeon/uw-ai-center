@@ -19,8 +19,8 @@ import uw.common.dto.ResponseData;
 @RequestMapping("/open/translate")
 @Tag(name = "Ai翻译接口")
 @ResponseAdviceIgnore
-public class AiTranslateController {
-    private static final Logger logger = LoggerFactory.getLogger( AiTranslateController.class );
+public class AiTranslateOpenController {
+    private static final Logger logger = LoggerFactory.getLogger( AiTranslateOpenController.class );
 
 
     /**

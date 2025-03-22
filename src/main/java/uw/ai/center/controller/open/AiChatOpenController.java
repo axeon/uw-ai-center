@@ -16,8 +16,8 @@ import uw.common.dto.ResponseData;
 @RequestMapping("/open/chat")
 @Tag(name = "AiChat接口")
 @ResponseAdviceIgnore
-public class AiChatController {
-    private static final Logger logger = LoggerFactory.getLogger( AiChatController.class );
+public class AiChatOpenController {
+    private static final Logger logger = LoggerFactory.getLogger( AiChatOpenController.class );
 
     /**
      * ChatClient 简单调用
