@@ -55,6 +55,7 @@ public class AiModelConfigController {
         return dao.list( AiModelConfig.class, queryParam );
     }
 
+
     /**
      * 列表AI服务。
      *
@@ -66,6 +67,21 @@ public class AiModelConfigController {
     @MscPermDeclare(user = UserType.OPS, auth = AuthType.USER, log = ActionLog.NONE)
     public List<AiVendor> listVendor() {
         return AiVendorHelper.getVendorMap().values().stream().toList();
+    }
+
+    /**
+     * 列表AI服务。
+     *
+     * @return
+     * @throws TransactionException
+     */
+    @GetMapping("/listModel")
+    @Operation(summary = "列表模型列表", description = "列表模型列表")
+    @MscPermDeclare(user = UserType.OPS, auth = AuthType.USER, log = ActionLog.NONE)
+    public List<String> listModel(@Parameter(description = "vendorClass", required = true) @RequestParam String vendorClass,
+                                  @Parameter(description = "apiUrl", required = true) @RequestParam String apiUrl,
+                                  @Parameter(description = "apiKey", required = true) @RequestParam String apiKey) {
+        return AiVendorHelper.listModel( vendorClass, apiUrl, apiKey );
     }
 
     /**

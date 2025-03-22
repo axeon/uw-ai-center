@@ -82,4 +82,14 @@ public class OpenAiVendor implements AiVendor {
     public ChatClient buildChatClient(AiModelConfigData aiModelConfigData) {
         return null;
     }
+
+    /**
+     * 获取模型列表。
+     *
+     * @return
+     */
+    @Override
+    public List<String> listModel(String apiUrl,String apiKey) {
+        return List.of();
+    }
 }

@@ -16,6 +16,7 @@ import uw.cache.FusionCache;
 import uw.dao.DaoFactory;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -32,8 +33,8 @@ public class AiVendorHelper {
      */
     private final static Map<String, AiVendor> VENDOR_MAP = new LinkedHashMap<>() {{
         put( OllamaVendor.class.getName(), new OllamaVendor() );
-        put( DeepSeekVendor.class.getName(), new DeepSeekVendor() );
         put( OpenAiVendor.class.getName(), new OpenAiVendor() );
+        put( DeepSeekVendor.class.getName(), new DeepSeekVendor() );
     }};
 
     /**
@@ -93,6 +94,29 @@ public class AiVendorHelper {
      */
     public static ChatClientWrapper getChatClient(long configId) {
         return modelInstanceCache.get( configId );
+    }
+
+
+    /**
+     * 根据配置ID获取AI模型配置。
+     *
+     * @param configId
+     * @return
+     */
+    public static AiModelConfigData getModelConfigData(long configId) {
+        return FusionCache.get( AiModelConfigData.class, configId );
+    }
+
+    /**
+     * 获取模型列表。
+     *
+     * @param vendorClass
+     * @param apiUrl
+     * @param apiKey
+     * @return
+     */
+    public static List<String> listModel(String vendorClass, String apiUrl, String apiKey) {
+        return getVendor( vendorClass ).listModel( apiUrl, apiKey );
     }
 
     /**

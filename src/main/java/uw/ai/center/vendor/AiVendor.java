@@ -61,6 +61,12 @@ public interface AiVendor {
     ChatClient buildChatClient(AiModelConfigData aiModelConfigData);
 
     /**
+     * 获取模型列表。
+     * @return
+     */
+    List<String> listModel(String apiUrl,String apiKey);
+
+    /**
      * 配置信息解析类
      */
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -122,4 +128,5 @@ public interface AiVendor {
             return desc;
         }
     }
+
 }

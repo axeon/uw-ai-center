@@ -19,7 +19,7 @@ import java.util.Map;
 @Profile({"test", "dev"})
 public class EnumController {
 
-    private static final String BASE_PACKAGE = "uw.auth";
+    private static final String BASE_PACKAGE = "uw.ai";
 
     @GetMapping("/getAllEnumMap")
     @Operation(summary = "获取所有枚举", description = "获取所有枚举")

@@ -19,6 +19,10 @@ import java.util.Map;
 public class AiModelConfigData {
 
     private static final Logger logger = LoggerFactory.getLogger( AiModelConfigData.class );
+
+    /**
+     * Ai模型配置。
+     */
     private final AiModelConfig aiModelConfig;
     /**
      * vendor参数信息集合，所有人可见。
@@ -37,7 +41,7 @@ public class AiModelConfigData {
         this.aiModelConfig = aiModelConfig;
         AiVendor aiVendor = AiVendorHelper.getVendor( aiModelConfig.getVendorClass() );
         if (aiVendor != null) {
-            vendorParamMap = new HashMap<String, String>();
+            vendorParamMap = new HashMap<>();
             for (AiVendor.ConfigParam configParam : aiVendor.vendorParam()) {
                 vendorParamMap.put( configParam.getKey(), configParam.getValue() );
             }
@@ -50,7 +54,7 @@ public class AiModelConfigData {
                 }
             }
 
-            modelParamMap = new HashMap<String, String>();
+            modelParamMap = new HashMap<>();
             for (AiVendor.ConfigParam configParam : aiVendor.modelParam()) {
                 modelParamMap.put( configParam.getKey(), configParam.getValue() );
             }
@@ -63,7 +67,7 @@ public class AiModelConfigData {
                 }
             }
 
-            embedParamMap = new HashMap<String, String>();
+            embedParamMap = new HashMap<>();
             for (AiVendor.ConfigParam configParam : aiVendor.embedParam()) {
                 embedParamMap.put( configParam.getKey(), configParam.getValue() );
             }

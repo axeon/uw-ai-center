@@ -69,6 +69,22 @@ public class AiModelConfigController {
     }
 
     /**
+     * 列表AI服务。
+     *
+     * @return
+     * @throws TransactionException
+     */
+    @GetMapping("/listModel")
+    @Operation(summary = "列表模型列表", description = "列表模型列表")
+    @MscPermDeclare(user = UserType.SAAS, auth = AuthType.USER, log = ActionLog.NONE)
+    public List<String> listModel(@Parameter(description = "vendorClass", required = true) @RequestParam String vendorClass,
+                                     @Parameter(description = "apiUrl", required = true) @RequestParam String apiUrl,
+                                     @Parameter(description = "apiKey", required = true) @RequestParam String apiKey) {
+        return AiVendorHelper.listModel( vendorClass, apiUrl, apiKey );
+    }
+
+
+    /**
      * 轻量级列表AI服务模型，一般用于select控件。
      *
      * @return
