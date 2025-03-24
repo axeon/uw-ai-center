@@ -6,7 +6,6 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.ai.chat.client.ChatClient;
 import uw.ai.center.entity.AiModelConfig;
-import uw.ai.center.vendor.deepseek.DeepSeekVendor;
 import uw.ai.center.vendor.ollama.OllamaVendor;
 import uw.ai.center.vendor.openai.OpenAiVendor;
 import uw.ai.center.vo.AiModelConfigData;
@@ -34,7 +33,6 @@ public class AiVendorHelper {
     private final static Map<String, AiVendor> VENDOR_MAP = new LinkedHashMap<>() {{
         put( OllamaVendor.class.getName(), new OllamaVendor() );
         put( OpenAiVendor.class.getName(), new OpenAiVendor() );
-        put( DeepSeekVendor.class.getName(), new DeepSeekVendor() );
     }};
 
     /**

@@ -168,7 +168,7 @@ public class AiChatService {
      * ChatClient 流式调用
      */
     public static Flux<String> chat(long saasId, long userId, int userType, String userInfo, long sessionId, String userPrompt, String systemPrompt,
-                                    List<AiToolCallInfo> toolList, MultipartFile[] files) {
+                                    List<AiToolCallInfo> toolList, MultipartFile[] fileList) {
         // 初始化会话信息
         AiSessionInfo sessionInfo;
         if (sessionId > 0) {
@@ -183,6 +183,22 @@ public class AiChatService {
         if (StringUtils.isBlank( systemPrompt )){
             systemPrompt = sessionInfo.getSystemPrompt();
         }
+        // 构建文档信息
+        if (fileList != null) {
+            ResponseData<String> readFileContent = readFileContent( fileList );
+            if (readFileContent.isNotSuccess()) {
+                return Flux.just( readFileContent.toString() );
+            } else {
+                systemPrompt = buildSystemContextInfo( systemPrompt, readFileContent.getData() );
+            }
+        }
+        //如果本次没有传工具类，则检查是否有会话中的工具类。
+        if (toolList == null || toolList.isEmpty()) {
+            if (StringUtils.isNotBlank( sessionInfo.getToolInfo() )) {
+                toolList = JsonInterfaceHelper.JSON_CONVERTER.parse( sessionInfo.getToolInfo(), new TypeReference<List<AiToolCallInfo>>() {
+                } );
+            }
+        }
         // 获取ChatClient
         AiVendorHelper.ChatClientWrapper chatClientWrapper = AiVendorHelper.getChatClient( sessionInfo.getConfigId() );
         if (chatClientWrapper == null) {
@@ -196,27 +212,15 @@ public class AiChatService {
         StringBuilder responseData = new StringBuilder();
         // 最后一个ChatResponse信息
         AtomicReference<ChatResponse> lastResponseRef = new AtomicReference<>();
-        ChatClient.ChatClientRequestSpec chatClientRequestSpec = chatClientWrapper.chatClient().prompt().user( userPrompt );
-        //如果本次没有传工具类，则检查是否有会话中的工具类。
-        if (toolList == null || toolList.isEmpty()) {
-            if (StringUtils.isNotBlank( sessionInfo.getToolInfo() )) {
-                toolList = JsonInterfaceHelper.JSON_CONVERTER.parse( sessionInfo.getToolInfo(), new TypeReference<List<AiToolCallInfo>>() {
-                } );
-            }
+        ChatClient.ChatClientRequestSpec chatClientRequestSpec = chatClientWrapper.chatClient().prompt();
+        if (StringUtils.isNotBlank( systemPrompt )){
+            chatClientRequestSpec.system( systemPrompt );
         }
+        chatClientRequestSpec.user( userPrompt );
         // 设置工具
         if (toolList != null && !toolList.isEmpty()) {
             chatClientRequestSpec.tools( AiToolHelper.getToolCallbacks( toolList ) );
             chatClientRequestSpec.toolContext( Map.of( "saasId", saasId, "userId", userId, "userType", userType, "userInfo", userInfo ) );
-        }
-        // 构建文档信息
-        if (files != null) {
-            ResponseData<String> readFileContent = readFileContent( files );
-            if (readFileContent.isNotSuccess()) {
-                return Flux.just( readFileContent.toString() );
-            } else {
-                systemPrompt = buildSystemContextInfo( systemPrompt, readFileContent.getData() );
-            }
         }
         Flux<String> chatResponse =
                 chatClientRequestSpec.advisors( spec -> spec.param( CHAT_MEMORY_CONVERSATION_ID_KEY,
