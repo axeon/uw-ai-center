@@ -383,7 +383,7 @@ public class AiChatService {
      */
     public static String buildSystemContextInfo(String systemPrompt, String contextInfo) {
         Message message = new PromptTemplate( """
-                已下内容是额外的知识，在你回答问题时可以参考下面的内容
+                以下内容是额外的知识，在你回答问题时可以参考下面的内容
                 ---------------------
                 {context}
                 ---------------------
