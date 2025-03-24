@@ -96,7 +96,9 @@ public class OpenAiVendor implements AiVendor {
      */
     @Override
     public List<ConfigParam> embedParam() {
-        return List.of();
+        return List.of(
+                new ConfigParam("api-path", "/v1/chat/embeddings",TypeConfigData.STRING.getValue(),"api路径","api路径"  )
+                );
     }
 
     /**
