@@ -24,7 +24,7 @@ public class AiChatOpenController {
      * ChatClient 简单调用
      */
     @PostMapping("/generate")
-    public ResponseData<String> generate(AiChatGenerateParam param) {
+    public ResponseData<String> generate(@ModelAttribute AiChatGenerateParam param) {
         return AiChatService.generate( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(),
                 param.getConfigId(), param.getUserPrompt(), param.getSystemPrompt(), param.getToolList(),  param.getFileList() );
     }

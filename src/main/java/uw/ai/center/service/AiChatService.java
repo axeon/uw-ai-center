@@ -21,6 +21,7 @@ import uw.ai.center.entity.AiSessionInfo;
 import uw.ai.center.entity.AiSessionMsg;
 import uw.ai.center.tool.AiToolHelper;
 import uw.ai.center.vendor.AiVendorHelper;
+import uw.ai.center.vo.AiModelConfigData;
 import uw.ai.center.vo.SessionConversationData;
 import uw.ai.vo.AiToolCallInfo;
 import uw.common.constant.StateCommon;
@@ -58,6 +59,11 @@ public class AiChatService {
         if (chatClientWrapper == null) {
             return ResponseData.errorMsg( "ChatClient获取失败!" );
         }
+        //获得基础信息。
+        AiModelConfigData configData = chatClientWrapper.configData();
+        if (StringUtils.isBlank( systemPrompt )){
+            systemPrompt = configData.getModelParam( "systemPrompt","" );
+        }
         // 初始化会话信息
         AiSessionInfo sessionInfo = loadSession( saasId, userId, SessionType.COMMON.getValue(), null ).getData();
         if (sessionInfo == null) {
@@ -82,7 +88,11 @@ public class AiChatService {
         AiSessionMsg sessionMsg = initSessionMsg( sessionInfo.getId(), systemPrompt, userPrompt, toolList );
         // 设置请求开始时间
         sessionMsg.setResponseStartDate( new Date() );
-        ChatClient.ChatClientRequestSpec chatClientRequestSpec = chatClientWrapper.chatClient().prompt().system( systemPrompt ).user( userPrompt );
+        ChatClient.ChatClientRequestSpec chatClientRequestSpec = chatClientWrapper.chatClient().prompt();
+        if (StringUtils.isNotBlank( systemPrompt )){
+            chatClientRequestSpec.system( systemPrompt );
+        }
+        chatClientRequestSpec.user( userPrompt );
         // 设置工具调用
         if (toolList != null && !toolList.isEmpty()) {
             chatClientRequestSpec.tools( AiToolHelper.getToolCallbacks( toolList ) );
@@ -115,6 +125,16 @@ public class AiChatService {
      */
     public static ResponseData<AiSessionInfo> initSession(long saasId, long userId, int userType, String userInfo, long configId, int sessionType, String sessionName,
                                                           Integer windowSize, String systemPrompt, List<AiToolCallInfo> toolList) {
+        // 获取ChatClient
+        AiVendorHelper.ChatClientWrapper chatClientWrapper = AiVendorHelper.getChatClient( configId );
+        if (chatClientWrapper == null) {
+            return ResponseData.errorMsg( "ChatClient获取失败!" );
+        }
+        //获得基础信息。
+        AiModelConfigData configData = chatClientWrapper.configData();
+        if (StringUtils.isBlank( systemPrompt )){
+            systemPrompt = configData.getModelParam( "systemPrompt","" );
+        }
         long sessionId = dao.getSequenceId( AiSessionInfo.class );
         AiSessionInfo sessionInfo = new AiSessionInfo();
         sessionInfo.setId( sessionId );
@@ -158,6 +178,10 @@ public class AiChatService {
         }
         if (sessionInfo == null) {
             return Flux.just( ResponseData.errorMsg( "会话不存在" ).toString() );
+        }
+        // 如何没有系统提示语，则使用会话的
+        if (StringUtils.isBlank( systemPrompt )){
+            systemPrompt = sessionInfo.getSystemPrompt();
         }
         // 获取ChatClient
         AiVendorHelper.ChatClientWrapper chatClientWrapper = AiVendorHelper.getChatClient( sessionInfo.getConfigId() );

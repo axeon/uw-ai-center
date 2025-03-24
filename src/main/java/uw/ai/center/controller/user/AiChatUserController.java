@@ -36,7 +36,7 @@ public class AiChatUserController {
     @PostMapping("/generate")
     @Operation(summary = "生成数据", description = "生成数据")
     @MscPermDeclare(auth = AuthType.NONE, log = ActionLog.BASE)
-    public ResponseData<String> generate(AiChatGenerateParam param) {
+    public ResponseData<String> generate(@ModelAttribute AiChatGenerateParam param) {
         return AiChatService.generate( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(),
                 param.getConfigId(), param.getUserPrompt(), param.getSystemPrompt(), param.getToolList(),  param.getFileList() );
     }
@@ -47,7 +47,7 @@ public class AiChatUserController {
     @PostMapping(value = "/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     @Operation(summary = "聊天", description = "聊天")
     @MscPermDeclare(auth = AuthType.NONE, log = ActionLog.BASE)
-    public Flux<ServerSentEvent<String>> chat(HttpServletResponse response, AiChatMsgParam param) {
+    public Flux<ServerSentEvent<String>> chat(HttpServletResponse response, @ModelAttribute AiChatMsgParam param) {
         response.setCharacterEncoding( "UTF-8" );
         return AiChatService.chat( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(),
                 param.getSessionId(), param.getUserPrompt(), param.getUserPrompt(), param.getToolList(), param.getFileList() ).map( s -> ServerSentEvent.builder( s ).build() );
@@ -61,7 +61,7 @@ public class AiChatUserController {
     @PostMapping(value = "/initSession")
     @Operation(summary = "初始化会话", description = "初始化会话")
     @MscPermDeclare(auth = AuthType.NONE, log = ActionLog.BASE)
-    public ResponseData<AiSessionInfo> initSession(AiChatSessionParam param) {
+    public ResponseData<AiSessionInfo> initSession(@ModelAttribute AiChatSessionParam param) {
         return AiChatService.initSession( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(),
                 param.getConfigId(), SessionType.CHAT.getValue(), param.getUserPrompt(), 0, param.getSystemPrompt(), param.getToolList() );
     }
