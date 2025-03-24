@@ -110,8 +110,8 @@ public class OpenAiVendor implements AiVendor {
         OpenAiApi openAiApi =  OpenAiApi.builder()
                 .baseUrl(aiModelConfigData.getApiUrl())
                 .apiKey(new SimpleApiKey(aiModelConfigData.getApiKey()))
-                .completionsPath( aiModelConfigData.getVendorParam( "apiPath" ) )
-                .embeddingsPath( aiModelConfigData.getEmbedParam(  "apiPath") )
+                .completionsPath( aiModelConfigData.getVendorParam( "api-path" ) )
+                .embeddingsPath( aiModelConfigData.getEmbedParam(  "api-path") )
                 .build();
         OpenAiChatModel chatModel =  OpenAiChatModel.builder()
                 .openAiApi(openAiApi)
