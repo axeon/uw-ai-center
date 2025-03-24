@@ -492,7 +492,7 @@ public class AiModelConfigData {
      * @return 参数值
      */
     public String getEmbedParam(String paramName) {
-        return getParam( modelParamMap, paramName, "" );
+        return getParam( embedParamMap, paramName, "" );
     }
 
     /**
@@ -503,7 +503,7 @@ public class AiModelConfigData {
      * @return 参数值
      */
     public String getEmbedParam(String paramName, String defaultValue) {
-        return getParam( modelParamMap, paramName, defaultValue );
+        return getParam( embedParamMap, paramName, defaultValue );
     }
 
     /**
@@ -514,7 +514,7 @@ public class AiModelConfigData {
      * @return 参数值
      */
     public int getEmbedIntParam(String paramName, int defaultValue) {
-        return getIntParam( modelParamMap, paramName, defaultValue );
+        return getIntParam( embedParamMap, paramName, defaultValue );
     }
 
     /**
@@ -524,7 +524,7 @@ public class AiModelConfigData {
      * @return 参数值
      */
     public int getEmbedIntParam(String paramName) {
-        return getIntParam( modelParamMap, paramName, 0 );
+        return getIntParam( embedParamMap, paramName, 0 );
     }
 
     /**
@@ -535,7 +535,7 @@ public class AiModelConfigData {
      * @return 参数值
      */
     public Long getEmbedLongParam(String paramName, long defaultValue) {
-        return getLongParam( modelParamMap, paramName, defaultValue );
+        return getLongParam( embedParamMap, paramName, defaultValue );
     }
 
     /**
@@ -545,7 +545,7 @@ public class AiModelConfigData {
      * @return 参数值
      */
     public Long getEmbedLongParam(String paramName) {
-        return getLongParam( modelParamMap, paramName, 0 );
+        return getLongParam( embedParamMap, paramName, 0 );
     }
 
     /**
@@ -556,7 +556,7 @@ public class AiModelConfigData {
      * @return 参数值
      */
     public boolean getEmbedBooleanParam(String paramName, boolean defaultValue) {
-        return getBooleanParam( modelParamMap, paramName, defaultValue );
+        return getBooleanParam( embedParamMap, paramName, defaultValue );
     }
 
     /**
@@ -566,7 +566,7 @@ public class AiModelConfigData {
      * @return 参数值
      */
     public boolean getEmbedBooleanParam(String paramName) {
-        return getBooleanParam( modelParamMap, paramName, false );
+        return getBooleanParam( embedParamMap, paramName, false );
     }
 
     /**
@@ -577,7 +577,7 @@ public class AiModelConfigData {
      * @return 参数值
      */
     public double getEmbedDoubleParam(String paramName, double defaultValue) {
-        return getDoubleParam( modelParamMap, paramName, defaultValue );
+        return getDoubleParam( embedParamMap, paramName, defaultValue );
     }
 
     /**
@@ -587,7 +587,7 @@ public class AiModelConfigData {
      * @return 参数值
      */
     public double getEmbedDoubleParam(String paramName) {
-        return getDoubleParam( modelParamMap, paramName, 0 );
+        return getDoubleParam( embedParamMap, paramName, 0 );
     }
 
     /**
@@ -598,7 +598,7 @@ public class AiModelConfigData {
      * @return 参数值
      */
     public float getEmbedFloatParam(String paramName, float defaultValue) {
-        return getFloatParam( modelParamMap, paramName, defaultValue );
+        return getFloatParam( embedParamMap, paramName, defaultValue );
     }
 
     /**
@@ -608,7 +608,7 @@ public class AiModelConfigData {
      * @return 参数值
      */
     public float getEmbedFloatParam(String paramName) {
-        return getFloatParam( modelParamMap, paramName, 0 );
+        return getFloatParam( embedParamMap, paramName, 0 );
     }
 
 
