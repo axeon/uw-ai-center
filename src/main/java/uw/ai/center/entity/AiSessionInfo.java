@@ -13,12 +13,12 @@ import uw.dao.annotation.TableMeta;
 
 /**
  * AiSessionInfo实体类
- * session信息
+ * session会话
  *
  * @author axeon
  */
 @TableMeta(tableName="ai_session_info",tableType="table")
-@Schema(title = "session信息", description = "session信息")
+@Schema(title = "session会话", description = "session会话")
 public class AiSessionInfo implements DataEntity,Serializable{
 
 

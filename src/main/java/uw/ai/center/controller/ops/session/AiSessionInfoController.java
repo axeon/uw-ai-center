@@ -27,25 +27,25 @@ import java.util.Date;
 
 
 /**
- * session信息管理。
+ * session会话管理。
  */
 @RestController
 @RequestMapping("/ops/session/info")
-@Tag(name = "session信息管理", description = "session信息增删改查列管理")
+@Tag(name = "session会话管理", description = "session会话增删改查列管理")
 @MscPermDeclare(user = UserType.OPS)
 public class AiSessionInfoController {
 
     private final DaoFactory dao = DaoFactory.getInstance();
 
     /**
-     * 列表session信息。
+     * 列表session会话。
      *
      * @param queryParam
      * @return
      * @throws TransactionException
      */
     @GetMapping("/list")
-    @Operation(summary = "列表session信息", description = "列表session信息")
+    @Operation(summary = "列表session会话", description = "列表session会话")
     @MscPermDeclare(user = UserType.OPS, auth = AuthType.PERM, log = ActionLog.REQUEST)
     public DataList<AiSessionInfo> list(AiSessionInfoQueryParam queryParam) throws TransactionException {
         AuthServiceHelper.logRef(AiSessionInfo.class);
@@ -53,12 +53,12 @@ public class AiSessionInfoController {
     }
 
     /**
-     * 轻量级列表session信息，一般用于select控件。
+     * 轻量级列表session会话，一般用于select控件。
      *
      * @return
      */
     @GetMapping("/liteList")
-    @Operation(summary = "轻量级列表session信息", description = "轻量级列表session信息，一般用于select控件。")
+    @Operation(summary = "轻量级列表session会话", description = "轻量级列表session会话，一般用于select控件。")
     @MscPermDeclare(user = UserType.OPS, auth = AuthType.USER, log = ActionLog.NONE)
     public DataList<AiSessionInfo> liteList(AiSessionInfoQueryParam queryParam) throws TransactionException {
         queryParam.SELECT_SQL( "SELECT id,saas_id,mch_id,user_id,user_type,group_id,user_name,nick_name,real_name,session_name,create_date,modify_date,state from ai_session_info " );
@@ -66,13 +66,13 @@ public class AiSessionInfoController {
     }
 
     /**
-     * 加载session信息。
+     * 加载session会话。
      *
      * @param id
      * @throws TransactionException
      */
     @GetMapping("/load")
-    @Operation(summary = "加载session信息", description = "加载session信息")
+    @Operation(summary = "加载session会话", description = "加载session会话")
     @MscPermDeclare(user = UserType.OPS, auth = AuthType.PERM, log = ActionLog.REQUEST)
     public AiSessionInfo load(@Parameter(description = "主键ID", required = true) @RequestParam long id) throws TransactionException {
         AuthServiceHelper.logRef(AiSessionInfo.class,id);
@@ -80,22 +80,22 @@ public class AiSessionInfoController {
     }
 
     /**
-     * 删除session信息。
+     * 删除session会话。
      *
      * @param id
      * @throws TransactionException
      */
     @DeleteMapping("/delete")
-    @Operation(summary = "删除session信息", description = "删除session信息")
+    @Operation(summary = "删除session会话", description = "删除session会话")
     @MscPermDeclare(user = UserType.OPS, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData delete(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark) throws TransactionException {
-        AuthServiceHelper.logInfo(AiSessionInfo.class,id,"删除session信息！操作备注："+remark);
+        AuthServiceHelper.logInfo(AiSessionInfo.class,id,"删除session会话！操作备注："+remark);
         AiSessionInfo aiSessionInfo = dao.queryForSingleObject(AiSessionInfo.class, new AuthIdQueryParam(id));
         if (aiSessionInfo == null) {
-            return ResponseData.warnMsg("未找到指定id的session信息！");
+            return ResponseData.warnMsg("未找到指定id的session会话！");
         }
         if (aiSessionInfo.getState()!=StateCommon.DISABLED.getValue()){
-            return ResponseData.warnMsg("删除session信息失败！当前状态不是禁用状态！");
+            return ResponseData.warnMsg("删除session会话失败！当前状态不是禁用状态！");
         }            
 //        aiSessionInfo.setModifyDate(new Date());
         aiSessionInfo.setState(StateCommon.DELETED.getValue());

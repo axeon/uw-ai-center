@@ -22,37 +22,104 @@ CREATE TABLE `ai_model_config` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='AI服务模型';
 
 
+-- uw_ai.ai_rag_doc definition
+
+CREATE TABLE `ai_rag_doc` (
+                              `id` bigint NOT NULL COMMENT 'ID',
+                              `saas_id` bigint NOT NULL COMMENT 'saasId',
+                              `lib_id` bigint NOT NULL COMMENT 'libId',
+                              `doc_type` int DEFAULT NULL COMMENT '文档类型',
+                              `doc_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '文档名称',
+                              `doc_desc` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci COMMENT '文档描述',
+                              `doc_size` bigint NOT NULL COMMENT '文档大小',
+                              `create_date` datetime(3) DEFAULT NULL COMMENT '创建时间',
+                              `modify_date` datetime(3) DEFAULT NULL COMMENT '修改时间',
+                              `state` int DEFAULT NULL COMMENT '状态',
+                              PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='rag文档信息';
+
+
+-- uw_ai.ai_rag_lib definition
+
+CREATE TABLE `ai_rag_lib` (
+                              `id` bigint NOT NULL COMMENT 'ID',
+                              `saas_id` bigint NOT NULL COMMENT 'saasId',
+                              `user_id` bigint NOT NULL COMMENT '用户id',
+                              `user_type` int DEFAULT NULL COMMENT '用户类型',
+                              `user_info` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '用户名',
+                              `lib_type` int DEFAULT NULL COMMENT '文档库类型',
+                              `lib_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '文档库名称',
+                              `lib_desc` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci COMMENT '文档库描述',
+                              `lib_config` json DEFAULT NULL COMMENT '服务商配置',
+                              `create_date` datetime(3) DEFAULT NULL COMMENT '创建时间',
+                              `modify_date` datetime(3) DEFAULT NULL COMMENT '修改时间',
+                              `state` int DEFAULT NULL COMMENT '状态',
+                              PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='rag文档库';
+
+
 -- uw_ai.ai_session_info definition
 
 CREATE TABLE `ai_session_info` (
                                    `id` bigint NOT NULL COMMENT 'ID',
                                    `saas_id` bigint NOT NULL COMMENT 'saasId',
-                                   `mch_id` bigint DEFAULT NULL COMMENT '商户ID',
                                    `user_id` bigint NOT NULL COMMENT '用户id',
                                    `user_type` int DEFAULT NULL COMMENT '用户类型',
-                                   `group_id` bigint DEFAULT NULL COMMENT '用户组ID',
-                                   `user_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '用户名',
-                                   `nick_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '用户昵称',
-                                   `real_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '真实名称',
-                                   `session_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT 'session名称',
+                                   `user_info` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '用户名',
+                                   `config_id` bigint DEFAULT NULL COMMENT '配置ID',
+                                   `session_type` int DEFAULT NULL COMMENT 'session类型',
+                                   `session_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT 'session名称',
+                                   `msg_num` int DEFAULT NULL COMMENT 'session大小',
+                                   `window_size` int DEFAULT NULL COMMENT '历史长度',
+                                   `request_tokens` bigint DEFAULT NULL COMMENT '请求token数',
+                                   `response_tokens` bigint DEFAULT NULL COMMENT '响应token数',
+                                   `system_prompt` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci COMMENT '系统信息',
+                                   `tool_info` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci COMMENT '工具信息',
                                    `create_date` datetime(3) DEFAULT NULL COMMENT '创建时间',
                                    `modify_date` datetime(3) DEFAULT NULL COMMENT '修改时间',
+                                   `last_update` datetime(3) DEFAULT NULL COMMENT '最后更新时间',
                                    `state` int DEFAULT NULL COMMENT '状态',
                                    PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='session信息';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='session会话';
 
 
 -- uw_ai.ai_session_msg definition
 
 CREATE TABLE `ai_session_msg` (
                                   `id` bigint NOT NULL COMMENT 'ID',
+                                  `saas_id` bigint NOT NULL COMMENT 'saasId',
                                   `session_id` bigint NOT NULL COMMENT 'sessionId',
-                                  `request_info` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci COMMENT '请求信息',
+                                  `system_prompt` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci COMMENT '系统提问',
+                                  `user_prompt` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci COMMENT '用户提问',
+                                  `tool_info` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci COMMENT '工具信息',
+                                  `file_info` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci COMMENT '文件信息',
                                   `response_info` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci COMMENT '返回信息',
-                                  `create_date` datetime(3) DEFAULT NULL COMMENT '创建时间',
+                                  `request_tokens` bigint DEFAULT NULL COMMENT '请求token数',
+                                  `response_tokens` bigint DEFAULT NULL COMMENT '响应token数',
+                                  `request_date` datetime(3) DEFAULT NULL COMMENT '创建时间',
+                                  `response_start_date` datetime(3) DEFAULT NULL COMMENT '回应开始时间',
+                                  `response_end_date` datetime(3) DEFAULT NULL COMMENT '回应结束时间',
                                   `state` int DEFAULT NULL COMMENT '状态',
                                   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='session消息';
+
+
+-- uw_ai.ai_tool_info definition
+
+CREATE TABLE `ai_tool_info` (
+                                `id` bigint NOT NULL COMMENT 'ID',
+                                `app_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '应用名',
+                                `tool_class` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '工具类',
+                                `tool_version` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '工具版本',
+                                `tool_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '工具名称',
+                                `tool_desc` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci COMMENT '工具描述',
+                                `tool_input` json DEFAULT NULL COMMENT '工具参数配置',
+                                `tool_output` json DEFAULT NULL COMMENT '工具返回配置',
+                                `create_date` datetime(3) DEFAULT NULL COMMENT '创建时间',
+                                `modify_date` datetime(3) DEFAULT NULL COMMENT '修改时间',
+                                `state` int DEFAULT NULL COMMENT '状态',
+                                PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='AI工具信息';
 
 
 -- uw_ai.sys_crit_log definition

@@ -34,6 +34,7 @@ import uw.httpclient.json.JsonInterfaceHelper;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
@@ -53,7 +54,7 @@ public class AiChatService {
      * ChatClient 简单调用。
      */
     public static ResponseData<String> generate(long saasId, long userId, int userType, String userInfo, long configId, String userPrompt, String systemPrompt,
-                                                List<AiToolCallInfo> toolList, MultipartFile[] files) {
+                                                List<AiToolCallInfo> toolList, MultipartFile[] fileList) {
         // 获取ChatClient
         AiVendorHelper.ChatClientWrapper chatClientWrapper = AiVendorHelper.getChatClient( configId );
         if (chatClientWrapper == null) {
@@ -61,8 +62,8 @@ public class AiChatService {
         }
         //获得基础信息。
         AiModelConfigData configData = chatClientWrapper.configData();
-        if (StringUtils.isBlank( systemPrompt )){
-            systemPrompt = configData.getModelParam( "systemPrompt","" );
+        if (StringUtils.isBlank( systemPrompt )) {
+            systemPrompt = configData.getModelParam( "systemPrompt", "" );
         }
         // 初始化会话信息
         AiSessionInfo sessionInfo = loadSession( saasId, userId, SessionType.COMMON.getValue(), null ).getData();
@@ -76,20 +77,23 @@ public class AiChatService {
             }
         }
         // 构建文档信息
-        if (files != null) {
-            ResponseData<String> readFileContent = readFileContent( files );
-            if (readFileContent.isNotSuccess()) {
-                return readFileContent;
+        String fileInfo = null;
+        if (fileList != null) {
+            ResponseData<String[]> readFileData = readFileData( fileList );
+            if (readFileData.isNotSuccess()) {
+                return readFileData.prototype();
             } else {
-                systemPrompt = buildSystemContextInfo( systemPrompt, readFileContent.getData() );
+                String[] fileData = readFileData.getData();
+                fileInfo = fileData[0];
+                systemPrompt = buildSystemContextInfo( systemPrompt, fileData[1] );
             }
         }
         // 初始化会话消息
-        AiSessionMsg sessionMsg = initSessionMsg( sessionInfo.getId(), systemPrompt, userPrompt, toolList );
+        AiSessionMsg sessionMsg = initSessionMsg( sessionInfo.getId(), systemPrompt, userPrompt, toolList, fileInfo );
         // 设置请求开始时间
         sessionMsg.setResponseStartDate( new Date() );
         ChatClient.ChatClientRequestSpec chatClientRequestSpec = chatClientWrapper.chatClient().prompt();
-        if (StringUtils.isNotBlank( systemPrompt )){
+        if (StringUtils.isNotBlank( systemPrompt )) {
             chatClientRequestSpec.system( systemPrompt );
         }
         chatClientRequestSpec.user( userPrompt );
@@ -132,8 +136,8 @@ public class AiChatService {
         }
         //获得基础信息。
         AiModelConfigData configData = chatClientWrapper.configData();
-        if (StringUtils.isBlank( systemPrompt )){
-            systemPrompt = configData.getModelParam( "systemPrompt","" );
+        if (StringUtils.isBlank( systemPrompt )) {
+            systemPrompt = configData.getModelParam( "systemPrompt", "" );
         }
         long sessionId = dao.getSequenceId( AiSessionInfo.class );
         AiSessionInfo sessionInfo = new AiSessionInfo();
@@ -180,16 +184,19 @@ public class AiChatService {
             return Flux.just( ResponseData.errorMsg( "会话不存在" ).toString() );
         }
         // 如何没有系统提示语，则使用会话的
-        if (StringUtils.isBlank( systemPrompt )){
+        if (StringUtils.isBlank( systemPrompt )) {
             systemPrompt = sessionInfo.getSystemPrompt();
         }
         // 构建文档信息
+        String fileInfo = null;
         if (fileList != null) {
-            ResponseData<String> readFileContent = readFileContent( fileList );
-            if (readFileContent.isNotSuccess()) {
-                return Flux.just( readFileContent.toString() );
+            ResponseData<String[]> readFileData = readFileData( fileList );
+            if (readFileData.isNotSuccess()) {
+                return Flux.just( readFileData.toString() );
             } else {
-                systemPrompt = buildSystemContextInfo( systemPrompt, readFileContent.getData() );
+                String[] fileData = readFileData.getData();
+                fileInfo = fileData[0];
+                systemPrompt = buildSystemContextInfo( systemPrompt, fileData[1] );
             }
         }
         //如果本次没有传工具类，则检查是否有会话中的工具类。
@@ -205,7 +212,7 @@ public class AiChatService {
             return Flux.just( ResponseData.errorMsg( "ChatClient获取失败" ).toString() );
         }
         // 初始化会话消息
-        AiSessionMsg sessionMsg = initSessionMsg( sessionInfo.getId(), systemPrompt, userPrompt, toolList );
+        AiSessionMsg sessionMsg = initSessionMsg( sessionInfo.getId(), systemPrompt, userPrompt, toolList, fileInfo );
         // 会话消息的会话ID和消息ID
         SessionConversationData conversationData = new SessionConversationData( sessionMsg.getSessionId(), sessionMsg.getId() );
         // 返回信息
@@ -213,7 +220,7 @@ public class AiChatService {
         // 最后一个ChatResponse信息
         AtomicReference<ChatResponse> lastResponseRef = new AtomicReference<>();
         ChatClient.ChatClientRequestSpec chatClientRequestSpec = chatClientWrapper.chatClient().prompt();
-        if (StringUtils.isNotBlank( systemPrompt )){
+        if (StringUtils.isNotBlank( systemPrompt )) {
             chatClientRequestSpec.system( systemPrompt );
         }
         chatClientRequestSpec.user( userPrompt );
@@ -299,7 +306,7 @@ public class AiChatService {
      * @param userPrompt
      * @return
      */
-    public static AiSessionMsg initSessionMsg(long sessionId, String systemPrompt, String userPrompt, List<AiToolCallInfo> toolList) {
+    public static AiSessionMsg initSessionMsg(long sessionId, String systemPrompt, String userPrompt, List<AiToolCallInfo> toolList, String fileInfo) {
         long msgId = dao.getSequenceId( AiSessionMsg.class );
         AiSessionMsg sessionMsg = new AiSessionMsg();
         sessionMsg.setId( msgId );
@@ -307,6 +314,7 @@ public class AiChatService {
         sessionMsg.setSystemPrompt( systemPrompt );
         sessionMsg.setUserPrompt( userPrompt );
         sessionMsg.setToolInfo( JsonInterfaceHelper.JSON_CONVERTER.toString( toolList ) );
+        sessionMsg.setFileInfo( fileInfo );
         sessionMsg.setState( StateCommon.ENABLED.getValue() );
         sessionMsg.setRequestDate( new Date() );
         return sessionMsg;
@@ -322,7 +330,7 @@ public class AiChatService {
         try {
             // 更新sessionMsg
             dao.save( sessionMsg );
-            // 更新session信息
+            // 更新session会话
             String sql = "update ai_session_info set last_update=?, msg_num=msg_num+1,request_tokens=request_tokens+?,response_tokens=response_tokens+? where id=?";
             dao.executeCommand( sql, new Object[]{new java.util.Date(), sessionMsg.getRequestTokens(), sessionMsg.getResponseTokens(), sessionMsg.getSessionId()} );
         } catch (TransactionException e) {
@@ -350,18 +358,21 @@ public class AiChatService {
         }
     }
 
+
     /**
      * 读取文件内容。
      *
      * @param files
-     * @return
+     * @return String[0] 文件信息 String[1] 文件内容
      */
-    public static ResponseData<String> readFileContent(MultipartFile[] files) {
+    public static ResponseData<String[]> readFileData(MultipartFile[] files) {
         if (files == null) {
             return ResponseData.errorMsg( "文件为空!" );
         }
+        LinkedHashMap<String, Long> infoMap = new LinkedHashMap<>();
         StringBuilder content = new StringBuilder( 8192 );
         for (MultipartFile file : files) {
+            infoMap.put( file.getName(), file.getSize() );
             try (InputStream inputStream = file.getInputStream()) {
                 TikaDocumentReader reader = new TikaDocumentReader( new InputStreamResource( inputStream ) );
                 List<Document> documents = reader.get(); // 假设返回List<Document>
@@ -377,7 +388,8 @@ public class AiChatService {
                 return ResponseData.errorMsg( "处理文件[" + file.getName() + "]时发生错误!" + e.getMessage() );
             }
         }
-        return ResponseData.success( content.toString() );
+        String fileInfo = JsonInterfaceHelper.JSON_CONVERTER.toString( infoMap );
+        return ResponseData.success( new String[]{fileInfo, content.toString()} );
     }
 
     /**
@@ -387,7 +399,7 @@ public class AiChatService {
      */
     public static String buildSystemContextInfo(String systemPrompt, String contextInfo) {
         Message message = new PromptTemplate( """
-                以下内容是额外的知识，在你回答问题时可以参考下面的内容
+                以下内容是附件信息，在你回答问题时可以参考下面的内容
                 ---------------------
                 {context}
                 ---------------------

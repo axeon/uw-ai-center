@@ -65,6 +65,13 @@ public class AiSessionMsg implements DataEntity,Serializable{
     private String toolInfo;
 
     /**
+     * 文件信息
+     */
+    @ColumnMeta(columnName="file_info", dataType="String", dataSize=65535, nullable=true)
+    @Schema(title = "文件信息", description = "文件信息", maxLength=65535, nullable=true )
+    private String fileInfo;
+
+    /**
      * 返回信息
      */
     @ColumnMeta(columnName="response_info", dataType="String", dataSize=2147483646, nullable=true)
@@ -205,6 +212,13 @@ public class AiSessionMsg implements DataEntity,Serializable{
     }
 
     /**
+     * 获取文件信息。
+     */
+    public String getFileInfo(){
+        return this.fileInfo;
+    }
+
+    /**
      * 获取返回信息。
      */
     public String getResponseInfo(){
@@ -339,6 +353,20 @@ public class AiSessionMsg implements DataEntity,Serializable{
     }
 
     /**
+     * 设置文件信息。
+     */
+    public void setFileInfo(String fileInfo){
+        if (!Objects.equals(this.fileInfo, fileInfo)){
+            if (this.UPDATED_COLUMN == null) {
+                _INIT_UPDATE_INFO();
+            }
+            this.UPDATED_COLUMN.add("file_info");
+            this.UPDATED_INFO.append("file_info:\"" + this.fileInfo+ "\"=>\"" + fileInfo + "\"\r\n");
+            this.fileInfo = fileInfo;
+        }
+    }
+
+    /**
      * 设置返回信息。
      */
     public void setResponseInfo(String responseInfo){
@@ -448,6 +476,7 @@ public class AiSessionMsg implements DataEntity,Serializable{
         sb.append("system_prompt:\"" + this.systemPrompt + "\"\r\n");
         sb.append("user_prompt:\"" + this.userPrompt + "\"\r\n");
         sb.append("tool_info:\"" + this.toolInfo + "\"\r\n");
+        sb.append("file_info:\"" + this.fileInfo + "\"\r\n");
         sb.append("response_info:\"" + this.responseInfo + "\"\r\n");
         sb.append("request_tokens:\"" + this.requestTokens + "\"\r\n");
         sb.append("response_tokens:\"" + this.responseTokens + "\"\r\n");

@@ -9,9 +9,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
-* session信息列表查询参数。
+`* session会话列表查询参数。
 */
-@Schema(title = "session信息列表查询参数", description = "session信息列表查询参数")
+@Schema(title = "session会话列表查询参数", description = "session会话列表查询参数")
 public class AiSessionInfoQueryParam extends AuthPageQueryParam{
 
     public AiSessionInfoQueryParam() {
