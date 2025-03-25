@@ -38,7 +38,7 @@ public class AiChatUserController {
     @MscPermDeclare(auth = AuthType.NONE, log = ActionLog.BASE)
     public ResponseData<String> generate(@ModelAttribute AiChatGenerateParam param) {
         return AiChatService.generate( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(),
-                param.getConfigId(), param.getUserPrompt(), param.getSystemPrompt(), param.getToolList(),  param.getFileList() );
+                param.getConfigId(), param.getUserPrompt(), param.getSystemPrompt(), param.getToolList(), param.getFileList() );
     }
 
     /**
@@ -50,7 +50,9 @@ public class AiChatUserController {
     public Flux<ServerSentEvent<String>> chat(HttpServletResponse response, @ModelAttribute AiChatMsgParam param) {
         response.setCharacterEncoding( "UTF-8" );
         return AiChatService.chat( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(),
-                param.getSessionId(), param.getUserPrompt(), param.getSystemPrompt(), param.getToolList(), param.getFileList() ).map( s -> ServerSentEvent.builder( s ).build() );
+                param.getSessionId(), param.getUserPrompt(), param.getSystemPrompt(), param.getToolList(), param.getFileList() ).map( s -> ServerSentEvent.builder( s == null ?
+                "" : s ).build() );
+
     }
 
     /**
