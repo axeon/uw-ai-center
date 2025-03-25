@@ -2,6 +2,7 @@ package uw.ai.center.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import uw.app.common.dto.AuthPageQueryParam;
+import uw.dao.PageQueryParam;
 import uw.dao.annotation.QueryMeta;
 
 import java.util.Date;
@@ -12,16 +13,12 @@ import java.util.Map;
 * AI服务模型列表查询参数。
 */
 @Schema(title = "AI服务模型列表查询参数", description = "AI服务模型列表查询参数")
-public class AiModelConfigQueryParam extends AuthPageQueryParam{
+public class UserModelConfigQueryParam extends PageQueryParam {
 
-    public AiModelConfigQueryParam() {
+    public UserModelConfigQueryParam() {
         super();
     }
 
-    public AiModelConfigQueryParam(Long saasId) {
-        super(saasId);
-    }
-	
     /**
      * 允许的排序属性。
      * key:排序名 value:排序字段
@@ -37,12 +34,10 @@ public class AiModelConfigQueryParam extends AuthPageQueryParam{
             put( "vendorClass", "vendor_class" );
             put( "configCode", "config_code" );
             put( "configName", "config_name" );
-            put( "apiUrl", "api_url" );
             put( "modelMain", "model_main" );
             put( "modelEmbed", "model_embed" );
             put( "createDate", "create_date" );
             put( "modifyDate", "modify_date" );
-            put( "state", "state" );
         }};
     }
 
@@ -59,6 +54,13 @@ public class AiModelConfigQueryParam extends AuthPageQueryParam{
     @QueryMeta(expr = "id in (?)")
     @Schema(title="数组ID", description = "ID数组，可同时匹配多个。")
     private Long[] ids;
+
+    /**
+     * saasId。
+     */
+    @QueryMeta(expr = "(saas_id=0 or saas_id=?)")
+    @Schema(title = "saasId", description = "saasId")
+    private long saasId;
 
     /**
     * 商户ID。
@@ -87,20 +89,7 @@ public class AiModelConfigQueryParam extends AuthPageQueryParam{
     @QueryMeta(expr = "config_name like ?")
     @Schema(title="服务商名称", description = "服务商名称")
     private String configName;
-	
-    /**
-    * api地址。
-    */
-    @QueryMeta(expr = "api_url like ?")
-    @Schema(title="api地址", description = "api地址")
-    private String apiUrl;
-	
-    /**
-    * api key。
-    */
-    @QueryMeta(expr = "api_key like ?")
-    @Schema(title="api key", description = "api key")
-    private String apiKey;
+
 	
     /**
     * 主模型。
@@ -115,7 +104,7 @@ public class AiModelConfigQueryParam extends AuthPageQueryParam{
     @QueryMeta(expr = "model_embed like ?")
     @Schema(title="嵌入模型", description = "嵌入模型")
     private String modelEmbed;
-	
+
     /**
     * 创建时间范围。
     */
@@ -176,7 +165,7 @@ public class AiModelConfigQueryParam extends AuthPageQueryParam{
     /**
     * 设置ID链式调用。
     */
-    public AiModelConfigQueryParam id(Long id) {
+    public UserModelConfigQueryParam id(Long id) {
         setId(id);
         return this;
     }
@@ -198,8 +187,30 @@ public class AiModelConfigQueryParam extends AuthPageQueryParam{
     /**
     * 设置数组ID链式调用。
     */
-    public AiModelConfigQueryParam ids(Long[] ids) {
+    public UserModelConfigQueryParam ids(Long[] ids) {
         setIds(ids);
+        return this;
+    }
+
+    /**
+    * 获取saasId。
+    */
+    public long getSaasId() {
+        return saasId;
+    }
+
+    /**
+    * 设置saasId。
+    */
+    public void setSaasId(long saasId) {
+        this.saasId = saasId;
+    }
+
+    /**
+    * 设置saasId链式调用。
+    */
+    public UserModelConfigQueryParam saasId(long saasId) {
+        setSaasId(saasId);
         return this;
     }
 
@@ -220,7 +231,7 @@ public class AiModelConfigQueryParam extends AuthPageQueryParam{
     /**
     * 设置商户ID链式调用。
     */
-	public AiModelConfigQueryParam mchId(Long mchId){
+	public UserModelConfigQueryParam mchId(Long mchId){
         setMchId(mchId);
         return this;
     }
@@ -242,7 +253,7 @@ public class AiModelConfigQueryParam extends AuthPageQueryParam{
     /**
     * 设置服务商类链式调用。
     */
-    public AiModelConfigQueryParam vendorClass(String vendorClass) {
+    public UserModelConfigQueryParam vendorClass(String vendorClass) {
         setVendorClass(vendorClass);
         return this;
     }
@@ -264,7 +275,7 @@ public class AiModelConfigQueryParam extends AuthPageQueryParam{
     /**
     * 设置服务商代码链式调用。
     */
-    public AiModelConfigQueryParam configCode(String configCode) {
+    public UserModelConfigQueryParam configCode(String configCode) {
         setConfigCode(configCode);
         return this;
     }
@@ -286,55 +297,11 @@ public class AiModelConfigQueryParam extends AuthPageQueryParam{
     /**
     * 设置服务商名称链式调用。
     */
-    public AiModelConfigQueryParam configName(String configName) {
+    public UserModelConfigQueryParam configName(String configName) {
         setConfigName(configName);
         return this;
     }
-	
-    /**
-    * 获取api地址。
-    */
-    public String getApiUrl(){
-        return this.apiUrl;
-    }
 
-    /**
-    * 设置api地址。
-    */
-    public void setApiUrl(String apiUrl){
-        this.apiUrl = apiUrl;
-    }
-	
-    /**
-    * 设置api地址链式调用。
-    */
-    public AiModelConfigQueryParam apiUrl(String apiUrl) {
-        setApiUrl(apiUrl);
-        return this;
-    }
-	
-    /**
-    * 获取api key。
-    */
-    public String getApiKey(){
-        return this.apiKey;
-    }
-
-    /**
-    * 设置api key。
-    */
-    public void setApiKey(String apiKey){
-        this.apiKey = apiKey;
-    }
-	
-    /**
-    * 设置api key链式调用。
-    */
-    public AiModelConfigQueryParam apiKey(String apiKey) {
-        setApiKey(apiKey);
-        return this;
-    }
-	
     /**
     * 获取主模型。
     */
@@ -352,7 +319,7 @@ public class AiModelConfigQueryParam extends AuthPageQueryParam{
     /**
     * 设置主模型链式调用。
     */
-    public AiModelConfigQueryParam modelMain(String modelMain) {
+    public UserModelConfigQueryParam modelMain(String modelMain) {
         setModelMain(modelMain);
         return this;
     }
@@ -374,7 +341,7 @@ public class AiModelConfigQueryParam extends AuthPageQueryParam{
     /**
     * 设置嵌入模型链式调用。
     */
-    public AiModelConfigQueryParam modelEmbed(String modelEmbed) {
+    public UserModelConfigQueryParam modelEmbed(String modelEmbed) {
         setModelEmbed(modelEmbed);
         return this;
     }
@@ -396,7 +363,7 @@ public class AiModelConfigQueryParam extends AuthPageQueryParam{
     /**
     * 设置创建时间范围链式调用。
     */
-    public AiModelConfigQueryParam createDateRange(Date[] createDateRange) {
+    public UserModelConfigQueryParam createDateRange(Date[] createDateRange) {
         setCreateDateRange(createDateRange);
         return this;
     }
@@ -418,7 +385,7 @@ public class AiModelConfigQueryParam extends AuthPageQueryParam{
     /**
     * 设置修改时间范围链式调用。
     */
-    public AiModelConfigQueryParam modifyDateRange(Date[] modifyDateRange) {
+    public UserModelConfigQueryParam modifyDateRange(Date[] modifyDateRange) {
         setModifyDateRange(modifyDateRange);
         return this;
     }
@@ -440,7 +407,7 @@ public class AiModelConfigQueryParam extends AuthPageQueryParam{
     /**
     * 设置状态链式调用。
     */
-    public AiModelConfigQueryParam state(Integer state) {
+    public UserModelConfigQueryParam state(Integer state) {
         setState(state);
         return this;
     }
@@ -462,7 +429,7 @@ public class AiModelConfigQueryParam extends AuthPageQueryParam{
     /**
     * 设置数组状态链式调用。
     */
-    public AiModelConfigQueryParam states(Integer[] states) {
+    public UserModelConfigQueryParam states(Integer[] states) {
         setStates(states);
         return this;
     }
@@ -484,7 +451,7 @@ public class AiModelConfigQueryParam extends AuthPageQueryParam{
     /**
     * 设置大于等于状态链式调用。
     */
-    public AiModelConfigQueryParam stateGte(Integer stateGte) {
+    public UserModelConfigQueryParam stateGte(Integer stateGte) {
         setStateGte(stateGte);
         return this;
     }
@@ -506,7 +473,7 @@ public class AiModelConfigQueryParam extends AuthPageQueryParam{
     /**
     * 获取小于等于状态链式调用。
     */
-    public AiModelConfigQueryParam stateLte(Integer stateLte) {
+    public UserModelConfigQueryParam stateLte(Integer stateLte) {
         setStateLte(stateLte);
         return this;
     }
