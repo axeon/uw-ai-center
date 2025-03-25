@@ -5,10 +5,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.metadata.Usage;
 import org.springframework.ai.chat.model.ChatResponse;
-import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.reader.tika.TikaDocumentReader;
 import org.springframework.core.io.InputStreamResource;
@@ -157,7 +155,7 @@ public class AiChatService {
         sessionInfo.setToolInfo( JsonInterfaceHelper.JSON_CONVERTER.toString( toolList ) );
         sessionInfo.setRequestTokens( 0 );
         sessionInfo.setResponseTokens( 0 );
-        sessionInfo.setCreateDate( new java.util.Date() );
+        sessionInfo.setCreateDate( new Date() );
         sessionInfo.setLastUpdate( null );
         sessionInfo.setState( StateCommon.ENABLED.getValue() );
         try {
@@ -230,24 +228,25 @@ public class AiChatService {
             chatClientRequestSpec.toolContext( Map.of( "saasId", saasId, "userId", userId, "userType", userType, "userInfo", userInfo ) );
         }
         Flux<String> chatResponse =
-                chatClientRequestSpec.advisors( spec -> spec.param( CHAT_MEMORY_CONVERSATION_ID_KEY,
-                        conversationData.toString() ).param( CHAT_MEMORY_RETRIEVE_SIZE_KEY, sessionInfo.getWindowSize() ) ).stream().chatResponse().doFirst( () -> {
-                    sessionMsg.setResponseStartDate( new Date() );
-                } ).doOnComplete( () -> {
-                    ChatResponse lastResponse = lastResponseRef.get();
-                    Usage tokenUsage = lastResponse.getMetadata().getUsage();
-                    sessionMsg.setRequestTokens( tokenUsage.getPromptTokens() );
-                    sessionMsg.setResponseTokens( tokenUsage.getCompletionTokens() );
-                    sessionMsg.setResponseEndDate( new Date() );
-                    sessionMsg.setResponseInfo( responseData.toString() );
-                    // 保存会话信息
-                    saveSessionMsg( sessionMsg );
-                } ).map( x -> {
-                    String content = x.getResult().getOutput().getText();
-                    responseData.append( content );
-                    lastResponseRef.set( x );
-                    return content;
-                } );
+                chatClientRequestSpec.advisors( spec -> spec.param( CHAT_MEMORY_CONVERSATION_ID_KEY, conversationData.toString() ).param( CHAT_MEMORY_RETRIEVE_SIZE_KEY,
+                                sessionInfo.getWindowSize() ) ).stream().chatResponse().doFirst( () -> {
+                            sessionMsg.setResponseStartDate( new Date() );
+                        } ).doOnComplete( () -> {
+                            ChatResponse lastResponse = lastResponseRef.get();
+                            Usage tokenUsage = lastResponse.getMetadata().getUsage();
+                            sessionMsg.setRequestTokens( tokenUsage.getPromptTokens() );
+                            sessionMsg.setResponseTokens( tokenUsage.getCompletionTokens() );
+                            sessionMsg.setResponseEndDate( new Date() );
+                            sessionMsg.setResponseInfo( responseData.toString() );
+                            // 保存会话信息
+                            saveSessionMsg( sessionMsg );
+                        } ).filter( x -> x != null && x.getResult() != null && x.getResult().getOutput() != null && x.getResult().getOutput().getText() != null )
+                        .map( x -> {
+                            String content = x.getResult().getOutput().getText();
+                            responseData.append( content );
+                            lastResponseRef.set( x );
+                            return content;
+                        } );
         return Flux.concat( Flux.just( "<session>" + JsonInterfaceHelper.JSON_CONVERTER.toString( sessionInfo ) + "</session>\n" ), chatResponse );
     }
 
@@ -332,7 +331,7 @@ public class AiChatService {
             dao.save( sessionMsg );
             // 更新session会话
             String sql = "update ai_session_info set last_update=?, msg_num=msg_num+1,request_tokens=request_tokens+?,response_tokens=response_tokens+? where id=?";
-            dao.executeCommand( sql, new Object[]{new java.util.Date(), sessionMsg.getRequestTokens(), sessionMsg.getResponseTokens(), sessionMsg.getSessionId()} );
+            dao.executeCommand( sql, new Object[]{new Date(), sessionMsg.getRequestTokens(), sessionMsg.getResponseTokens(), sessionMsg.getSessionId()} );
         } catch (TransactionException e) {
             logger.error( e.getMessage(), e );
         }
@@ -371,11 +370,11 @@ public class AiChatService {
         }
         LinkedHashMap<String, Long> infoMap = new LinkedHashMap<>();
         StringBuilder content = new StringBuilder( 8192 );
-        content.append("以下内容是附件信息，在你回答问题时可以参考下面的内容\n");
-        content.append("---------------------\n");
+        content.append( "以下内容是附件信息，在你回答问题时可以参考下面的内容\n" );
+        content.append( "---------------------\n" );
         for (MultipartFile file : files) {
             infoMap.put( file.getName(), file.getSize() );
-            content.append( "文件名：" + file.getName() + "的内容：\n\n");
+            content.append( "文件名：" + file.getName() + "的内容：\n\n" );
             try (InputStream inputStream = file.getInputStream()) {
                 TikaDocumentReader reader = new TikaDocumentReader( new InputStreamResource( inputStream ) );
                 List<Document> documents = reader.get(); // 假设返回List<Document>
@@ -391,7 +390,7 @@ public class AiChatService {
                 return ResponseData.errorMsg( "处理文件[" + file.getName() + "]时发生错误!" + e.getMessage() );
             }
         }
-        content.append("---------------------\n");
+        content.append( "---------------------\n" );
         String fileInfo = JsonInterfaceHelper.JSON_CONVERTER.toString( infoMap );
         return ResponseData.success( new String[]{fileInfo, content.toString()} );
     }
