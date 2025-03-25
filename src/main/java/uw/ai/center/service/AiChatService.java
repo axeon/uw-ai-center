@@ -371,8 +371,11 @@ public class AiChatService {
         }
         LinkedHashMap<String, Long> infoMap = new LinkedHashMap<>();
         StringBuilder content = new StringBuilder( 8192 );
+        content.append("以下内容是附件信息，在你回答问题时可以参考下面的内容\n");
+        content.append("---------------------\n");
         for (MultipartFile file : files) {
             infoMap.put( file.getName(), file.getSize() );
+            content.append( "文件名：" + file.getName() + "的内容：\n\n");
             try (InputStream inputStream = file.getInputStream()) {
                 TikaDocumentReader reader = new TikaDocumentReader( new InputStreamResource( inputStream ) );
                 List<Document> documents = reader.get(); // 假设返回List<Document>
@@ -388,6 +391,7 @@ public class AiChatService {
                 return ResponseData.errorMsg( "处理文件[" + file.getName() + "]时发生错误!" + e.getMessage() );
             }
         }
+        content.append("---------------------\n");
         String fileInfo = JsonInterfaceHelper.JSON_CONVERTER.toString( infoMap );
         return ResponseData.success( new String[]{fileInfo, content.toString()} );
     }
@@ -398,17 +402,10 @@ public class AiChatService {
      * @param contextInfo
      */
     public static String buildSystemContextInfo(String systemPrompt, String contextInfo) {
-        Message message = new PromptTemplate( """
-                以下内容是附件信息，在你回答问题时可以参考下面的内容
-                ---------------------
-                {context}
-                ---------------------
-                """ )
-                .createMessage( Map.of( "context", contextInfo ) );
         if (StringUtils.isNotBlank( systemPrompt )) {
-            return systemPrompt + "\n" + message.getText();
+            return systemPrompt + "\n" + contextInfo;
         } else {
-            return message.getText();
+            return contextInfo;
         }
     }
 }
