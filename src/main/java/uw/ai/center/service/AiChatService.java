@@ -181,7 +181,7 @@ public class AiChatService {
             sessionInfo = null;
         }
         if (sessionInfo == null) {
-            return Flux.just( ResponseData.errorMsg( "会话不存在" ).toString() );
+            return Flux.just( ResponseData.errorMsg( "Session会话不存在！" ).toString() );
         }
         // 如何没有系统提示语，则使用会话的
         if (StringUtils.isBlank( systemPrompt )) {
@@ -209,7 +209,7 @@ public class AiChatService {
         // 获取ChatClient
         AiVendorHelper.ChatClientWrapper chatClientWrapper = AiVendorHelper.getChatClient( sessionInfo.getConfigId() );
         if (chatClientWrapper == null) {
-            return Flux.just( ResponseData.errorMsg( "ChatClient获取失败" ).toString() );
+            return Flux.just( ResponseData.errorMsg( "ChatClient获取失败！" ).toString() );
         }
         // 初始化会话消息
         AiSessionMsg sessionMsg = initSessionMsg( sessionInfo.getId(), systemPrompt, userPrompt, toolList, fileInfo );
