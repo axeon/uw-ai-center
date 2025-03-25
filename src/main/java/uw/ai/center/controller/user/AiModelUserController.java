@@ -34,6 +34,7 @@ public class AiModelUserController {
     @MscPermDeclare(auth = AuthType.NONE, log = ActionLog.BASE)
     public DataList<AiModelConfig> list(UserModelConfigQueryParam queryParam) throws TransactionException {
         AuthServiceHelper.logRef( AiModelConfig.class );
+        queryParam.SELECT_SQL( "SELECT id, saas_id, mch_id, vendor_class, config_code, config_name, config_desc, api_url, api_key, model_main, model_embed, create_date, modify_date, state from ai_model_config ");
         return dao.list( AiModelConfig.class, queryParam );
     }
 }
