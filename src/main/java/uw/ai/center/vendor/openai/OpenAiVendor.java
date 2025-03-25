@@ -134,6 +134,7 @@ public class OpenAiVendor implements AiVendor {
                         .presencePenalty( aiModelConfigData.getVendorDoubleParam( "presence-penalty") )
                         .seed( aiModelConfigData.getVendorIntParam( "seed") )
                         .topP( aiModelConfigData.getVendorDoubleParam( "top-p") )
+                        .streamUsage( true )
                         .parallelToolCalls( aiModelConfigData.getVendorBooleanParam( "parallel-tool-calls") )
                         .build())
                 .build();
