@@ -86,7 +86,7 @@ public class AiTranslateService {
      */
     public static ResponseData<String> translateMap(long saasId, long userId, int userType, String userInfo, AiTranslateMapParam param) {
         String TRANSLATE_USER_PROMPT_TEMPLATE = """
-                请帮我把以下JSON Map的Value中文字分别翻译成 %s 语言。
+                请帮我把以下JSON Map的Value值分别翻译成 %s 语言。
                 %s
                 """;
         String userPrompt = String.format( TRANSLATE_USER_PROMPT_TEMPLATE, JsonInterfaceHelper.JSON_CONVERTER.toString( param.getLangList() ),
