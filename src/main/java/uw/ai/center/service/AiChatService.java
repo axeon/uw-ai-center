@@ -373,7 +373,7 @@ public class AiChatService {
         content.append( "以下内容是附件信息，在你回答问题时可以参考下面的内容\n" );
         content.append( "---------------------\n" );
         for (MultipartFile file : files) {
-            infoMap.put( file.getName(), file.getSize() );
+            infoMap.put( file.getOriginalFilename(), file.getSize() );
             content.append( "文件名：" + file.getName() + "的内容：\n\n" );
             try (InputStream inputStream = file.getInputStream()) {
                 TikaDocumentReader reader = new TikaDocumentReader( new InputStreamResource( inputStream ) );
