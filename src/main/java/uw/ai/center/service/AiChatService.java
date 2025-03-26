@@ -31,10 +31,7 @@ import uw.httpclient.json.JsonInterfaceHelper;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.springframework.ai.chat.client.advisor.AbstractChatMemoryAdvisor.CHAT_MEMORY_CONVERSATION_ID_KEY;
@@ -52,7 +49,7 @@ public class AiChatService {
      * ChatClient 简单调用。
      */
     public static ResponseData<String> generate(long saasId, long userId, int userType, String userInfo, long configId, String userPrompt, String systemPrompt,
-                                                List<AiToolCallInfo> toolList, MultipartFile[] fileList) {
+                                                List<AiToolCallInfo> toolList, Map<String,Object> toolContext, MultipartFile[] fileList) {
         // 获取ChatClient
         AiVendorHelper.ChatClientWrapper chatClientWrapper = AiVendorHelper.getChatClient( configId );
         if (chatClientWrapper == null) {
@@ -98,7 +95,15 @@ public class AiChatService {
         // 设置工具调用
         if (toolList != null && !toolList.isEmpty()) {
             chatClientRequestSpec.tools( AiToolHelper.getToolCallbacks( toolList ) );
-            chatClientRequestSpec.toolContext( Map.of( "saasId", saasId, "userId", userId, "userType", userType, "userInfo", userInfo ) );
+            Map<String, Object> paramMap = new HashMap<>();
+            if (toolContext != null){
+                paramMap.putAll( toolContext );
+            }
+            paramMap.put( "saasId", saasId );
+            paramMap.put( "userId", userId);
+            paramMap.put( "userType", userType);
+            paramMap.put( "userInfo",userInfo );
+            chatClientRequestSpec.toolContext( paramMap);
         }
         ChatResponse chatResponse = chatClientRequestSpec.call().chatResponse();
         String responseData = chatResponse.getResult().getOutput().getText();
@@ -170,7 +175,7 @@ public class AiChatService {
      * ChatClient 流式调用
      */
     public static Flux<String> chat(long saasId, long userId, int userType, String userInfo, long sessionId, String userPrompt, String systemPrompt,
-                                    List<AiToolCallInfo> toolList, MultipartFile[] fileList) {
+                                    List<AiToolCallInfo> toolList, Map<String,Object> toolContext, MultipartFile[] fileList) {
         // 初始化会话信息
         AiSessionInfo sessionInfo;
         if (sessionId > 0) {
@@ -225,7 +230,15 @@ public class AiChatService {
         // 设置工具
         if (toolList != null && !toolList.isEmpty()) {
             chatClientRequestSpec.tools( AiToolHelper.getToolCallbacks( toolList ) );
-            chatClientRequestSpec.toolContext( Map.of( "saasId", saasId, "userId", userId, "userType", userType, "userInfo", userInfo ) );
+            Map<String, Object> paramMap = new HashMap<>();
+            if (toolContext != null){
+                paramMap.putAll( toolContext );
+            }
+            paramMap.put( "saasId", saasId );
+            paramMap.put( "userId", userId);
+            paramMap.put( "userType", userType);
+            paramMap.put( "userInfo",userInfo );
+            chatClientRequestSpec.toolContext( paramMap);
         }
         Flux<String> chatResponse =
                 chatClientRequestSpec.advisors( spec -> spec.param( CHAT_MEMORY_CONVERSATION_ID_KEY, conversationData.toString() ).param( CHAT_MEMORY_RETRIEVE_SIZE_KEY,

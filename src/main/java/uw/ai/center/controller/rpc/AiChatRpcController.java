@@ -41,7 +41,7 @@ public class AiChatRpcController implements AiChatRpc {
     @MscPermDeclare(user = UserType.RPC)
     public ResponseData<String> generate(@ModelAttribute AiChatGenerateParam param) {
         return AiChatService.generate( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(),
-                param.getConfigId(), param.getUserPrompt(), param.getSystemPrompt(), param.getToolList(), param.getFileList() );
+                param.getConfigId(), param.getUserPrompt(), param.getSystemPrompt(), param.getToolList(),null, param.getFileList() );
     }
 
     /**
@@ -53,7 +53,7 @@ public class AiChatRpcController implements AiChatRpc {
     public Flux<ServerSentEvent<String>> chat(HttpServletResponse response, @ModelAttribute AiChatMsgParam param) {
         response.setCharacterEncoding( "UTF-8" );
         return AiChatService.chat( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(),
-                param.getSessionId(), param.getUserPrompt(), param.getUserPrompt(), param.getToolList(), param.getFileList() ).map( s -> ServerSentEvent.builder( s ).build() );
+                param.getSessionId(), param.getUserPrompt(), param.getUserPrompt(), param.getToolList(), null,param.getFileList() ).map( s -> ServerSentEvent.builder( s ).build() );
     }
 
     /**

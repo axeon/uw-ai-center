@@ -74,7 +74,7 @@ public class AiTranslateService {
         String userPrompt = String.format( TRANSLATE_USER_PROMPT_TEMPLATE, JsonInterfaceHelper.JSON_CONVERTER.toString( param.getLangList() ),
                 JsonInterfaceHelper.JSON_CONVERTER.toString( param.getTextList() ) );
         String systemPrompt = param.getSystemPrompt() + "\n\n" + BEAN_OUTPUT_CONVERTER.getFormat();
-        ResponseData<String> responseData = AiChatService.generate( saasId, userId, userType, userInfo, param.getConfigId(), userPrompt, systemPrompt, null, null );
+        ResponseData<String> responseData = AiChatService.generate( saasId, userId, userType, userInfo, param.getConfigId(), userPrompt, systemPrompt, null, null,null );
         if (responseData.isSuccess()) {
             responseData.setData( BEAN_OUTPUT_CONVERTER.cleanJson( responseData.getData() ) );
         }
@@ -92,7 +92,7 @@ public class AiTranslateService {
         String userPrompt = String.format( TRANSLATE_USER_PROMPT_TEMPLATE, JsonInterfaceHelper.JSON_CONVERTER.toString( param.getLangList() ),
                 JsonInterfaceHelper.JSON_CONVERTER.toString( param.getTextMap() ) );
         String systemPrompt = param.getSystemPrompt() + "\n\n" + BEAN_OUTPUT_CONVERTER.getFormat();
-        ResponseData<String> responseData = AiChatService.generate( saasId, userId, userType, userInfo, param.getConfigId(), userPrompt, systemPrompt, null, null );
+        ResponseData<String> responseData = AiChatService.generate( saasId, userId, userType, userInfo, param.getConfigId(), userPrompt, systemPrompt, null, null,null );
         if (responseData.isSuccess()) {
             responseData.setData( BEAN_OUTPUT_CONVERTER.cleanJson( responseData.getData() ) );
         }
