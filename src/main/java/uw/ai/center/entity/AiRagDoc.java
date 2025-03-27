@@ -65,11 +65,33 @@ public class AiRagDoc implements DataEntity,Serializable{
     private String docDesc;
 
     /**
-     * 文档大小
+     * 文档主体
      */
-    @ColumnMeta(columnName="doc_size", dataType="long", dataSize=19, nullable=false)
-    @Schema(title = "文档大小", description = "文档大小", maxLength=19, nullable=false )
-    private long docSize;
+//    @ColumnMeta(columnName="doc_body", dataType="Object", dataSize=2147483646, nullable=true)
+    @Schema(title = "文档主体", description = "文档主体", maxLength=2147483646, nullable=true )
+    private Object docBody;
+
+    /**
+     * 文档内容
+     */
+    @ColumnMeta(columnName="doc_content", dataType="String", dataSize=1073741824, nullable=true)
+    @Schema(title = "文档内容", description = "文档内容", maxLength=1073741824, nullable=true )
+    @JsonRawValue(value = false)
+    private String docContent;
+
+    /**
+     * 文档主体大小
+     */
+    @ColumnMeta(columnName="doc_body_size", dataType="long", dataSize=19, nullable=true)
+    @Schema(title = "文档主体大小", description = "文档主体大小", maxLength=19, nullable=true )
+    private long docBodySize;
+
+    /**
+     * 文档内容大小
+     */
+    @ColumnMeta(columnName="doc_content_size", dataType="long", dataSize=19, nullable=true)
+    @Schema(title = "文档内容大小", description = "文档内容大小", maxLength=19, nullable=true )
+    private long docContentSize;
 
     /**
      * 创建时间
@@ -184,10 +206,31 @@ public class AiRagDoc implements DataEntity,Serializable{
     }
 
     /**
-     * 获取文档大小。
+     * 获取文档主体。
      */
-    public long getDocSize(){
-        return this.docSize;
+    public Object getDocBody(){
+        return this.docBody;
+    }
+
+    /**
+     * 获取文档内容。
+     */
+    public String getDocContent(){
+        return this.docContent;
+    }
+
+    /**
+     * 获取文档主体大小。
+     */
+    public long getDocBodySize(){
+        return this.docBodySize;
+    }
+
+    /**
+     * 获取文档内容大小。
+     */
+    public long getDocContentSize(){
+        return this.docContentSize;
     }
 
     /**
@@ -297,16 +340,58 @@ public class AiRagDoc implements DataEntity,Serializable{
     }
 
     /**
-     * 设置文档大小。
+     * 设置文档主体。
      */
-    public void setDocSize(long docSize){
-        if (!Objects.equals(this.docSize, docSize)){
+    public void setDocBody(Object docBody){
+        if (!Objects.equals(this.docBody, docBody)){
             if (this.UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("doc_size");
-            this.UPDATED_INFO.append("doc_size:\"" + this.docSize+ "\"=>\"" + docSize + "\"\r\n");
-            this.docSize = docSize;
+            this.UPDATED_COLUMN.add("doc_body");
+            this.UPDATED_INFO.append("doc_body:\"" + this.docBody+ "\"=>\"" + docBody + "\"\r\n");
+            this.docBody = docBody;
+        }
+    }
+
+    /**
+     * 设置文档内容。
+     */
+    public void setDocContent(String docContent){
+        if (!Objects.equals(this.docContent, docContent)){
+            if (this.UPDATED_COLUMN == null) {
+                _INIT_UPDATE_INFO();
+            }
+            this.UPDATED_COLUMN.add("doc_content");
+            this.UPDATED_INFO.append("doc_content:\"" + this.docContent+ "\"=>\"" + docContent + "\"\r\n");
+            this.docContent = docContent;
+        }
+    }
+
+    /**
+     * 设置文档主体大小。
+     */
+    public void setDocBodySize(long docBodySize){
+        if (!Objects.equals(this.docBodySize, docBodySize)){
+            if (this.UPDATED_COLUMN == null) {
+                _INIT_UPDATE_INFO();
+            }
+            this.UPDATED_COLUMN.add("doc_body_size");
+            this.UPDATED_INFO.append("doc_body_size:\"" + this.docBodySize+ "\"=>\"" + docBodySize + "\"\r\n");
+            this.docBodySize = docBodySize;
+        }
+    }
+
+    /**
+     * 设置文档内容大小。
+     */
+    public void setDocContentSize(long docContentSize){
+        if (!Objects.equals(this.docContentSize, docContentSize)){
+            if (this.UPDATED_COLUMN == null) {
+                _INIT_UPDATE_INFO();
+            }
+            this.UPDATED_COLUMN.add("doc_content_size");
+            this.UPDATED_INFO.append("doc_content_size:\"" + this.docContentSize+ "\"=>\"" + docContentSize + "\"\r\n");
+            this.docContentSize = docContentSize;
         }
     }
 
@@ -364,7 +449,10 @@ public class AiRagDoc implements DataEntity,Serializable{
         sb.append("doc_type:\"" + this.docType + "\"\r\n");
         sb.append("doc_name:\"" + this.docName + "\"\r\n");
         sb.append("doc_desc:\"" + this.docDesc + "\"\r\n");
-        sb.append("doc_size:\"" + this.docSize + "\"\r\n");
+        sb.append("doc_body:\"" + this.docBody + "\"\r\n");
+        sb.append("doc_content:\"" + this.docContent + "\"\r\n");
+        sb.append("doc_body_size:\"" + this.docBodySize + "\"\r\n");
+        sb.append("doc_content_size:\"" + this.docContentSize + "\"\r\n");
         sb.append("create_date:\"" + this.createDate + "\"\r\n");
         sb.append("modify_date:\"" + this.modifyDate + "\"\r\n");
         sb.append("state:\"" + this.state + "\"\r\n");

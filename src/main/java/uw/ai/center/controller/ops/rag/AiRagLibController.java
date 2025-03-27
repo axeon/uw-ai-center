@@ -149,13 +149,10 @@ public class AiRagLibController {
         if (aiRagLibDb == null) {
             return ResponseData.warnMsg("未找到指定ID的rag文档库！");
         }
-        aiRagLibDb.setUserId(aiRagLib.getUserId());
-        aiRagLibDb.setUserType(aiRagLib.getUserType());
-        aiRagLibDb.setUserInfo(aiRagLib.getUserInfo());
         aiRagLibDb.setLibType(aiRagLib.getLibType());
         aiRagLibDb.setLibName(aiRagLib.getLibName());
         aiRagLibDb.setLibDesc(aiRagLib.getLibDesc());
-        aiRagLibDb.setLibConfig(aiRagLib.getLibConfig());
+        aiRagLibDb.setLibConfig( aiRagLib.getLibConfig() );
         aiRagLibDb.setModifyDate(new Date());
         dao.update(aiRagLibDb);
         SysDataHistoryHelper.saveHistory(aiRagLibDb.getId(),aiRagLibDb,"rag文档库","修改rag文档库！操作备注："+remark);

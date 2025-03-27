@@ -134,33 +134,6 @@ public class AiRagDocController {
     }
 
     /**
-     * 修改rag文档信息。
-     *
-     * @param aiRagDoc
-     * @return
-     * @throws TransactionException
-     */
-    @PutMapping("/update")
-    @Operation(summary = "修改rag文档信息", description = "修改rag文档信息")
-    @MscPermDeclare(user = UserType.OPS, auth = AuthType.PERM, log = ActionLog.CRIT)
-    public ResponseData<AiRagDoc> update(@RequestBody AiRagDoc aiRagDoc, @Parameter(description = "备注") @RequestParam String remark) throws TransactionException {
-        AuthServiceHelper.logInfo(AiRagDoc.class,aiRagDoc.getId(),"修改rag文档信息！操作备注："+remark);
-        AiRagDoc aiRagDocDb = dao.queryForSingleObject(AiRagDoc.class, new AuthIdQueryParam(aiRagDoc.getId()));
-        if (aiRagDocDb == null) {
-            return ResponseData.warnMsg("未找到指定ID的rag文档信息！");
-        }
-        aiRagDocDb.setLibId(aiRagDoc.getLibId());
-        aiRagDocDb.setDocType(aiRagDoc.getDocType());
-        aiRagDocDb.setDocName(aiRagDoc.getDocName());
-        aiRagDocDb.setDocDesc(aiRagDoc.getDocDesc());
-        aiRagDocDb.setDocSize(aiRagDoc.getDocSize());
-        aiRagDocDb.setModifyDate(new Date());
-        dao.update(aiRagDocDb);
-        SysDataHistoryHelper.saveHistory(aiRagDocDb.getId(),aiRagDocDb,"rag文档信息","修改rag文档信息！操作备注："+remark);
-        return ResponseData.success(aiRagDocDb);
-    }
-    
-    /**
      * 启用rag文档信息。
      *
      * @param id

@@ -58,7 +58,7 @@ public class AiChatService {
         //获得基础信息。
         AiModelConfigData configData = chatClientWrapper.configData();
         if (StringUtils.isBlank( systemPrompt )) {
-            systemPrompt = configData.getModelParam( "systemPrompt", "" );
+            systemPrompt = configData.getModelParamBox().getParam( "systemPrompt", "" );
         }
         // 初始化会话信息
         AiSessionInfo sessionInfo = loadSession( saasId, userId, SessionType.COMMON.getValue(), null ).getData();
@@ -140,7 +140,7 @@ public class AiChatService {
         //获得基础信息。
         AiModelConfigData configData = chatClientWrapper.configData();
         if (StringUtils.isBlank( systemPrompt )) {
-            systemPrompt = configData.getModelParam( "systemPrompt", "" );
+            systemPrompt = configData.getModelParamBox().getParam( "systemPrompt", "" );
         }
         long sessionId = dao.getSequenceId( AiSessionInfo.class );
         AiSessionInfo sessionInfo = new AiSessionInfo();
@@ -387,7 +387,7 @@ public class AiChatService {
         content.append( "---------------------\n" );
         for (MultipartFile file : files) {
             infoMap.put( file.getOriginalFilename(), file.getSize() );
-            content.append( "文件名：" + file.getName() + "的内容：\n\n" );
+            content.append( "文件名：" ).append( file.getName() ).append( "的内容：\n\n" );
             try (InputStream inputStream = file.getInputStream()) {
                 TikaDocumentReader reader = new TikaDocumentReader( new InputStreamResource( inputStream ) );
                 List<Document> documents = reader.get(); // 假设返回List<Document>

@@ -1,8 +1,8 @@
 package uw.ai.center.vendor;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import org.springframework.ai.chat.client.ChatClient;
 import uw.ai.center.vo.AiModelConfigData;
+import uw.common.vo.ConfigParam;
 
 import java.util.List;
 
@@ -65,68 +65,5 @@ public interface AiVendor {
      * @return
      */
     List<String> listModel(String apiUrl,String apiKey);
-
-    /**
-     * 配置信息解析类
-     */
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    class ConfigParam {
-
-        /**
-         * 配置参数名。
-         */
-        private String key;
-
-        /**
-         * 配置默认值。
-         */
-        private String value;
-
-        /**
-         * 配置类型。 数值，字符串，布尔值，浮点数，浮点数，日期，时间，日期时间,枚举.
-         */
-        private String type;
-
-        /**
-         * 配置名称。
-         */
-        private String name;
-
-        /**
-         * 配置描述。
-         */
-        private String desc;
-
-        public ConfigParam() {
-        }
-
-        public ConfigParam(String key, String value, String type, String name, String desc) {
-            this.key = key;
-            this.value = value;
-            this.type = type;
-            this.name = name;
-            this.desc = desc;
-        }
-
-        public String getKey() {
-            return key;
-        }
-
-        public String getValue() {
-            return value;
-        }
-
-        public String getType() {
-            return type;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public String getDesc() {
-            return desc;
-        }
-    }
 
 }

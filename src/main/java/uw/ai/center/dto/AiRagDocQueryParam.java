@@ -36,7 +36,8 @@ public class AiRagDocQueryParam extends AuthPageQueryParam{
             put( "libId", "lib_id" );
             put( "docType", "doc_type" );
             put( "docName", "doc_name" );
-            put( "docSize", "doc_size" );
+            put( "docBodySize", "doc_body_size" );
+            put( "docContentSize", "doc_content_size" );
             put( "createDate", "create_date" );
             put( "modifyDate", "modify_date" );
             put( "state", "state" );
@@ -79,18 +80,39 @@ public class AiRagDocQueryParam extends AuthPageQueryParam{
     private String docName;
 	
     /**
-    * 文档大小。
+    * 文档主体。
     */
-    @QueryMeta(expr = "doc_size=?")
-    @Schema(title="文档大小", description = "文档大小")
-    private Long docSize;
+    @QueryMeta(expr = "doc_body=?")
+    @Schema(title="文档主体", description = "文档主体")
+    private Object docBody;
+	
+    /**
+    * 文档主体大小。
+    */
+    @QueryMeta(expr = "doc_body_size=?")
+    @Schema(title="文档主体大小", description = "文档主体大小")
+    private Long docBodySize;
 
     /**
-    * 文档大小范围。
+    * 文档主体大小范围。
     */
-    @QueryMeta(expr = "doc_size between ? and ?")
-    @Schema(title="文档大小范围", description = "文档大小范围")
-    private Long[] docSizeRange;
+    @QueryMeta(expr = "doc_body_size between ? and ?")
+    @Schema(title="文档主体大小范围", description = "文档主体大小范围")
+    private Long[] docBodySizeRange;
+	
+    /**
+    * 文档内容大小。
+    */
+    @QueryMeta(expr = "doc_content_size=?")
+    @Schema(title="文档内容大小", description = "文档内容大小")
+    private Long docContentSize;
+
+    /**
+    * 文档内容大小范围。
+    */
+    @QueryMeta(expr = "doc_content_size between ? and ?")
+    @Schema(title="文档内容大小范围", description = "文档内容大小范围")
+    private Long[] docContentSizeRange;
 	
     /**
     * 创建时间范围。
@@ -246,46 +268,112 @@ public class AiRagDocQueryParam extends AuthPageQueryParam{
     }
 	
     /**
-    * 获取文档大小。
+    * 获取文档主体。
     */
-    public Long getDocSize(){
-        return this.docSize;
+    public Object getDocBody(){
+        return this.docBody;
     }
 
     /**
-    * 设置文档大小。
+    * 设置文档主体。
     */
-    public void setDocSize(Long docSize){
-        this.docSize = docSize;
+    public void setDocBody(Object docBody){
+        this.docBody = docBody;
     }
 	
     /**
-    * 设置文档大小链式调用。
+    * 设置文档主体链式调用。
     */
-    public AiRagDocQueryParam docSize(Long docSize){
-        setDocSize(docSize);
+	public AiRagDocQueryParam docBody(Object docBody){
+        setDocBody(docBody);
+        return this;
+    }
+	
+    /**
+    * 获取文档主体大小。
+    */
+    public Long getDocBodySize(){
+        return this.docBodySize;
+    }
+
+    /**
+    * 设置文档主体大小。
+    */
+    public void setDocBodySize(Long docBodySize){
+        this.docBodySize = docBodySize;
+    }
+	
+    /**
+    * 设置文档主体大小链式调用。
+    */
+    public AiRagDocQueryParam docBodySize(Long docBodySize){
+        setDocBodySize(docBodySize);
         return this;
     }
 
     /**
-    * 获取文档大小范围。
+    * 获取文档主体大小范围。
     */
-    public Long[] getDocSizeRange(){
-        return this.docSizeRange;
+    public Long[] getDocBodySizeRange(){
+        return this.docBodySizeRange;
     }
 
     /**
-    * 设置文档大小范围。
+    * 设置文档主体大小范围。
     */
-    public void setDocSizeRange(Long[] docSizeRange){
-        this.docSizeRange = docSizeRange;
+    public void setDocBodySizeRange(Long[] docBodySizeRange){
+        this.docBodySizeRange = docBodySizeRange;
     }
 	
     /**
-    * 设置文档大小范围链式调用。
+    * 设置文档主体大小范围链式调用。
     */
-    public AiRagDocQueryParam docSizeRange(Long[] docSizeRange){
-        setDocSizeRange(docSizeRange);
+    public AiRagDocQueryParam docBodySizeRange(Long[] docBodySizeRange){
+        setDocBodySizeRange(docBodySizeRange);
+        return this;
+    }
+	
+    /**
+    * 获取文档内容大小。
+    */
+    public Long getDocContentSize(){
+        return this.docContentSize;
+    }
+
+    /**
+    * 设置文档内容大小。
+    */
+    public void setDocContentSize(Long docContentSize){
+        this.docContentSize = docContentSize;
+    }
+	
+    /**
+    * 设置文档内容大小链式调用。
+    */
+    public AiRagDocQueryParam docContentSize(Long docContentSize){
+        setDocContentSize(docContentSize);
+        return this;
+    }
+
+    /**
+    * 获取文档内容大小范围。
+    */
+    public Long[] getDocContentSizeRange(){
+        return this.docContentSizeRange;
+    }
+
+    /**
+    * 设置文档内容大小范围。
+    */
+    public void setDocContentSizeRange(Long[] docContentSizeRange){
+        this.docContentSizeRange = docContentSizeRange;
+    }
+	
+    /**
+    * 设置文档内容大小范围链式调用。
+    */
+    public AiRagDocQueryParam docContentSizeRange(Long[] docContentSizeRange){
+        setDocContentSizeRange(docContentSizeRange);
         return this;
     }
 	

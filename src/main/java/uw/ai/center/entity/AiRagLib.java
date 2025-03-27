@@ -37,27 +37,6 @@ public class AiRagLib implements DataEntity,Serializable{
     private long saasId;
 
     /**
-     * 用户id
-     */
-    @ColumnMeta(columnName="user_id", dataType="long", dataSize=19, nullable=false)
-    @Schema(title = "用户id", description = "用户id", maxLength=19, nullable=false )
-    private long userId;
-
-    /**
-     * 用户类型
-     */
-    @ColumnMeta(columnName="user_type", dataType="int", dataSize=10, nullable=true)
-    @Schema(title = "用户类型", description = "用户类型", maxLength=10, nullable=true )
-    private int userType;
-
-    /**
-     * 用户名
-     */
-    @ColumnMeta(columnName="user_info", dataType="String", dataSize=200, nullable=true)
-    @Schema(title = "用户名", description = "用户名", maxLength=200, nullable=true )
-    private String userInfo;
-
-    /**
      * 文档库类型
      */
     @ColumnMeta(columnName="lib_type", dataType="int", dataSize=10, nullable=true)
@@ -79,10 +58,10 @@ public class AiRagLib implements DataEntity,Serializable{
     private String libDesc;
 
     /**
-     * 服务商配置
+     * 文档库配置
      */
     @ColumnMeta(columnName="lib_config", dataType="String", dataSize=1073741824, nullable=true)
-    @Schema(title = "服务商配置", description = "服务商配置", maxLength=1073741824, nullable=true )
+    @Schema(title = "文档库配置", description = "文档库配置", maxLength=1073741824, nullable=true )
     @JsonRawValue(value = false)
     private String libConfig;
 
@@ -171,27 +150,6 @@ public class AiRagLib implements DataEntity,Serializable{
     }
 
     /**
-     * 获取用户id。
-     */
-    public long getUserId(){
-        return this.userId;
-    }
-
-    /**
-     * 获取用户类型。
-     */
-    public int getUserType(){
-        return this.userType;
-    }
-
-    /**
-     * 获取用户名。
-     */
-    public String getUserInfo(){
-        return this.userInfo;
-    }
-
-    /**
      * 获取文档库类型。
      */
     public int getLibType(){
@@ -213,7 +171,7 @@ public class AiRagLib implements DataEntity,Serializable{
     }
 
     /**
-     * 获取服务商配置。
+     * 获取文档库配置。
      */
     public String getLibConfig(){
         return this.libConfig;
@@ -270,48 +228,6 @@ public class AiRagLib implements DataEntity,Serializable{
     }
 
     /**
-     * 设置用户id。
-     */
-    public void setUserId(long userId){
-        if (!Objects.equals(this.userId, userId)){
-            if (this.UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this.UPDATED_COLUMN.add("user_id");
-            this.UPDATED_INFO.append("user_id:\"" + this.userId+ "\"=>\"" + userId + "\"\r\n");
-            this.userId = userId;
-        }
-    }
-
-    /**
-     * 设置用户类型。
-     */
-    public void setUserType(int userType){
-        if (!Objects.equals(this.userType, userType)){
-            if (this.UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this.UPDATED_COLUMN.add("user_type");
-            this.UPDATED_INFO.append("user_type:\"" + this.userType+ "\"=>\"" + userType + "\"\r\n");
-            this.userType = userType;
-        }
-    }
-
-    /**
-     * 设置用户名。
-     */
-    public void setUserInfo(String userInfo){
-        if (!Objects.equals(this.userInfo, userInfo)){
-            if (this.UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this.UPDATED_COLUMN.add("user_info");
-            this.UPDATED_INFO.append("user_info:\"" + this.userInfo+ "\"=>\"" + userInfo + "\"\r\n");
-            this.userInfo = userInfo;
-        }
-    }
-
-    /**
      * 设置文档库类型。
      */
     public void setLibType(int libType){
@@ -354,7 +270,7 @@ public class AiRagLib implements DataEntity,Serializable{
     }
 
     /**
-     * 设置服务商配置。
+     * 设置文档库配置。
      */
     public void setLibConfig(String libConfig){
         if (!Objects.equals(this.libConfig, libConfig)){
@@ -417,9 +333,6 @@ public class AiRagLib implements DataEntity,Serializable{
         StringBuilder sb = new StringBuilder();
         sb.append("id:\"" + this.id + "\"\r\n");
         sb.append("saas_id:\"" + this.saasId + "\"\r\n");
-        sb.append("user_id:\"" + this.userId + "\"\r\n");
-        sb.append("user_type:\"" + this.userType + "\"\r\n");
-        sb.append("user_info:\"" + this.userInfo + "\"\r\n");
         sb.append("lib_type:\"" + this.libType + "\"\r\n");
         sb.append("lib_name:\"" + this.libName + "\"\r\n");
         sb.append("lib_desc:\"" + this.libDesc + "\"\r\n");

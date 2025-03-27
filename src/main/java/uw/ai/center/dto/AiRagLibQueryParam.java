@@ -33,9 +33,6 @@ public class AiRagLibQueryParam extends AuthPageQueryParam{
         return new HashMap<>() {{
             put( "id", "id" );
             put( "saasId", "saas_id" );
-            put( "userId", "user_id" );
-            put( "userType", "user_type" );
-            put( "userInfo", "user_info" );
             put( "libType", "lib_type" );
             put( "libName", "lib_name" );
             put( "createDate", "create_date" );
@@ -58,27 +55,6 @@ public class AiRagLibQueryParam extends AuthPageQueryParam{
     @Schema(title="数组ID", description = "ID数组，可同时匹配多个。")
     private Long[] ids;
 
-    /**
-    * 用户id。
-    */
-    @QueryMeta(expr = "user_id=?")
-    @Schema(title="用户id", description = "用户id")
-    private Long userId;
-	
-    /**
-    * 用户类型。
-    */
-    @QueryMeta(expr = "user_type=?")
-    @Schema(title="用户类型", description = "用户类型")
-    private Integer userType;
-	
-    /**
-    * 用户名。
-    */
-    @QueryMeta(expr = "user_info like ?")
-    @Schema(title="用户名", description = "用户名")
-    private String userInfo;
-	
     /**
     * 文档库类型。
     */
@@ -180,72 +156,6 @@ public class AiRagLibQueryParam extends AuthPageQueryParam{
         return this;
     }
 
-    /**
-    * 获取用户id。
-    */
-    public Long getUserId(){
-        return this.userId;
-    }
-
-    /**
-    * 设置用户id。
-    */
-    public void setUserId(Long userId){
-        this.userId = userId;
-    }
-	
-    /**
-    * 设置用户id链式调用。
-    */
-	public AiRagLibQueryParam userId(Long userId){
-        setUserId(userId);
-        return this;
-    }
-	
-    /**
-    * 获取用户类型。
-    */
-    public Integer getUserType(){
-        return this.userType;
-    }
-
-    /**
-    * 设置用户类型。
-    */
-    public void setUserType(Integer userType){
-        this.userType = userType;
-    }
-	
-    /**
-    * 设置用户类型链式调用。
-    */
-	public AiRagLibQueryParam userType(Integer userType){
-        setUserType(userType);
-        return this;
-    }
-	
-    /**
-    * 获取用户名。
-    */
-    public String getUserInfo(){
-        return this.userInfo;
-    }
-
-    /**
-    * 设置用户名。
-    */
-    public void setUserInfo(String userInfo){
-        this.userInfo = userInfo;
-    }
-	
-    /**
-    * 设置用户名链式调用。
-    */
-    public AiRagLibQueryParam userInfo(String userInfo) {
-        setUserInfo(userInfo);
-        return this;
-    }
-	
     /**
     * 获取文档库类型。
     */
