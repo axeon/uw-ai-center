@@ -58,10 +58,17 @@ public class AiSessionMsg implements DataEntity,Serializable{
     private String userPrompt;
 
     /**
+     * 附加数据
+     */
+    @ColumnMeta(columnName="ext_data", dataType="String", dataSize=2147483646, nullable=true)
+    @Schema(title = "附加数据", description = "附加数据", maxLength=2147483646, nullable=true )
+    private String extData;
+
+    /**
      * 工具信息
      */
-    @ColumnMeta(columnName="tool_info", dataType="String", dataSize=2147483646, nullable=true)
-    @Schema(title = "工具信息", description = "工具信息", maxLength=2147483646, nullable=true )
+    @ColumnMeta(columnName="tool_info", dataType="String", dataSize=65535, nullable=true)
+    @Schema(title = "工具信息", description = "工具信息", maxLength=65535, nullable=true )
     private String toolInfo;
 
     /**
@@ -70,6 +77,13 @@ public class AiSessionMsg implements DataEntity,Serializable{
     @ColumnMeta(columnName="file_info", dataType="String", dataSize=65535, nullable=true)
     @Schema(title = "文件信息", description = "文件信息", maxLength=65535, nullable=true )
     private String fileInfo;
+
+    /**
+     * rag信息
+     */
+    @ColumnMeta(columnName="rag_info", dataType="String", dataSize=65535, nullable=true)
+    @Schema(title = "rag信息", description = "rag信息", maxLength=65535, nullable=true )
+    private String ragInfo;
 
     /**
      * 返回信息
@@ -205,6 +219,13 @@ public class AiSessionMsg implements DataEntity,Serializable{
     }
 
     /**
+     * 获取附加数据。
+     */
+    public String getExtData(){
+        return this.extData;
+    }
+
+    /**
      * 获取工具信息。
      */
     public String getToolInfo(){
@@ -216,6 +237,13 @@ public class AiSessionMsg implements DataEntity,Serializable{
      */
     public String getFileInfo(){
         return this.fileInfo;
+    }
+
+    /**
+     * 获取rag信息。
+     */
+    public String getRagInfo(){
+        return this.ragInfo;
     }
 
     /**
@@ -339,6 +367,20 @@ public class AiSessionMsg implements DataEntity,Serializable{
     }
 
     /**
+     * 设置附加数据。
+     */
+    public void setExtData(String extData){
+        if (!Objects.equals(this.extData, extData)){
+            if (this.UPDATED_COLUMN == null) {
+                _INIT_UPDATE_INFO();
+            }
+            this.UPDATED_COLUMN.add("ext_data");
+            this.UPDATED_INFO.append("ext_data:\"" + this.extData+ "\"=>\"" + extData + "\"\r\n");
+            this.extData = extData;
+        }
+    }
+
+    /**
      * 设置工具信息。
      */
     public void setToolInfo(String toolInfo){
@@ -363,6 +405,20 @@ public class AiSessionMsg implements DataEntity,Serializable{
             this.UPDATED_COLUMN.add("file_info");
             this.UPDATED_INFO.append("file_info:\"" + this.fileInfo+ "\"=>\"" + fileInfo + "\"\r\n");
             this.fileInfo = fileInfo;
+        }
+    }
+
+    /**
+     * 设置rag信息。
+     */
+    public void setRagInfo(String ragInfo){
+        if (!Objects.equals(this.ragInfo, ragInfo)){
+            if (this.UPDATED_COLUMN == null) {
+                _INIT_UPDATE_INFO();
+            }
+            this.UPDATED_COLUMN.add("rag_info");
+            this.UPDATED_INFO.append("rag_info:\"" + this.ragInfo+ "\"=>\"" + ragInfo + "\"\r\n");
+            this.ragInfo = ragInfo;
         }
     }
 
@@ -475,8 +531,10 @@ public class AiSessionMsg implements DataEntity,Serializable{
         sb.append("session_id:\"" + this.sessionId + "\"\r\n");
         sb.append("system_prompt:\"" + this.systemPrompt + "\"\r\n");
         sb.append("user_prompt:\"" + this.userPrompt + "\"\r\n");
+        sb.append("ext_data:\"" + this.extData + "\"\r\n");
         sb.append("tool_info:\"" + this.toolInfo + "\"\r\n");
         sb.append("file_info:\"" + this.fileInfo + "\"\r\n");
+        sb.append("rag_info:\"" + this.ragInfo + "\"\r\n");
         sb.append("response_info:\"" + this.responseInfo + "\"\r\n");
         sb.append("request_tokens:\"" + this.requestTokens + "\"\r\n");
         sb.append("response_tokens:\"" + this.responseTokens + "\"\r\n");

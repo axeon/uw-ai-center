@@ -86,7 +86,7 @@ public class AiChatService {
             }
         }
         // 初始化会话消息
-        AiSessionMsg sessionMsg = initSessionMsg( sessionInfo.getId(), systemPrompt, userPrompt, toolList, fileInfo );
+        AiSessionMsg sessionMsg = initSessionMsg( sessionInfo.getId(), systemPrompt, userPrompt, toolList, fileInfo ,null,null);
         // 设置请求开始时间
         sessionMsg.setResponseStartDate( new Date() );
         ChatClient.ChatClientRequestSpec chatClientRequestSpec = chatClientWrapper.getChatClient().prompt();
@@ -217,7 +217,7 @@ public class AiChatService {
             return Flux.just( ResponseData.errorMsg( "ChatClient获取失败！" ).toString() );
         }
         // 初始化会话消息
-        AiSessionMsg sessionMsg = initSessionMsg( sessionInfo.getId(), systemPrompt, userPrompt, toolList, fileInfo );
+        AiSessionMsg sessionMsg = initSessionMsg( sessionInfo.getId(), systemPrompt, userPrompt, toolList, fileInfo ,null,null);
         // 会话消息的会话ID和消息ID
         SessionConversationData conversationData = new SessionConversationData( sessionMsg.getSessionId(), sessionMsg.getId() );
         // 返回信息
@@ -320,7 +320,7 @@ public class AiChatService {
      * @param userPrompt
      * @return
      */
-    public static AiSessionMsg initSessionMsg(long sessionId, String systemPrompt, String userPrompt, List<AiToolCallInfo> toolList, String fileInfo) {
+    public static AiSessionMsg initSessionMsg(long sessionId, String systemPrompt, String userPrompt, List<AiToolCallInfo> toolList, String fileInfo,String ragInfo,String extData) {
         long msgId = dao.getSequenceId( AiSessionMsg.class );
         AiSessionMsg sessionMsg = new AiSessionMsg();
         sessionMsg.setId( msgId );
@@ -329,6 +329,8 @@ public class AiChatService {
         sessionMsg.setUserPrompt( userPrompt );
         sessionMsg.setToolInfo( JsonInterfaceHelper.JSON_CONVERTER.toString( toolList ) );
         sessionMsg.setFileInfo( fileInfo );
+        sessionMsg.setRagInfo( ragInfo );
+        sessionMsg.setExtData( extData );
         sessionMsg.setState( StateCommon.ENABLED.getValue() );
         sessionMsg.setRequestDate( new Date() );
         return sessionMsg;

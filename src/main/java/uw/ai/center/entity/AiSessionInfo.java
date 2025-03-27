@@ -116,9 +116,16 @@ public class AiSessionInfo implements DataEntity,Serializable{
     /**
      * 工具信息
      */
-    @ColumnMeta(columnName="tool_info", dataType="String", dataSize=2147483646, nullable=true)
-    @Schema(title = "工具信息", description = "工具信息", maxLength=2147483646, nullable=true )
+    @ColumnMeta(columnName="tool_info", dataType="String", dataSize=65535, nullable=true)
+    @Schema(title = "工具信息", description = "工具信息", maxLength=65535, nullable=true )
     private String toolInfo;
+
+    /**
+     * rag信息
+     */
+    @ColumnMeta(columnName="rag_info", dataType="String", dataSize=65535, nullable=true)
+    @Schema(title = "rag信息", description = "rag信息", maxLength=65535, nullable=true )
+    private String ragInfo;
 
     /**
      * 创建时间
@@ -293,6 +300,13 @@ public class AiSessionInfo implements DataEntity,Serializable{
      */
     public String getToolInfo(){
         return this.toolInfo;
+    }
+
+    /**
+     * 获取rag信息。
+     */
+    public String getRagInfo(){
+        return this.ragInfo;
     }
 
     /**
@@ -521,6 +535,20 @@ public class AiSessionInfo implements DataEntity,Serializable{
     }
 
     /**
+     * 设置rag信息。
+     */
+    public void setRagInfo(String ragInfo){
+        if (!Objects.equals(this.ragInfo, ragInfo)){
+            if (this.UPDATED_COLUMN == null) {
+                _INIT_UPDATE_INFO();
+            }
+            this.UPDATED_COLUMN.add("rag_info");
+            this.UPDATED_INFO.append("rag_info:\"" + this.ragInfo+ "\"=>\"" + ragInfo + "\"\r\n");
+            this.ragInfo = ragInfo;
+        }
+    }
+
+    /**
      * 设置创建时间。
      */
     public void setCreateDate(java.util.Date createDate){
@@ -596,6 +624,7 @@ public class AiSessionInfo implements DataEntity,Serializable{
         sb.append("response_tokens:\"" + this.responseTokens + "\"\r\n");
         sb.append("system_prompt:\"" + this.systemPrompt + "\"\r\n");
         sb.append("tool_info:\"" + this.toolInfo + "\"\r\n");
+        sb.append("rag_info:\"" + this.ragInfo + "\"\r\n");
         sb.append("create_date:\"" + this.createDate + "\"\r\n");
         sb.append("modify_date:\"" + this.modifyDate + "\"\r\n");
         sb.append("last_update:\"" + this.lastUpdate + "\"\r\n");
