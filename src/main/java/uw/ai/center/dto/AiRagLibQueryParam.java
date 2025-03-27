@@ -35,6 +35,8 @@ public class AiRagLibQueryParam extends AuthPageQueryParam{
             put( "saasId", "saas_id" );
             put( "libType", "lib_type" );
             put( "libName", "lib_name" );
+            put( "embedConfigId", "embed_config_id" );
+            put( "embedModelName", "embed_model_name" );
             put( "createDate", "create_date" );
             put( "modifyDate", "modify_date" );
             put( "state", "state" );
@@ -68,6 +70,20 @@ public class AiRagLibQueryParam extends AuthPageQueryParam{
     @QueryMeta(expr = "lib_name like ?")
     @Schema(title="文档库名称", description = "文档库名称")
     private String libName;
+	
+    /**
+    * embed配置ID。
+    */
+    @QueryMeta(expr = "embed_config_id=?")
+    @Schema(title="embed配置ID", description = "embed配置ID")
+    private Long embedConfigId;
+	
+    /**
+    * embed模型名。
+    */
+    @QueryMeta(expr = "embed_model_name like ?")
+    @Schema(title="embed模型名", description = "embed模型名")
+    private String embedModelName;
 	
     /**
     * 创建时间范围。
@@ -197,6 +213,50 @@ public class AiRagLibQueryParam extends AuthPageQueryParam{
     */
     public AiRagLibQueryParam libName(String libName) {
         setLibName(libName);
+        return this;
+    }
+	
+    /**
+    * 获取embed配置ID。
+    */
+    public Long getEmbedConfigId(){
+        return this.embedConfigId;
+    }
+
+    /**
+    * 设置embed配置ID。
+    */
+    public void setEmbedConfigId(Long embedConfigId){
+        this.embedConfigId = embedConfigId;
+    }
+	
+    /**
+    * 设置embed配置ID链式调用。
+    */
+	public AiRagLibQueryParam embedConfigId(Long embedConfigId){
+        setEmbedConfigId(embedConfigId);
+        return this;
+    }
+	
+    /**
+    * 获取embed模型名。
+    */
+    public String getEmbedModelName(){
+        return this.embedModelName;
+    }
+
+    /**
+    * 设置embed模型名。
+    */
+    public void setEmbedModelName(String embedModelName){
+        this.embedModelName = embedModelName;
+    }
+	
+    /**
+    * 设置embed模型名链式调用。
+    */
+    public AiRagLibQueryParam embedModelName(String embedModelName) {
+        setEmbedModelName(embedModelName);
         return this;
     }
 	

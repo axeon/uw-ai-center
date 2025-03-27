@@ -152,6 +152,8 @@ public class AiRagLibController {
         aiRagLibDb.setLibType(aiRagLib.getLibType());
         aiRagLibDb.setLibName(aiRagLib.getLibName());
         aiRagLibDb.setLibDesc(aiRagLib.getLibDesc());
+        aiRagLibDb.setEmbedConfigId(aiRagLib.getEmbedConfigId());
+        aiRagLibDb.setEmbedModelName(aiRagLib.getEmbedModelName());
         aiRagLibDb.setLibConfig( aiRagLib.getLibConfig() );
         aiRagLibDb.setModifyDate(new Date());
         dao.update(aiRagLibDb);

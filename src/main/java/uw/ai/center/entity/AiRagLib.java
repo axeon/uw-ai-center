@@ -58,6 +58,20 @@ public class AiRagLib implements DataEntity,Serializable{
     private String libDesc;
 
     /**
+     * embed配置ID
+     */
+    @ColumnMeta(columnName="embed_config_id", dataType="long", dataSize=19, nullable=true)
+    @Schema(title = "embed配置ID", description = "embed配置ID", maxLength=19, nullable=true )
+    private long embedConfigId;
+
+    /**
+     * embed模型名
+     */
+    @ColumnMeta(columnName="embed_model_name", dataType="String", dataSize=100, nullable=true)
+    @Schema(title = "embed模型名", description = "embed模型名", maxLength=100, nullable=true )
+    private String embedModelName;
+
+    /**
      * 文档库配置
      */
     @ColumnMeta(columnName="lib_config", dataType="String", dataSize=1073741824, nullable=true)
@@ -171,6 +185,20 @@ public class AiRagLib implements DataEntity,Serializable{
     }
 
     /**
+     * 获取embed配置ID。
+     */
+    public long getEmbedConfigId(){
+        return this.embedConfigId;
+    }
+
+    /**
+     * 获取embed模型名。
+     */
+    public String getEmbedModelName(){
+        return this.embedModelName;
+    }
+
+    /**
      * 获取文档库配置。
      */
     public String getLibConfig(){
@@ -270,6 +298,34 @@ public class AiRagLib implements DataEntity,Serializable{
     }
 
     /**
+     * 设置embed配置ID。
+     */
+    public void setEmbedConfigId(long embedConfigId){
+        if (!Objects.equals(this.embedConfigId, embedConfigId)){
+            if (this.UPDATED_COLUMN == null) {
+                _INIT_UPDATE_INFO();
+            }
+            this.UPDATED_COLUMN.add("embed_config_id");
+            this.UPDATED_INFO.append("embed_config_id:\"" + this.embedConfigId+ "\"=>\"" + embedConfigId + "\"\r\n");
+            this.embedConfigId = embedConfigId;
+        }
+    }
+
+    /**
+     * 设置embed模型名。
+     */
+    public void setEmbedModelName(String embedModelName){
+        if (!Objects.equals(this.embedModelName, embedModelName)){
+            if (this.UPDATED_COLUMN == null) {
+                _INIT_UPDATE_INFO();
+            }
+            this.UPDATED_COLUMN.add("embed_model_name");
+            this.UPDATED_INFO.append("embed_model_name:\"" + this.embedModelName+ "\"=>\"" + embedModelName + "\"\r\n");
+            this.embedModelName = embedModelName;
+        }
+    }
+
+    /**
      * 设置文档库配置。
      */
     public void setLibConfig(String libConfig){
@@ -336,6 +392,8 @@ public class AiRagLib implements DataEntity,Serializable{
         sb.append("lib_type:\"" + this.libType + "\"\r\n");
         sb.append("lib_name:\"" + this.libName + "\"\r\n");
         sb.append("lib_desc:\"" + this.libDesc + "\"\r\n");
+        sb.append("embed_config_id:\"" + this.embedConfigId + "\"\r\n");
+        sb.append("embed_model_name:\"" + this.embedModelName + "\"\r\n");
         sb.append("lib_config:\"" + this.libConfig + "\"\r\n");
         sb.append("create_date:\"" + this.createDate + "\"\r\n");
         sb.append("modify_date:\"" + this.modifyDate + "\"\r\n");
