@@ -12,16 +12,15 @@ import reactor.core.publisher.Flux;
 import java.util.function.Function;
 
 /**
- * A simple logger advisor that logs the request and response.
+ * chat日志打印，调试用。。。
  */
-public class AiChatLoggerAdvisor  implements CallAroundAdvisor, StreamAroundAdvisor {
+public class AiChatLoggerAdvisor implements CallAroundAdvisor, StreamAroundAdvisor {
 
-    public static final Function<AdvisedRequest, String> DEFAULT_REQUEST_TO_STRING = request -> request.toString();
+    public static final Function<AdvisedRequest, String> DEFAULT_REQUEST_TO_STRING = Record::toString;
 
-    public static final Function<ChatResponse, String> DEFAULT_RESPONSE_TO_STRING = response -> ModelOptionsUtils
-            .toJsonString(response);
+    public static final Function<ChatResponse, String> DEFAULT_RESPONSE_TO_STRING = ModelOptionsUtils::toJsonString;
 
-    private static final Logger logger = LoggerFactory.getLogger( org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor.class);
+    private static final Logger logger = LoggerFactory.getLogger( AiChatLoggerAdvisor.class );
 
     private final Function<AdvisedRequest, String> requestToString;
 
@@ -30,15 +29,14 @@ public class AiChatLoggerAdvisor  implements CallAroundAdvisor, StreamAroundAdvi
     private int order;
 
     public AiChatLoggerAdvisor() {
-        this(DEFAULT_REQUEST_TO_STRING, DEFAULT_RESPONSE_TO_STRING, 0);
+        this( DEFAULT_REQUEST_TO_STRING, DEFAULT_RESPONSE_TO_STRING, 0 );
     }
 
     public AiChatLoggerAdvisor(int order) {
-        this(DEFAULT_REQUEST_TO_STRING, DEFAULT_RESPONSE_TO_STRING, order);
+        this( DEFAULT_REQUEST_TO_STRING, DEFAULT_RESPONSE_TO_STRING, order );
     }
 
-    public AiChatLoggerAdvisor(Function<AdvisedRequest, String> requestToString,
-                               Function<ChatResponse, String> responseToString, int order) {
+    public AiChatLoggerAdvisor(Function<AdvisedRequest, String> requestToString, Function<ChatResponse, String> responseToString, int order) {
         this.requestToString = requestToString;
         this.responseToString = responseToString;
         this.order = order;
@@ -54,19 +52,6 @@ public class AiChatLoggerAdvisor  implements CallAroundAdvisor, StreamAroundAdvi
         return this.order;
     }
 
-    private AdvisedRequest before(AdvisedRequest request) {
-        logger.info("request: {}", this.requestToString.apply(request));
-        for (Message message : request.messages()) {
-            logger.info("message: {}", message);
-        }
-
-        return request;
-    }
-
-    private void observeAfter(AdvisedResponse advisedResponse) {
-        logger.info("response: {}", this.responseToString.apply(advisedResponse.response()));
-    }
-
     @Override
     public String toString() {
         return org.springframework.ai.chat.client.advisor.SimpleLoggerAdvisor.class.getSimpleName();
@@ -75,11 +60,11 @@ public class AiChatLoggerAdvisor  implements CallAroundAdvisor, StreamAroundAdvi
     @Override
     public AdvisedResponse aroundCall(AdvisedRequest advisedRequest, CallAroundAdvisorChain chain) {
 
-        advisedRequest = before(advisedRequest);
+        advisedRequest = before( advisedRequest );
 
-        AdvisedResponse advisedResponse = chain.nextAroundCall(advisedRequest);
+        AdvisedResponse advisedResponse = chain.nextAroundCall( advisedRequest );
 
-        observeAfter(advisedResponse);
+        observeAfter( advisedResponse );
 
         return advisedResponse;
     }
@@ -87,11 +72,23 @@ public class AiChatLoggerAdvisor  implements CallAroundAdvisor, StreamAroundAdvi
     @Override
     public Flux<AdvisedResponse> aroundStream(AdvisedRequest advisedRequest, StreamAroundAdvisorChain chain) {
 
-        advisedRequest = before(advisedRequest);
+        advisedRequest = before( advisedRequest );
 
-        Flux<AdvisedResponse> advisedResponses = chain.nextAroundStream(advisedRequest);
+        Flux<AdvisedResponse> advisedResponses = chain.nextAroundStream( advisedRequest );
 
-        return new MessageAggregator().aggregateAdvisedResponse(advisedResponses, this::observeAfter);
+        return new MessageAggregator().aggregateAdvisedResponse( advisedResponses, this::observeAfter );
+    }
+
+    private AdvisedRequest before(AdvisedRequest request) {
+        logger.info( "request: {}", this.requestToString.apply( request ) );
+        for (Message message : request.messages()) {
+            logger.info( "message: {}", message );
+        }
+        return request;
+    }
+
+    private void observeAfter(AdvisedResponse advisedResponse) {
+        logger.info( "response: {}", this.responseToString.apply( advisedResponse.response() ) );
     }
 
 }

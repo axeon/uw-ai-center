@@ -4,7 +4,6 @@ import com.github.benmanes.caffeine.cache.CacheLoader;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.springframework.ai.chat.client.ChatClient;
 import uw.ai.center.entity.AiModelConfig;
 import uw.ai.center.vendor.ollama.OllamaVendor;
 import uw.ai.center.vendor.openai.OpenAiVendor;
@@ -38,9 +37,10 @@ public class AiVendorHelper {
     /**
      * 本地AisLinker实例缓存。
      */
-    private static final LoadingCache<Long, ChatClientWrapper> modelInstanceCache = Caffeine.newBuilder().maximumSize( 1000 ).build( new CacheLoader<Long, ChatClientWrapper>() {
+    private static final LoadingCache<Long, AiVendorClientWrapper> modelInstanceCache = Caffeine.newBuilder().maximumSize( 1000 ).build( new CacheLoader<Long,
+            AiVendorClientWrapper>() {
         @Override
-        public @Nullable ChatClientWrapper load(Long configId) {
+        public @Nullable AiVendorClientWrapper load(Long configId) {
             AiModelConfigData aiModelConfigData = FusionCache.get( AiModelConfigData.class, configId );
             if (aiModelConfigData == null) {
                 return null;
@@ -90,7 +90,7 @@ public class AiVendorHelper {
      * @param configId
      * @return
      */
-    public static ChatClientWrapper getChatClient(long configId) {
+    public static AiVendorClientWrapper getChatClient(long configId) {
         return modelInstanceCache.get( configId );
     }
 
@@ -123,38 +123,14 @@ public class AiVendorHelper {
      * @param aiModelConfigData
      * @return
      */
-    private static ChatClientWrapper buildChatClient(AiModelConfigData aiModelConfigData) {
+    private static AiVendorClientWrapper buildChatClient(AiModelConfigData aiModelConfigData) {
         if (aiModelConfigData != null) {
             AiVendor aiVendor = VENDOR_MAP.get( aiModelConfigData.getVendorClass() );
             if (aiVendor != null) {
-                return new ChatClientWrapper( aiVendor.buildChatClient( aiModelConfigData ), aiModelConfigData );
+                return aiVendor.buildClientWrapper( aiModelConfigData );
             }
         }
         return null;
-    }
-
-    /**
-     * 聊天客户端包装类。
-     *
-     * @param chatClient 聊天客户端。
-     * @param configData 配置数据。
-     */
-    public record ChatClientWrapper(ChatClient chatClient, AiModelConfigData configData) {
-
-        public ChatClientWrapper(ChatClient chatClient, AiModelConfigData configData) {
-            this.chatClient = chatClient;
-            this.configData = configData;
-        }
-
-        @Override
-        public ChatClient chatClient() {
-            return chatClient;
-        }
-
-        @Override
-        public AiModelConfigData configData() {
-            return configData;
-        }
     }
 
 }

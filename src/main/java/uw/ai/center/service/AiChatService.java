@@ -18,6 +18,7 @@ import uw.ai.center.dto.AiSessionMsgQueryParam;
 import uw.ai.center.entity.AiSessionInfo;
 import uw.ai.center.entity.AiSessionMsg;
 import uw.ai.center.tool.AiToolHelper;
+import uw.ai.center.vendor.AiVendorClientWrapper;
 import uw.ai.center.vendor.AiVendorHelper;
 import uw.ai.center.vo.AiModelConfigData;
 import uw.ai.center.vo.SessionConversationData;
@@ -51,12 +52,12 @@ public class AiChatService {
     public static ResponseData<String> generate(long saasId, long userId, int userType, String userInfo, long configId, String userPrompt, String systemPrompt,
                                                 List<AiToolCallInfo> toolList, Map<String,Object> toolContext, MultipartFile[] fileList) {
         // 获取ChatClient
-        AiVendorHelper.ChatClientWrapper chatClientWrapper = AiVendorHelper.getChatClient( configId );
+        AiVendorClientWrapper chatClientWrapper = AiVendorHelper.getChatClient( configId );
         if (chatClientWrapper == null) {
             return ResponseData.errorMsg( "ChatClient获取失败!" );
         }
         //获得基础信息。
-        AiModelConfigData configData = chatClientWrapper.configData();
+        AiModelConfigData configData = chatClientWrapper.getConfigData();
         if (StringUtils.isBlank( systemPrompt )) {
             systemPrompt = configData.getModelParamBox().getParam( "systemPrompt", "" );
         }
@@ -87,7 +88,7 @@ public class AiChatService {
         AiSessionMsg sessionMsg = initSessionMsg( sessionInfo.getId(), systemPrompt, userPrompt, toolList, fileInfo );
         // 设置请求开始时间
         sessionMsg.setResponseStartDate( new Date() );
-        ChatClient.ChatClientRequestSpec chatClientRequestSpec = chatClientWrapper.chatClient().prompt();
+        ChatClient.ChatClientRequestSpec chatClientRequestSpec = chatClientWrapper.getChatClient().prompt();
         if (StringUtils.isNotBlank( systemPrompt )) {
             chatClientRequestSpec.system( systemPrompt );
         }
@@ -133,12 +134,12 @@ public class AiChatService {
     public static ResponseData<AiSessionInfo> initSession(long saasId, long userId, int userType, String userInfo, long configId, int sessionType, String sessionName,
                                                           Integer windowSize, String systemPrompt, List<AiToolCallInfo> toolList) {
         // 获取ChatClient
-        AiVendorHelper.ChatClientWrapper chatClientWrapper = AiVendorHelper.getChatClient( configId );
+        AiVendorClientWrapper chatClientWrapper = AiVendorHelper.getChatClient( configId );
         if (chatClientWrapper == null) {
             return ResponseData.errorMsg( "ChatClient获取失败!" );
         }
         //获得基础信息。
-        AiModelConfigData configData = chatClientWrapper.configData();
+        AiModelConfigData configData = chatClientWrapper.getConfigData();
         if (StringUtils.isBlank( systemPrompt )) {
             systemPrompt = configData.getModelParamBox().getParam( "systemPrompt", "" );
         }
@@ -210,7 +211,7 @@ public class AiChatService {
             }
         }
         // 获取ChatClient
-        AiVendorHelper.ChatClientWrapper chatClientWrapper = AiVendorHelper.getChatClient( sessionInfo.getConfigId() );
+        AiVendorClientWrapper chatClientWrapper = AiVendorHelper.getChatClient( sessionInfo.getConfigId() );
         if (chatClientWrapper == null) {
             return Flux.just( ResponseData.errorMsg( "ChatClient获取失败！" ).toString() );
         }
@@ -222,7 +223,7 @@ public class AiChatService {
         StringBuilder responseData = new StringBuilder();
         // 最后一个ChatResponse信息
         AtomicReference<ChatResponse> lastResponseRef = new AtomicReference<>();
-        ChatClient.ChatClientRequestSpec chatClientRequestSpec = chatClientWrapper.chatClient().prompt();
+        ChatClient.ChatClientRequestSpec chatClientRequestSpec = chatClientWrapper.getChatClient().prompt();
         if (StringUtils.isNotBlank( systemPrompt )) {
             chatClientRequestSpec.system( systemPrompt );
         }

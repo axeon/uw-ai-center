@@ -1,6 +1,5 @@
 package uw.ai.center.vendor;
 
-import org.springframework.ai.chat.client.ChatClient;
 import uw.ai.center.vo.AiModelConfigData;
 import uw.common.vo.ConfigParam;
 
@@ -55,10 +54,11 @@ public interface AiVendor {
 
     /**
      * 构造模型实例。
+     *
      * @param aiModelConfigData
      * @return
      */
-    ChatClient buildChatClient(AiModelConfigData aiModelConfigData);
+    AiVendorClientWrapper buildClientWrapper(AiModelConfigData aiModelConfigData);
 
     /**
      * 获取模型列表。

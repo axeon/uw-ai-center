@@ -16,9 +16,13 @@ import uw.dao.TransactionException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AiSessionMemoryAdvisor implements ChatMemory {
 
-    private static final Logger logger = LoggerFactory.getLogger( AiSessionMemoryAdvisor.class );
+/**
+ * 会话内存的mysql实现类，保存会话内的消息。
+ */
+public class AiMysqlChatMemory implements ChatMemory {
+
+    private static final Logger logger = LoggerFactory.getLogger( AiMysqlChatMemory.class );
     /**
      * dao。
      */
