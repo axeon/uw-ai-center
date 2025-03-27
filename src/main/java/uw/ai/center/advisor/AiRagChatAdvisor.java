@@ -42,7 +42,7 @@ public class AiRagChatAdvisor implements CallAroundAdvisor, StreamAroundAdvisor 
 
     private static final int DEFAULT_ORDER = 0;
 
-    private final VectorStore vectorStore;
+    private final long[] ragLibIds;
 
     private final String userTextAdvise;
 
@@ -56,43 +56,42 @@ public class AiRagChatAdvisor implements CallAroundAdvisor, StreamAroundAdvisor 
      * The QuestionAnswerAdvisor retrieves context information from a Vector Store and
      * combines it with the user's text.
      *
-     * @param vectorStore The vector store to use
      */
-    public AiRagChatAdvisor(VectorStore vectorStore) {
-        this( vectorStore, SearchRequest.builder().build(), DEFAULT_USER_TEXT_ADVISE );
+    public AiRagChatAdvisor(long[] ragLibIds) {
+        this( ragLibIds, SearchRequest.builder().build(), DEFAULT_USER_TEXT_ADVISE );
     }
 
     /**
      * The QuestionAnswerAdvisor retrieves context information from a Vector Store and
      * combines it with the user's text.
      *
-     * @param vectorStore   The vector store to use
+     * @param ragLibIds   The vector store to use
      * @param searchRequest The search request defined using the portable filter
      *                      expression syntax
      */
-    public AiRagChatAdvisor(VectorStore vectorStore, SearchRequest searchRequest) {
-        this( vectorStore, searchRequest, DEFAULT_USER_TEXT_ADVISE );
+    public AiRagChatAdvisor(long[] ragLibIds, SearchRequest searchRequest) {
+        this( ragLibIds, searchRequest, DEFAULT_USER_TEXT_ADVISE );
     }
 
     /**
      * The QuestionAnswerAdvisor retrieves context information from a Vector Store and
      * combines it with the user's text.
      *
-     * @param vectorStore    The vector store to use
+     * @param ragLibIds    The vector store to use
      * @param searchRequest  The search request defined using the portable filter
      *                       expression syntax
      * @param userTextAdvise The user text to append to the existing user prompt. The text
      *                       should contain a placeholder named "question_answer_context".
      */
-    public AiRagChatAdvisor(VectorStore vectorStore, SearchRequest searchRequest, String userTextAdvise) {
-        this( vectorStore, searchRequest, userTextAdvise, true );
+    public AiRagChatAdvisor(long[] ragLibIds, SearchRequest searchRequest, String userTextAdvise) {
+        this( ragLibIds, searchRequest, userTextAdvise, true );
     }
 
     /**
      * The QuestionAnswerAdvisor retrieves context information from a Vector Store and
      * combines it with the user's text.
      *
-     * @param vectorStore         The vector store to use
+     * @param ragLibIds         The vector store to use
      * @param searchRequest       The search request defined using the portable filter
      *                            expression syntax
      * @param userTextAdvise      The user text to append to the existing user prompt. The text
@@ -102,15 +101,15 @@ public class AiRagChatAdvisor implements CallAroundAdvisor, StreamAroundAdvisor 
      *                            threads. This is useful when the advisor is used in a non-blocking environment. It
      *                            is true by default.
      */
-    public AiRagChatAdvisor(VectorStore vectorStore, SearchRequest searchRequest, String userTextAdvise, boolean protectFromBlocking) {
-        this( vectorStore, searchRequest, userTextAdvise, protectFromBlocking, DEFAULT_ORDER );
+    public AiRagChatAdvisor(long[] ragLibIds, SearchRequest searchRequest, String userTextAdvise, boolean protectFromBlocking) {
+        this( ragLibIds, searchRequest, userTextAdvise, protectFromBlocking, DEFAULT_ORDER );
     }
 
     /**
      * The QuestionAnswerAdvisor retrieves context information from a Vector Store and
      * combines it with the user's text.
      *
-     * @param vectorStore         The vector store to use
+     * @param ragLibIds         The vector store to use
      * @param searchRequest       The search request defined using the portable filter
      *                            expression syntax
      * @param userTextAdvise      The user text to append to the existing user prompt. The text
@@ -121,13 +120,13 @@ public class AiRagChatAdvisor implements CallAroundAdvisor, StreamAroundAdvisor 
      *                            is true by default.
      * @param order               The order of the advisor.
      */
-    public AiRagChatAdvisor(VectorStore vectorStore, SearchRequest searchRequest, String userTextAdvise, boolean protectFromBlocking, int order) {
+    public AiRagChatAdvisor(long[] ragLibIds, SearchRequest searchRequest, String userTextAdvise, boolean protectFromBlocking, int order) {
 
-        Assert.notNull( vectorStore, "The vectorStore must not be null!" );
+        Assert.notNull( ragLibIds, "The vectorStore must not be null!" );
         Assert.notNull( searchRequest, "The searchRequest must not be null!" );
         Assert.hasText( userTextAdvise, "The userTextAdvise must not be empty!" );
 
-        this.vectorStore = vectorStore;
+        this.ragLibIds = ragLibIds;
         this.searchRequest = searchRequest;
         this.userTextAdvise = userTextAdvise;
         this.protectFromBlocking = protectFromBlocking;
@@ -219,7 +218,7 @@ public class AiRagChatAdvisor implements CallAroundAdvisor, StreamAroundAdvisor 
         String query = new PromptTemplate( request.userText(), request.userParams() ).render();
         var searchRequestToUse = SearchRequest.from( this.searchRequest ).query( query ).filterExpression( doGetFilterExpression( context ) ).build();
 
-        List<Document> documents = this.vectorStore.similaritySearch( searchRequestToUse );
+        List<Document> documents = null; //this.vectorStore.similaritySearch( searchRequestToUse );
 
         // 3. Create the context from the documents.
         context.put( RETRIEVED_DOCUMENTS, documents );

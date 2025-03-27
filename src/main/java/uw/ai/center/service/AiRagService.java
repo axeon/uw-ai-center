@@ -1,13 +1,43 @@
 package uw.ai.center.service;
 
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.github.benmanes.caffeine.cache.CacheLoader;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import org.elasticsearch.client.RestClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.ai.document.Document;
+import org.springframework.ai.reader.tika.TikaDocumentReader;
+import org.springframework.ai.transformer.splitter.TextSplitter;
+import org.springframework.ai.transformer.splitter.TokenTextSplitter;
+import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.ai.vectorstore.elasticsearch.ElasticsearchVectorStore;
+import org.springframework.ai.vectorstore.elasticsearch.ElasticsearchVectorStoreOptions;
+import org.springframework.ai.vectorstore.elasticsearch.SimilarityFunction;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+import uw.ai.center.entity.AiRagDoc;
+import uw.ai.center.entity.AiRagLib;
+import uw.ai.center.vendor.AiVendorClientWrapper;
+import uw.ai.center.vendor.AiVendorHelper;
 import uw.common.constant.TypeConfigParam;
+import uw.common.util.ConfigParamUtils;
 import uw.common.vo.ConfigParam;
+import uw.common.vo.ConfigParamBox;
+import uw.dao.DaoFactory;
+import uw.dao.TransactionException;
+import uw.httpclient.json.JsonInterfaceHelper;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * RAG库服务.
@@ -18,28 +48,171 @@ public class AiRagService {
     /**
      * RAG库配置参数.
      */
-    public static final List<ConfigParam> RAG_LIB_CONFIG_PARAMS = List.of(
-            new ConfigParam( "chunk-size", "800", TypeConfigParam.INT.getValue(), "文本块大小", "文本块大小" ),
-            new ConfigParam( "chunk-min-char-size", "350", TypeConfigParam.INT.getValue(), "文本块最小字符数", "文本块大小" ),
-            new ConfigParam( "chunk-min-embed-size", "5", TypeConfigParam.INT.getValue(), "文本块embed最小长度", "文本块embed最小长度，低于这个长度将会不会embed。" ),
-            new ConfigParam( "chunk-max-num", "10000", TypeConfigParam.INT.getValue(), "文本块最大数量", "文本块最大数量" ),
-            new ConfigParam( "search-similarity-threshold", "0.0", TypeConfigParam.DOUBLE.getValue(), "搜索匹配下限", "搜索匹配下限，低于此下限值的将不会被使用" ),
-            new ConfigParam( "search-top-k", "5", TypeConfigParam.INT.getValue(), "搜索topK", "搜索topK" )
-    );
+    public static final List<ConfigParam> RAG_LIB_CONFIG_PARAMS = List.of( new ConfigParam( "chunk-size", "800", TypeConfigParam.INT.getValue(), "文本块大小", "文本块大小" ),
+            new ConfigParam( "chunk-min-char-size", "350", TypeConfigParam.INT.getValue(), "文本块最小字符数", "文本块大小" ), new ConfigParam( "chunk-min-embed-size", "5",
+                    TypeConfigParam.INT.getValue(), "文本块embed最小长度", "文本块embed最小长度，低于这个长度将会不会embed。" ), new ConfigParam( "chunk-max-num", "10000", TypeConfigParam.INT.getValue(),
+                    "文本块最大数量", "文本块最大数量" ), new ConfigParam( "search-similarity-threshold", "0.0", TypeConfigParam.DOUBLE.getValue(), "搜索匹配下限", "搜索匹配下限，低于此下限值的将不会被使用" ),
+            new ConfigParam( "search-top-k", "5", TypeConfigParam.INT.getValue(), "搜索topK", "搜索topK" ) );
     /**
      * RAG库ES索引前缀.
      */
     public static final String RAG_ES_INDEX_PREFIX = "uw.ai.rag.";
-
+    private static final Logger logger = LoggerFactory.getLogger( AiRagService.class );
+    /**
+     * 数据库操作实例.
+     */
+    private static final DaoFactory dao = DaoFactory.getInstance();
     private static RestClient restClient;
+    /**
+     * 实例缓存。
+     */
+    private static final LoadingCache<Long, AiRagClientWrapper> ragClientCache = Caffeine.newBuilder().maximumSize( 1000 ).build( new CacheLoader<Long, AiRagClientWrapper>() {
+        @Override
+        public AiRagService.AiRagClientWrapper load(Long libId) {
+            return buildRagClientWrapper( libId );
+        }
+    } );
 
     public AiRagService(RestClient restClient) {
         AiRagService.restClient = restClient;
     }
 
-    private static VectorStore buildVectorStore(long ragLibId) {
-        VectorStore vectorStore = ElasticsearchVectorStore.builder( restClient,null ).build();
-        return vectorStore;
+    /**
+     * 添加文档.
+     *
+     * @param ragLibId
+     * @param file
+     */
+    public static Map<String, String> addDocument(long ragLibId, MultipartFile file) {
+        AiRagClientWrapper ragClientWrapper = getRagClientWrapper( ragLibId );
+        try (InputStream inputStream = file.getInputStream()) {
+            TikaDocumentReader reader = new TikaDocumentReader( new InputStreamResource( inputStream ) );
+            List<Document> documentList = ragClientWrapper.textSplitter.apply( reader.get() );
+            ragClientWrapper.vectorStore.add( documentList );
+            return documentList.stream().collect( Collectors.toMap( Document::getId, Document::getText ) );
+        } catch (IOException e) {
+            logger.error( "处理文件[{}]时发生错误!{}", file.getOriginalFilename(), e.getMessage(), e );
+        }
+        return null;
     }
 
+    /**
+     * 添加文档.
+     *
+     * @param ragLibId
+     * @param fileContent
+     */
+    public static Map<String, String> addDocument(long ragLibId, String fileName, String fileContent) {
+        AiRagClientWrapper ragClientWrapper = getRagClientWrapper( ragLibId );
+        List<Document> documentList = ragClientWrapper.textSplitter.apply( List.of( new Document( fileContent ) ) );
+        ragClientWrapper.vectorStore.add( documentList );
+        return documentList.stream().collect( Collectors.toMap( Document::getId, Document::getText ) );
+    }
+
+    /**
+     * 删除文档.
+     *
+     * @param ragLibId
+     * @param ragDocId
+     */
+    public static void delDocument(long ragLibId, long ragDocId) {
+        try {
+            AiRagDoc aiRagDoc = dao.load( AiRagDoc.class, ragDocId );
+            if (aiRagDoc != null) {
+                AiRagClientWrapper ragClientWrapper = getRagClientWrapper( ragLibId );
+                Map<String, String> docMap = JsonInterfaceHelper.JSON_CONVERTER.parse( aiRagDoc.getDocContent(), new TypeReference<Map<String, String>>() {
+                } );
+                ragClientWrapper.vectorStore.delete( new ArrayList<>( docMap.keySet() ) );
+            }
+        } catch (TransactionException e) {
+            logger.error( e.getMessage(), e );
+        }
+    }
+
+    /**
+     * 删除RAG库.
+     *
+     * @param ragLibId
+     */
+    public static void delLib(long ragLibId) {
+        AiRagClientWrapper ragClientWrapper = getRagClientWrapper( ragLibId );
+        // 安全获取ElasticsearchClient并删除索引
+        ragClientWrapper.vectorStore.getNativeClient().map( client -> (ElasticsearchClient) client ) // 转换类型
+                .ifPresent( esClient -> {
+                    try {
+                        // 删除ES索引
+                        esClient.indices().delete( r -> r.index( RAG_ES_INDEX_PREFIX + ragLibId ) );
+                    } catch (Exception e) {
+                        logger.error( "删除ES索引失败", e );
+                    }
+                } );
+    }
+
+    /**
+     * 获取RAG客户端实例.
+     *
+     * @param ragLibId
+     * @return
+     */
+    public static AiRagClientWrapper getRagClientWrapper(long ragLibId) {
+        return ragClientCache.get( ragLibId );
+    }
+
+    /**
+     * 查询.
+     *
+     * @param ragLibId
+     * @param query
+     * @return
+     */
+    public String query(long ragLibId, String query) {
+        AiRagClientWrapper ragClientWrapper = getRagClientWrapper( ragLibId );
+        var searchRequestToUse = SearchRequest.from( ragClientWrapper.searchRequest ).query( query ).build();
+        List<Document> documents = ragClientWrapper.vectorStore.similaritySearch( searchRequestToUse );
+        return documents.stream().map( Document::getText ).collect( Collectors.joining( System.lineSeparator() ) );
+    }
+
+    /**
+     * 构建RAG客户端.
+     *
+     * @param ragLibId
+     * @return
+     */
+    private static AiRagClientWrapper buildRagClientWrapper(long ragLibId) {
+        try {
+            AiRagLib ragLib = dao.load( AiRagLib.class, ragLibId );
+            if (ragLib != null) {
+                String configData = ragLib.getLibConfig();
+                ConfigParamBox configParamBox = ConfigParamUtils.buildParamBox( RAG_LIB_CONFIG_PARAMS, configData ).getData();
+                int chunkSize = configParamBox.getIntParam( "chunk-size" );
+                int chunkMinCharSize = configParamBox.getIntParam( "chunk-min-char-size" );
+                int chunkMinEmbedSize = configParamBox.getIntParam( "chunk-min-embed-size" );
+                int chunkMaxNum = configParamBox.getIntParam( "chunk-max-num" );
+                double searchSimilarityThreshold = configParamBox.getDoubleParam( "search-similarity-threshold" );
+                int searchTopK = configParamBox.getIntParam( "search-top-k" );
+                TextSplitter textSplitter = new TokenTextSplitter( chunkSize, chunkMinCharSize, chunkMinEmbedSize, chunkMaxNum, true );
+                SearchRequest searchRequest = SearchRequest.builder().topK( searchTopK ).similarityThreshold( searchSimilarityThreshold ).build();
+                AiVendorClientWrapper aiVendorClientWrapper = AiVendorHelper.getChatClient( ragLib.getEmbedConfigId() );
+                ElasticsearchVectorStoreOptions elasticsearchVectorStoreOptions = new ElasticsearchVectorStoreOptions();
+                elasticsearchVectorStoreOptions.setIndexName( RAG_ES_INDEX_PREFIX + ragLibId );
+                elasticsearchVectorStoreOptions.setDimensions( 1536 );
+                elasticsearchVectorStoreOptions.setSimilarity( SimilarityFunction.cosine );
+                VectorStore vectorStore =
+                        ElasticsearchVectorStore.builder( restClient, aiVendorClientWrapper.getEmbeddingModel() ).options( elasticsearchVectorStoreOptions ).build();
+                return new AiRagClientWrapper( vectorStore, textSplitter, searchRequest );
+            }
+        } catch (Exception e) {
+            logger.error( e.getMessage(), e );
+        }
+        return null;
+    }
+
+    /**
+     * RAG实例封装类.
+     *
+     * @param vectorStore
+     * @param searchRequest
+     */
+    record AiRagClientWrapper(VectorStore vectorStore, TextSplitter textSplitter, SearchRequest searchRequest) {
+    }
 }

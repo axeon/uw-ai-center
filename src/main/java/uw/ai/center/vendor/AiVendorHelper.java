@@ -37,7 +37,7 @@ public class AiVendorHelper {
     /**
      * 本地AisLinker实例缓存。
      */
-    private static final LoadingCache<Long, AiVendorClientWrapper> modelInstanceCache = Caffeine.newBuilder().maximumSize( 1000 ).build( new CacheLoader<Long,
+    private static final LoadingCache<Long, AiVendorClientWrapper> vendorClientCache = Caffeine.newBuilder().maximumSize( 1000 ).build( new CacheLoader<Long,
             AiVendorClientWrapper>() {
         @Override
         public @Nullable AiVendorClientWrapper load(Long configId) {
@@ -59,8 +59,8 @@ public class AiVendorHelper {
             }
         }, (CacheChangeNotifyListener<Long, AiModelConfigData>) (key, oldValue, newValue) -> {
             //此处invalidate实例缓存。
-            if (modelInstanceCache.getIfPresent( key ) != null) {
-                modelInstanceCache.invalidate( key );
+            if (vendorClientCache.getIfPresent( key ) != null) {
+                vendorClientCache.invalidate( key );
             }
         } );
     }
@@ -91,7 +91,7 @@ public class AiVendorHelper {
      * @return
      */
     public static AiVendorClientWrapper getChatClient(long configId) {
-        return modelInstanceCache.get( configId );
+        return vendorClientCache.get( configId );
     }
 
 

@@ -12,6 +12,7 @@ import org.springframework.ai.reader.tika.TikaDocumentReader;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Flux;
+import uw.ai.center.advisor.AiRagChatAdvisor;
 import uw.ai.center.constant.SessionType;
 import uw.ai.center.dto.AiSessionInfoQueryParam;
 import uw.ai.center.dto.AiSessionMsgQueryParam;
@@ -388,7 +389,7 @@ public class AiChatService {
         content.append( "---------------------\n" );
         for (MultipartFile file : files) {
             infoMap.put( file.getOriginalFilename(), file.getSize() );
-            content.append( "文件名：" ).append( file.getName() ).append( "的内容：\n\n" );
+            content.append( "文件名：" ).append( file.getOriginalFilename() ).append( "的内容：\n\n" );
             try (InputStream inputStream = file.getInputStream()) {
                 TikaDocumentReader reader = new TikaDocumentReader( new InputStreamResource( inputStream ) );
                 List<Document> documents = reader.get(); // 假设返回List<Document>
@@ -397,11 +398,11 @@ public class AiChatService {
                         content.append( document.getText() ).append( "\n" );
                     }
                 } else {
-                    return ResponseData.warnMsg( "文件[" + file.getName() + "]内容为空，无法提取文本!" );
+                    return ResponseData.warnMsg( "文件[" + file.getOriginalFilename() + "]内容为空，无法提取文本!" );
                 }
             } catch (IOException e) {
-                logger.error( "处理文件[{}]时发生错误!{}", file.getName(), e.getMessage(), e );
-                return ResponseData.errorMsg( "处理文件[" + file.getName() + "]时发生错误!" + e.getMessage() );
+                logger.error( "处理文件[{}]时发生错误!{}", file.getOriginalFilename(), e.getMessage(), e );
+                return ResponseData.errorMsg( "处理文件[" + file.getOriginalFilename() + "]时发生错误!" + e.getMessage() );
             }
         }
         content.append( "---------------------\n" );
