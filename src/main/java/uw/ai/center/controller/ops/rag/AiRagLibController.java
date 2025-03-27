@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 import uw.ai.center.dto.AiRagLibQueryParam;
 import uw.ai.center.entity.AiRagLib;
+import uw.ai.center.service.AiRagService;
 import uw.app.common.dto.AuthIdQueryParam;
 import uw.app.common.dto.SysCritLogQueryParam;
 import uw.app.common.dto.SysDataHistoryQueryParam;
@@ -19,11 +20,13 @@ import uw.common.constant.StateCommon;
 import uw.auth.service.AuthServiceHelper;
 import uw.auth.service.annotation.MscPermDeclare;
 import uw.common.dto.ResponseData;
+import uw.common.vo.ConfigParam;
 import uw.dao.DaoFactory;
 import uw.dao.DataList;
 import uw.dao.TransactionException;
 
 import java.util.Date;
+import java.util.List;
 
 
 /**
@@ -77,6 +80,18 @@ public class AiRagLibController {
     public AiRagLib load(@Parameter(description = "主键ID", required = true) @RequestParam long id) throws TransactionException {
         AuthServiceHelper.logRef(AiRagLib.class,id);
         return dao.queryForSingleObject(AiRagLib.class, new AuthIdQueryParam(id));
+    }
+
+
+    /**
+     * 加载配置参数。
+     * @return
+     */
+    @GetMapping("/loadConfigParam")
+    @Operation(summary = "加载配置参数", description = "加载配置参数")
+    @MscPermDeclare(user = UserType.OPS, auth = AuthType.USER, log = ActionLog.NONE)
+    public List<ConfigParam> loadConfigParam() {
+        return AiRagService.RAG_LIB_CONFIG_PARAMS;
     }
 
     /**

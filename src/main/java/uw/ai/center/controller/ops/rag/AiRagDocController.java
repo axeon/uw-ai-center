@@ -49,6 +49,7 @@ public class AiRagDocController {
     @MscPermDeclare(user = UserType.OPS, auth = AuthType.PERM, log = ActionLog.REQUEST)
     public DataList<AiRagDoc> list(AiRagDocQueryParam queryParam) throws TransactionException {
         AuthServiceHelper.logRef(AiRagDoc.class);
+        queryParam.SELECT_SQL( "SELECT id,saas_id,lib_id,doc_type,doc_name,doc_size,create_date,modify_date,state from ai_rag_doc " );
         return dao.list(AiRagDoc.class, queryParam);
     }
 
