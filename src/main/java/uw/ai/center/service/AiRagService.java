@@ -29,7 +29,6 @@ import uw.common.util.ConfigParamUtils;
 import uw.common.vo.ConfigParam;
 import uw.common.vo.ConfigParamBox;
 import uw.dao.DaoFactory;
-import uw.dao.TransactionException;
 import uw.httpclient.json.JsonInterfaceHelper;
 
 import java.io.IOException;
@@ -122,19 +121,33 @@ public class AiRagService {
      * 删除文档.
      *
      * @param ragLibId
-     * @param ragDocId
      */
-    public static void delDocument(long ragLibId, long ragDocId) {
-        try {
-            AiRagDoc aiRagDoc = dao.load( AiRagDoc.class, ragDocId );
-            if (aiRagDoc != null) {
-                AiRagClientWrapper ragClientWrapper = getRagClientWrapper( ragLibId );
-                Map<String, String> docMap = JsonInterfaceHelper.JSON_CONVERTER.parse( aiRagDoc.getDocContent(), new TypeReference<Map<String, String>>() {
-                } );
-                ragClientWrapper.vectorStore.delete( new ArrayList<>( docMap.keySet() ) );
+    public static void delDocument(long ragLibId, AiRagDoc aiRagDoc) {
+        if (aiRagDoc != null) {
+            AiRagClientWrapper ragClientWrapper = getRagClientWrapper( ragLibId );
+            Map<String, String> docMap = JsonInterfaceHelper.JSON_CONVERTER.parse( aiRagDoc.getDocContent(), new TypeReference<Map<String, String>>() {
+            } );
+            ragClientWrapper.vectorStore.delete( new ArrayList<>( docMap.keySet() ) );
+        }
+    }
+
+
+    /**
+     * 删除文档.
+     *
+     * @param ragLibId
+     */
+    public static void rebuildDocument(long ragLibId, AiRagDoc aiRagDoc) {
+        if (aiRagDoc != null) {
+            AiRagClientWrapper ragClientWrapper = getRagClientWrapper( ragLibId );
+            Map<String, String> docMap = JsonInterfaceHelper.JSON_CONVERTER.parse( aiRagDoc.getDocContent(), new TypeReference<Map<String, String>>() {
+            } );
+//            ragClientWrapper.vectorStore.delete( new ArrayList<>( docMap.keySet() ) );
+            List<Document> documentList = new ArrayList<>( docMap.size() );
+            for (Map.Entry<String, String> entry : docMap.entrySet()) {
+                documentList.add( new Document( entry.getKey(), entry.getValue(), Map.of() ) );
             }
-        } catch (TransactionException e) {
-            logger.error( e.getMessage(), e );
+            ragClientWrapper.vectorStore.add( documentList );
         }
     }
 
