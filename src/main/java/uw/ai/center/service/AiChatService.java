@@ -94,20 +94,20 @@ public class AiChatService {
         if (ragLibIds != null && ragLibIds.length > 0) {
             ragContent = queryRagInfo( ragLibIds, userPrompt ).getData();
         }
-        String extData = null;
+        String contextData = null;
         if (StringUtils.isNotBlank( ragContent ) || StringUtils.isNotBlank( fileContent )) {
-            extData = buildContextInfo( ragContent, fileContent );
+            contextData = buildContextInfo( ragContent, fileContent );
         }
         // 初始化会话消息
-        AiSessionMsg sessionMsg = initSessionMsg( sessionInfo.getId(), systemPrompt, userPrompt, toolList, fileInfo, ragLibIds, extData );
+        AiSessionMsg sessionMsg = initSessionMsg( sessionInfo.getId(), systemPrompt, userPrompt, toolList, fileInfo, ragLibIds, contextData );
         // 设置请求开始时间
         sessionMsg.setResponseStartDate( new Date() );
         ChatClient.ChatClientRequestSpec chatClientRequestSpec = chatClientWrapper.getChatClient().prompt();
         if (StringUtils.isNotBlank( systemPrompt )) {
             chatClientRequestSpec.system( systemPrompt );
         }
-        if (StringUtils.isNotBlank( extData )) {
-            userPrompt = userPrompt + extData;
+        if (StringUtils.isNotBlank( contextData )) {
+            userPrompt = userPrompt + contextData;
         }
         chatClientRequestSpec.user( userPrompt );
         // 设置工具调用
@@ -233,12 +233,12 @@ public class AiChatService {
         if (ragLibIds != null && ragLibIds.length > 0) {
             ragContent = queryRagInfo( ragLibIds, userPrompt ).getData();
         }
-        String extData = null;
+        String contextData = null;
         if (StringUtils.isNotBlank( ragContent ) || StringUtils.isNotBlank( fileContent )) {
-            extData = buildContextInfo( ragContent, fileContent );
+            contextData = buildContextInfo( ragContent, fileContent );
         }
         // 初始化会话消息
-        AiSessionMsg sessionMsg = initSessionMsg( sessionInfo.getId(), systemPrompt, userPrompt, toolList, fileInfo, ragLibIds, extData );
+        AiSessionMsg sessionMsg = initSessionMsg( sessionInfo.getId(), systemPrompt, userPrompt, toolList, fileInfo, ragLibIds, contextData );
         // 获取ChatClient
         AiVendorClientWrapper chatClientWrapper = AiVendorHelper.getChatClient( sessionInfo.getConfigId() );
         if (chatClientWrapper == null) {
@@ -254,7 +254,9 @@ public class AiChatService {
         if (StringUtils.isNotBlank( systemPrompt )) {
             chatClientRequestSpec.system( systemPrompt );
         }
-        chatClientRequestSpec.user( userPrompt );
+        if (StringUtils.isNotBlank( contextData )) {
+            userPrompt = userPrompt + contextData;
+        }
         // 设置工具
         if (toolList != null && !toolList.isEmpty()) {
             chatClientRequestSpec.tools( AiToolHelper.getToolCallbacks( toolList ) );
