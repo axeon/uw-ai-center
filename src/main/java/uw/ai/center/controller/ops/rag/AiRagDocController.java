@@ -54,7 +54,7 @@ public class AiRagDocController {
     @MscPermDeclare(user = UserType.OPS, auth = AuthType.PERM, log = ActionLog.REQUEST)
     public DataList<AiRagDoc> list(AiRagDocQueryParam queryParam) throws TransactionException {
         AuthServiceHelper.logRef(AiRagDoc.class);
-        queryParam.SELECT_SQL( "SELECT id,saas_id,lib_id,doc_type,doc_name,doc_size,create_date,modify_date,state from ai_rag_doc " );
+        queryParam.SELECT_SQL( "SELECT id,saas_id,lib_id,doc_type,doc_name,doc_body_size,doc_content_size,create_date,modify_date,state from ai_rag_doc " );
         return dao.list(AiRagDoc.class, queryParam);
     }
 
@@ -67,7 +67,7 @@ public class AiRagDocController {
     @Operation(summary = "轻量级列表rag文档信息", description = "轻量级列表rag文档信息，一般用于select控件。")
     @MscPermDeclare(user = UserType.OPS, auth = AuthType.USER, log = ActionLog.NONE)
     public DataList<AiRagDoc> liteList(AiRagDocQueryParam queryParam) throws TransactionException {
-        queryParam.SELECT_SQL( "SELECT id,saas_id,lib_id,doc_type,doc_name,doc_size,create_date,modify_date,state from ai_rag_doc " );
+        queryParam.SELECT_SQL( "SELECT id,saas_id,lib_id,doc_type,doc_name,doc_body_size,doc_content_size,create_date,modify_date,state from ai_rag_doc " );
         return dao.list(AiRagDoc.class, queryParam);
     }
 
