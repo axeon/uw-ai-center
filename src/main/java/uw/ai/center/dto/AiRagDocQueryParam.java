@@ -68,9 +68,9 @@ public class AiRagDocQueryParam extends AuthPageQueryParam{
     /**
     * 文档类型。
     */
-    @QueryMeta(expr = "doc_type=?")
+    @QueryMeta(expr = "doc_type like ?")
     @Schema(title="文档类型", description = "文档类型")
-    private Integer docType;
+    private String docType;
 	
     /**
     * 文档名称。
@@ -226,21 +226,21 @@ public class AiRagDocQueryParam extends AuthPageQueryParam{
     /**
     * 获取文档类型。
     */
-    public Integer getDocType(){
+    public String getDocType(){
         return this.docType;
     }
 
     /**
     * 设置文档类型。
     */
-    public void setDocType(Integer docType){
+    public void setDocType(String docType){
         this.docType = docType;
     }
 	
     /**
     * 设置文档类型链式调用。
     */
-	public AiRagDocQueryParam docType(Integer docType){
+    public AiRagDocQueryParam docType(String docType) {
         setDocType(docType);
         return this;
     }

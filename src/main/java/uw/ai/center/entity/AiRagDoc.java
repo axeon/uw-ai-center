@@ -46,9 +46,9 @@ public class AiRagDoc implements DataEntity,Serializable{
     /**
      * 文档类型
      */
-    @ColumnMeta(columnName="doc_type", dataType="int", dataSize=10, nullable=true)
-    @Schema(title = "文档类型", description = "文档类型", maxLength=10, nullable=true )
-    private int docType;
+    @ColumnMeta(columnName="doc_type", dataType="String", dataSize=20, nullable=true)
+    @Schema(title = "文档类型", description = "文档类型", maxLength=20, nullable=true )
+    private String docType;
 
     /**
      * 文档名称
@@ -67,7 +67,7 @@ public class AiRagDoc implements DataEntity,Serializable{
     /**
      * 文档主体
      */
-//    @ColumnMeta(columnName="doc_body", dataType="Object", dataSize=2147483646, nullable=true)
+    @ColumnMeta(columnName="doc_body", dataType="Object", dataSize=2147483646, nullable=true)
     @Schema(title = "文档主体", description = "文档主体", maxLength=2147483646, nullable=true )
     private Object docBody;
 
@@ -187,7 +187,7 @@ public class AiRagDoc implements DataEntity,Serializable{
     /**
      * 获取文档类型。
      */
-    public int getDocType(){
+    public String getDocType(){
         return this.docType;
     }
 
@@ -300,7 +300,7 @@ public class AiRagDoc implements DataEntity,Serializable{
     /**
      * 设置文档类型。
      */
-    public void setDocType(int docType){
+    public void setDocType(String docType){
         if (!Objects.equals(this.docType, docType)){
             if (this.UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();

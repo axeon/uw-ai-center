@@ -48,20 +48,28 @@ public class AiRagService {
     /**
      * RAG库配置参数.
      */
-    public static final List<ConfigParam> RAG_LIB_CONFIG_PARAMS = List.of( new ConfigParam( "chunk-size", "800", TypeConfigParam.INT.getValue(), "文本块大小", "文本块大小" ),
-            new ConfigParam( "chunk-min-char-size", "350", TypeConfigParam.INT.getValue(), "文本块最小字符数", "文本块大小" ), new ConfigParam( "chunk-min-embed-size", "5",
-                    TypeConfigParam.INT.getValue(), "文本块embed最小长度", "文本块embed最小长度，低于这个长度将会不会embed。" ), new ConfigParam( "chunk-max-num", "10000", TypeConfigParam.INT.getValue(),
-                    "文本块最大数量", "文本块最大数量" ), new ConfigParam( "search-similarity-threshold", "0.0", TypeConfigParam.DOUBLE.getValue(), "搜索匹配下限", "搜索匹配下限，低于此下限值的将不会被使用" ),
-            new ConfigParam( "search-top-k", "5", TypeConfigParam.INT.getValue(), "搜索topK", "搜索topK" ) );
+    public static final List<ConfigParam> RAG_LIB_CONFIG_PARAMS = List.of(
+            new ConfigParam( "chunk-size", "800", TypeConfigParam.INT.getValue(), "文本块大小", "文本块大小" ),
+            new ConfigParam( "chunk-min-char-size", "350", TypeConfigParam.INT.getValue(), "文本块最小字符数", "文本块大小" ),
+            new ConfigParam( "chunk-min-embed-size", "5", TypeConfigParam.INT.getValue(), "文本块embed最小长度", "文本块embed最小长度，低于这个长度将会不会embed。" ),
+            new ConfigParam( "chunk-max-num", "10000", TypeConfigParam.INT.getValue(), "文本块最大数量", "文本块最大数量" ),
+            new ConfigParam( "search-similarity-threshold", "0.0", TypeConfigParam.DOUBLE.getValue(), "搜索匹配下限", "搜索匹配下限，低于此下限值的将不会被使用" ),
+            new ConfigParam( "search-top-k", "4", TypeConfigParam.INT.getValue(), "搜索topK", "搜索topK" ) );
     /**
      * RAG库ES索引前缀.
      */
     public static final String RAG_ES_INDEX_PREFIX = "uw.ai.rag.";
+    /**
+     * 日志记录器.
+     */
     private static final Logger logger = LoggerFactory.getLogger( AiRagService.class );
     /**
      * 数据库操作实例.
      */
     private static final DaoFactory dao = DaoFactory.getInstance();
+    /**
+     * RestClient实例.
+     */
     private static RestClient restClient;
     /**
      * 实例缓存。
@@ -73,7 +81,8 @@ public class AiRagService {
         }
     } );
 
-    public AiRagService(RestClient restClient) {
+
+    private AiRagService(RestClient restClient) {
         AiRagService.restClient = restClient;
     }
 
@@ -81,17 +90,17 @@ public class AiRagService {
      * 添加文档.
      *
      * @param ragLibId
-     * @param file
+     * @param docFile
      */
-    public static Map<String, String> addDocument(long ragLibId, MultipartFile file) {
+    public static Map<String, String> addDocument(long ragLibId, MultipartFile docFile) {
         AiRagClientWrapper ragClientWrapper = getRagClientWrapper( ragLibId );
-        try (InputStream inputStream = file.getInputStream()) {
+        try (InputStream inputStream = docFile.getInputStream()) {
             TikaDocumentReader reader = new TikaDocumentReader( new InputStreamResource( inputStream ) );
             List<Document> documentList = ragClientWrapper.textSplitter.apply( reader.get() );
             ragClientWrapper.vectorStore.add( documentList );
             return documentList.stream().collect( Collectors.toMap( Document::getId, Document::getText ) );
         } catch (IOException e) {
-            logger.error( "处理文件[{}]时发生错误!{}", file.getOriginalFilename(), e.getMessage(), e );
+            logger.error( "处理文件[{}]时发生错误!{}", docFile.getOriginalFilename(), e.getMessage(), e );
         }
         return null;
     }
@@ -102,7 +111,7 @@ public class AiRagService {
      * @param ragLibId
      * @param fileContent
      */
-    public static Map<String, String> addDocument(long ragLibId, String fileName, String fileContent) {
+    public static Map<String, String> addDocument(long ragLibId, String fileContent) {
         AiRagClientWrapper ragClientWrapper = getRagClientWrapper( ragLibId );
         List<Document> documentList = ragClientWrapper.textSplitter.apply( List.of( new Document( fileContent ) ) );
         ragClientWrapper.vectorStore.add( documentList );

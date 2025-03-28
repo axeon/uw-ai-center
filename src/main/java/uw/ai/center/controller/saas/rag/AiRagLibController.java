@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 import uw.ai.center.dto.AiRagLibQueryParam;
 import uw.ai.center.entity.AiRagLib;
+import uw.ai.center.service.AiRagService;
 import uw.app.common.dto.AuthIdQueryParam;
 import uw.app.common.dto.SysCritLogQueryParam;
 import uw.app.common.dto.SysDataHistoryQueryParam;
@@ -230,6 +231,7 @@ public class AiRagLibController {
         aiRagLib.setModifyDate(new Date());
         aiRagLib.setState(StateCommon.DELETED.getValue());
         dao.update(aiRagLib);
+        AiRagService.delLib( aiRagLib.getId() );
         return ResponseData.success();
     }
 
