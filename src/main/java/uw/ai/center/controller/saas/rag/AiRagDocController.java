@@ -168,7 +168,7 @@ public class AiRagDocController {
         aiRagDoc.setModifyDate( new Date() );
         aiRagDoc.setState( StateCommon.ENABLED.getValue() );
         dao.update( aiRagDoc );
-        AiRagService.delDocument( aiRagDoc.getLibId(), aiRagDoc.getId() );
+        AiRagService.rebuildDocument( aiRagDoc.getLibId(), aiRagDoc );
         return ResponseData.success();
     }
 
@@ -193,7 +193,7 @@ public class AiRagDocController {
         aiRagDoc.setModifyDate( new Date() );
         aiRagDoc.setState( StateCommon.DISABLED.getValue() );
         dao.update( aiRagDoc );
-        AiRagService.delDocument( aiRagDoc.getLibId(), aiRagDoc.getId() );
+        AiRagService.delDocument( aiRagDoc.getLibId(), aiRagDoc );
         return ResponseData.success();
     }
 
