@@ -257,6 +257,7 @@ public class AiChatService {
         if (StringUtils.isNotBlank( contextData )) {
             userPrompt = userPrompt + contextData;
         }
+        chatClientRequestSpec.user( userPrompt );
         // 设置工具
         if (toolList != null && !toolList.isEmpty()) {
             chatClientRequestSpec.tools( AiToolHelper.getToolCallbacks( toolList ) );
