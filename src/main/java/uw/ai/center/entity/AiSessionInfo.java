@@ -116,16 +116,16 @@ public class AiSessionInfo implements DataEntity,Serializable{
     /**
      * 工具信息
      */
-    @ColumnMeta(columnName="tool_info", dataType="String", dataSize=65535, nullable=true)
+    @ColumnMeta(columnName="tool_config", dataType="String", dataSize=65535, nullable=true)
     @Schema(title = "工具信息", description = "工具信息", maxLength=65535, nullable=true )
-    private String toolInfo;
+    private String toolConfig;
 
     /**
      * rag信息
      */
-    @ColumnMeta(columnName="rag_info", dataType="String", dataSize=65535, nullable=true)
+    @ColumnMeta(columnName="rag_config", dataType="String", dataSize=65535, nullable=true)
     @Schema(title = "rag信息", description = "rag信息", maxLength=65535, nullable=true )
-    private String ragInfo;
+    private String ragConfig;
 
     /**
      * 创建时间
@@ -298,15 +298,15 @@ public class AiSessionInfo implements DataEntity,Serializable{
     /**
      * 获取工具信息。
      */
-    public String getToolInfo(){
-        return this.toolInfo;
+    public String getToolConfig(){
+        return this.toolConfig;
     }
 
     /**
      * 获取rag信息。
      */
-    public String getRagInfo(){
-        return this.ragInfo;
+    public String getRagConfig(){
+        return this.ragConfig;
     }
 
     /**
@@ -523,28 +523,28 @@ public class AiSessionInfo implements DataEntity,Serializable{
     /**
      * 设置工具信息。
      */
-    public void setToolInfo(String toolInfo){
-        if (!Objects.equals(this.toolInfo, toolInfo)){
+    public void setToolConfig(String toolConfig){
+        if (!Objects.equals(this.toolConfig, toolConfig)){
             if (this.UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("tool_info");
-            this.UPDATED_INFO.append("tool_info:\"" + this.toolInfo+ "\"=>\"" + toolInfo + "\"\r\n");
-            this.toolInfo = toolInfo;
+            this.UPDATED_COLUMN.add("tool_config");
+            this.UPDATED_INFO.append("tool_config:\"" + this.toolConfig+ "\"=>\"" + toolConfig + "\"\r\n");
+            this.toolConfig = toolConfig;
         }
     }
 
     /**
      * 设置rag信息。
      */
-    public void setRagInfo(String ragInfo){
-        if (!Objects.equals(this.ragInfo, ragInfo)){
+    public void setRagConfig(String ragConfig){
+        if (!Objects.equals(this.ragConfig, ragConfig)){
             if (this.UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("rag_info");
-            this.UPDATED_INFO.append("rag_info:\"" + this.ragInfo+ "\"=>\"" + ragInfo + "\"\r\n");
-            this.ragInfo = ragInfo;
+            this.UPDATED_COLUMN.add("rag_config");
+            this.UPDATED_INFO.append("rag_config:\"" + this.ragConfig+ "\"=>\"" + ragConfig + "\"\r\n");
+            this.ragConfig = ragConfig;
         }
     }
 
@@ -623,8 +623,8 @@ public class AiSessionInfo implements DataEntity,Serializable{
         sb.append("request_tokens:\"" + this.requestTokens + "\"\r\n");
         sb.append("response_tokens:\"" + this.responseTokens + "\"\r\n");
         sb.append("system_prompt:\"" + this.systemPrompt + "\"\r\n");
-        sb.append("tool_info:\"" + this.toolInfo + "\"\r\n");
-        sb.append("rag_info:\"" + this.ragInfo + "\"\r\n");
+        sb.append("tool_config:\"" + this.toolConfig + "\"\r\n");
+        sb.append("rag_config:\"" + this.ragConfig + "\"\r\n");
         sb.append("create_date:\"" + this.createDate + "\"\r\n");
         sb.append("modify_date:\"" + this.modifyDate + "\"\r\n");
         sb.append("last_update:\"" + this.lastUpdate + "\"\r\n");

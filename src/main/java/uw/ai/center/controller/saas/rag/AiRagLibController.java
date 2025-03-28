@@ -231,7 +231,7 @@ public class AiRagLibController {
         aiRagLib.setModifyDate(new Date());
         aiRagLib.setState(StateCommon.DELETED.getValue());
         dao.update(aiRagLib);
-        AiRagService.delLib( aiRagLib.getId() );
+        AiRagService.deleteLib( aiRagLib.getId() );
         return ResponseData.success();
     }
 

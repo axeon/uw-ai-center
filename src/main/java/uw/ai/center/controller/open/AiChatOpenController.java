@@ -26,7 +26,7 @@ public class AiChatOpenController {
     @PostMapping("/generate")
     public ResponseData<String> generate(@ModelAttribute AiChatGenerateParam param) {
         return AiChatService.generate( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), "anonymous",
-                param.getConfigId(), param.getUserPrompt(), param.getSystemPrompt(), param.getToolList(), null, param.getFileList() );
+                param.getConfigId(), param.getSystemPrompt(), param.getUserPrompt(), param.getToolList(), param.getToolContext(), param.getFileList(),param.getRagLibIds());
     }
 
 }

@@ -58,32 +58,32 @@ public class AiSessionMsg implements DataEntity,Serializable{
     private String userPrompt;
 
     /**
-     * 附加数据
+     * 上下文数据
      */
-    @ColumnMeta(columnName="ext_data", dataType="String", dataSize=2147483646, nullable=true)
-    @Schema(title = "附加数据", description = "附加数据", maxLength=2147483646, nullable=true )
-    private String extData;
+    @ColumnMeta(columnName="context_data", dataType="String", dataSize=2147483646, nullable=true)
+    @Schema(title = "上下文数据", description = "上下文数据", maxLength=2147483646, nullable=true )
+    private String contextData;
 
     /**
      * 工具信息
      */
-    @ColumnMeta(columnName="tool_info", dataType="String", dataSize=65535, nullable=true)
+    @ColumnMeta(columnName="tool_config", dataType="String", dataSize=65535, nullable=true)
     @Schema(title = "工具信息", description = "工具信息", maxLength=65535, nullable=true )
-    private String toolInfo;
+    private String toolConfig;
 
     /**
      * 文件信息
      */
-    @ColumnMeta(columnName="file_info", dataType="String", dataSize=65535, nullable=true)
+    @ColumnMeta(columnName="file_config", dataType="String", dataSize=65535, nullable=true)
     @Schema(title = "文件信息", description = "文件信息", maxLength=65535, nullable=true )
-    private String fileInfo;
+    private String fileConfig;
 
     /**
      * rag信息
      */
-    @ColumnMeta(columnName="rag_info", dataType="String", dataSize=65535, nullable=true)
+    @ColumnMeta(columnName="rag_config", dataType="String", dataSize=65535, nullable=true)
     @Schema(title = "rag信息", description = "rag信息", maxLength=65535, nullable=true )
-    private String ragInfo;
+    private String ragConfig;
 
     /**
      * 返回信息
@@ -219,31 +219,31 @@ public class AiSessionMsg implements DataEntity,Serializable{
     }
 
     /**
-     * 获取附加数据。
+     * 获取上下文数据。
      */
-    public String getExtData(){
-        return this.extData;
+    public String getContextData(){
+        return this.contextData;
     }
 
     /**
      * 获取工具信息。
      */
-    public String getToolInfo(){
-        return this.toolInfo;
+    public String getToolConfig(){
+        return this.toolConfig;
     }
 
     /**
      * 获取文件信息。
      */
-    public String getFileInfo(){
-        return this.fileInfo;
+    public String getFileConfig(){
+        return this.fileConfig;
     }
 
     /**
      * 获取rag信息。
      */
-    public String getRagInfo(){
-        return this.ragInfo;
+    public String getRagConfig(){
+        return this.ragConfig;
     }
 
     /**
@@ -367,58 +367,58 @@ public class AiSessionMsg implements DataEntity,Serializable{
     }
 
     /**
-     * 设置附加数据。
+     * 设置上下文数据。
      */
-    public void setExtData(String extData){
-        if (!Objects.equals(this.extData, extData)){
+    public void setContextData(String contextData){
+        if (!Objects.equals(this.contextData, contextData)){
             if (this.UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("ext_data");
-            this.UPDATED_INFO.append("ext_data:\"" + this.extData+ "\"=>\"" + extData + "\"\r\n");
-            this.extData = extData;
+            this.UPDATED_COLUMN.add("context_data");
+            this.UPDATED_INFO.append("context_data:\"" + this.contextData+ "\"=>\"" + contextData + "\"\r\n");
+            this.contextData = contextData;
         }
     }
 
     /**
      * 设置工具信息。
      */
-    public void setToolInfo(String toolInfo){
-        if (!Objects.equals(this.toolInfo, toolInfo)){
+    public void setToolConfig(String toolConfig){
+        if (!Objects.equals(this.toolConfig, toolConfig)){
             if (this.UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("tool_info");
-            this.UPDATED_INFO.append("tool_info:\"" + this.toolInfo+ "\"=>\"" + toolInfo + "\"\r\n");
-            this.toolInfo = toolInfo;
+            this.UPDATED_COLUMN.add("tool_config");
+            this.UPDATED_INFO.append("tool_config:\"" + this.toolConfig+ "\"=>\"" + toolConfig + "\"\r\n");
+            this.toolConfig = toolConfig;
         }
     }
 
     /**
      * 设置文件信息。
      */
-    public void setFileInfo(String fileInfo){
-        if (!Objects.equals(this.fileInfo, fileInfo)){
+    public void setFileConfig(String fileConfig){
+        if (!Objects.equals(this.fileConfig, fileConfig)){
             if (this.UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("file_info");
-            this.UPDATED_INFO.append("file_info:\"" + this.fileInfo+ "\"=>\"" + fileInfo + "\"\r\n");
-            this.fileInfo = fileInfo;
+            this.UPDATED_COLUMN.add("file_config");
+            this.UPDATED_INFO.append("file_config:\"" + this.fileConfig+ "\"=>\"" + fileConfig + "\"\r\n");
+            this.fileConfig = fileConfig;
         }
     }
 
     /**
      * 设置rag信息。
      */
-    public void setRagInfo(String ragInfo){
-        if (!Objects.equals(this.ragInfo, ragInfo)){
+    public void setRagConfig(String ragConfig){
+        if (!Objects.equals(this.ragConfig, ragConfig)){
             if (this.UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("rag_info");
-            this.UPDATED_INFO.append("rag_info:\"" + this.ragInfo+ "\"=>\"" + ragInfo + "\"\r\n");
-            this.ragInfo = ragInfo;
+            this.UPDATED_COLUMN.add("rag_config");
+            this.UPDATED_INFO.append("rag_config:\"" + this.ragConfig+ "\"=>\"" + ragConfig + "\"\r\n");
+            this.ragConfig = ragConfig;
         }
     }
 
@@ -531,10 +531,10 @@ public class AiSessionMsg implements DataEntity,Serializable{
         sb.append("session_id:\"" + this.sessionId + "\"\r\n");
         sb.append("system_prompt:\"" + this.systemPrompt + "\"\r\n");
         sb.append("user_prompt:\"" + this.userPrompt + "\"\r\n");
-        sb.append("ext_data:\"" + this.extData + "\"\r\n");
-        sb.append("tool_info:\"" + this.toolInfo + "\"\r\n");
-        sb.append("file_info:\"" + this.fileInfo + "\"\r\n");
-        sb.append("rag_info:\"" + this.ragInfo + "\"\r\n");
+        sb.append("context_data:\"" + this.contextData + "\"\r\n");
+        sb.append("tool_config:\"" + this.toolConfig + "\"\r\n");
+        sb.append("file_config:\"" + this.fileConfig + "\"\r\n");
+        sb.append("rag_config:\"" + this.ragConfig + "\"\r\n");
         sb.append("response_info:\"" + this.responseInfo + "\"\r\n");
         sb.append("request_tokens:\"" + this.requestTokens + "\"\r\n");
         sb.append("response_tokens:\"" + this.responseTokens + "\"\r\n");

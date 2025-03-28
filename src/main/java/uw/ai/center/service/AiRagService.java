@@ -47,12 +47,10 @@ public class AiRagService {
     /**
      * RAG库配置参数.
      */
-    public static final List<ConfigParam> RAG_LIB_CONFIG_PARAMS = List.of(
-            new ConfigParam( "chunk-size", "800", TypeConfigParam.INT.getValue(), "文本块大小", "文本块大小" ),
-            new ConfigParam( "chunk-min-char-size", "350", TypeConfigParam.INT.getValue(), "文本块最小字符数", "文本块大小" ),
-            new ConfigParam( "chunk-min-embed-size", "5", TypeConfigParam.INT.getValue(), "文本块embed最小长度", "文本块embed最小长度，低于这个长度将会不会embed。" ),
-            new ConfigParam( "chunk-max-num", "10000", TypeConfigParam.INT.getValue(), "文本块最大数量", "文本块最大数量" ),
-            new ConfigParam( "search-similarity-threshold", "0.0", TypeConfigParam.DOUBLE.getValue(), "搜索匹配下限", "搜索匹配下限，低于此下限值的将不会被使用" ),
+    public static final List<ConfigParam> RAG_LIB_CONFIG_PARAMS = List.of( new ConfigParam( "chunk-size", "800", TypeConfigParam.INT.getValue(), "文本块大小", "文本块大小" ),
+            new ConfigParam( "chunk-min-char-size", "350", TypeConfigParam.INT.getValue(), "文本块最小字符数", "文本块大小" ), new ConfigParam( "chunk-min-embed-size", "5",
+                    TypeConfigParam.INT.getValue(), "文本块embed最小长度", "文本块embed最小长度，低于这个长度将会不会embed。" ), new ConfigParam( "chunk-max-num", "10000", TypeConfigParam.INT.getValue(),
+                    "文本块最大数量", "文本块最大数量" ), new ConfigParam( "search-similarity-threshold", "0.0", TypeConfigParam.DOUBLE.getValue(), "搜索匹配下限", "搜索匹配下限，低于此下限值的将不会被使用" ),
             new ConfigParam( "search-top-k", "4", TypeConfigParam.INT.getValue(), "搜索topK", "搜索topK" ) );
     /**
      * RAG库ES索引前缀.
@@ -91,7 +89,7 @@ public class AiRagService {
      * @param ragLibId
      * @param docFile
      */
-    public static Map<String, String> addDocument(long ragLibId, MultipartFile docFile) {
+    public static Map<String, String> buildDocument(long ragLibId, MultipartFile docFile) {
         AiRagClientWrapper ragClientWrapper = getRagClientWrapper( ragLibId );
         try (InputStream inputStream = docFile.getInputStream()) {
             TikaDocumentReader reader = new TikaDocumentReader( new InputStreamResource( inputStream ) );
@@ -110,7 +108,7 @@ public class AiRagService {
      * @param ragLibId
      * @param fileContent
      */
-    public static Map<String, String> addDocument(long ragLibId, String fileContent) {
+    public static Map<String, String> buildDocument(long ragLibId, String fileContent) {
         AiRagClientWrapper ragClientWrapper = getRagClientWrapper( ragLibId );
         List<Document> documentList = ragClientWrapper.textSplitter.apply( List.of( new Document( fileContent ) ) );
         ragClientWrapper.vectorStore.add( documentList );
@@ -122,7 +120,7 @@ public class AiRagService {
      *
      * @param ragLibId
      */
-    public static void delDocument(long ragLibId, AiRagDoc aiRagDoc) {
+    public static void deleteDocument(long ragLibId, AiRagDoc aiRagDoc) {
         if (aiRagDoc != null) {
             AiRagClientWrapper ragClientWrapper = getRagClientWrapper( ragLibId );
             Map<String, String> docMap = JsonInterfaceHelper.JSON_CONVERTER.parse( aiRagDoc.getDocContent(), new TypeReference<Map<String, String>>() {
@@ -156,7 +154,7 @@ public class AiRagService {
      *
      * @param ragLibId
      */
-    public static void delLib(long ragLibId) {
+    public static void deleteLib(long ragLibId) {
         AiRagClientWrapper ragClientWrapper = getRagClientWrapper( ragLibId );
         // 安全获取ElasticsearchClient并删除索引
         ragClientWrapper.vectorStore.getNativeClient().map( client -> (ElasticsearchClient) client ) // 转换类型
@@ -187,11 +185,17 @@ public class AiRagService {
      * @param query
      * @return
      */
-    public String query(long ragLibId, String query) {
+    public static String query(long ragLibId, String query) {
         AiRagClientWrapper ragClientWrapper = getRagClientWrapper( ragLibId );
         var searchRequestToUse = SearchRequest.from( ragClientWrapper.searchRequest ).query( query ).build();
         List<Document> documents = ragClientWrapper.vectorStore.similaritySearch( searchRequestToUse );
-        return documents.stream().map( Document::getText ).collect( Collectors.joining( System.lineSeparator() ) );
+        StringBuilder sb = new StringBuilder( 1280 );
+        sb.append( "来自知识库[" ).append( ragClientWrapper.aiRagLib.getLibName() ).append( "]检索的信息如下：\n" );
+        for (Document document : documents) {
+            sb.append( document.getText() ).append( "\n" );
+        }
+        sb.append( "\n" );
+        return sb.toString();
     }
 
     /**
@@ -217,11 +221,12 @@ public class AiRagService {
                 AiVendorClientWrapper aiVendorClientWrapper = AiVendorHelper.getChatClient( ragLib.getEmbedConfigId() );
                 ElasticsearchVectorStoreOptions elasticsearchVectorStoreOptions = new ElasticsearchVectorStoreOptions();
                 elasticsearchVectorStoreOptions.setIndexName( RAG_ES_INDEX_PREFIX + ragLibId );
-                elasticsearchVectorStoreOptions.setDimensions( 1536 );
+                elasticsearchVectorStoreOptions.setDimensions( 1024 );
                 elasticsearchVectorStoreOptions.setSimilarity( SimilarityFunction.cosine );
-                VectorStore vectorStore =
-                        ElasticsearchVectorStore.builder( restClient, aiVendorClientWrapper.getEmbeddingModel() ).options( elasticsearchVectorStoreOptions ).build();
-                return new AiRagClientWrapper( vectorStore, textSplitter, searchRequest );
+                ElasticsearchVectorStore vectorStore =
+                        ElasticsearchVectorStore.builder( restClient, aiVendorClientWrapper.getEmbeddingModel() ).options( elasticsearchVectorStoreOptions ).initializeSchema( true ).build();
+                vectorStore.afterPropertiesSet();
+                return new AiRagClientWrapper( ragLib, vectorStore, textSplitter, searchRequest );
             }
         } catch (Exception e) {
             logger.error( e.getMessage(), e );
@@ -235,6 +240,6 @@ public class AiRagService {
      * @param vectorStore
      * @param searchRequest
      */
-    record AiRagClientWrapper(VectorStore vectorStore, TextSplitter textSplitter, SearchRequest searchRequest) {
+    record AiRagClientWrapper(AiRagLib aiRagLib, VectorStore vectorStore, TextSplitter textSplitter, SearchRequest searchRequest) {
     }
 }

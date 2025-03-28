@@ -71,6 +71,7 @@ public class AiRagDocController {
         return dao.list(AiRagDoc.class, queryParam);
     }
 
+
     /**
      * 加载rag文档信息。
      *
@@ -137,7 +138,7 @@ public class AiRagDocController {
         aiRagDoc.setDocType( FilenameUtils.getExtension( aiRagDoc.getDocName() ) );
         aiRagDoc.setDocBodySize( docFile.getSize() );
         //添加文档
-        Map<String,String> fileContentMap = AiRagService.addDocument( libId, docFile );
+        Map<String,String> fileContentMap = AiRagService.buildDocument( libId, docFile );
         aiRagDoc.setDocContent( JsonInterfaceHelper.JSON_CONVERTER.toString( fileContentMap) );
         aiRagDoc.setDocContentSize( aiRagDoc.getDocContent().length() );
         aiRagDoc.setCreateDate( new Date() );
@@ -195,7 +196,7 @@ public class AiRagDocController {
         aiRagDoc.setModifyDate(new Date());
         aiRagDoc.setState(StateCommon.DISABLED.getValue());
         dao.update(aiRagDoc);
-        AiRagService.delDocument( aiRagDoc.getLibId(), aiRagDoc );
+        AiRagService.deleteDocument( aiRagDoc.getLibId(), aiRagDoc );
         return ResponseData.success();
     }
 

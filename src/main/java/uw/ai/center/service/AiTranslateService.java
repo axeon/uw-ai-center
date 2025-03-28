@@ -2,10 +2,10 @@ package uw.ai.center.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uw.ai.util.BeanOutputConverter;
 import uw.ai.vo.AiTranslateListParam;
 import uw.ai.vo.AiTranslateMapParam;
 import uw.ai.vo.AiTranslateResultData;
-import uw.ai.util.BeanOutputConverter;
 import uw.common.dto.ResponseData;
 import uw.httpclient.json.JsonInterfaceHelper;
 
@@ -74,7 +74,7 @@ public class AiTranslateService {
         String userPrompt = String.format( TRANSLATE_USER_PROMPT_TEMPLATE, JsonInterfaceHelper.JSON_CONVERTER.toString( param.getLangList() ),
                 JsonInterfaceHelper.JSON_CONVERTER.toString( param.getTextList() ) );
         String systemPrompt = param.getSystemPrompt() + "\n\n" + BEAN_OUTPUT_CONVERTER.getFormat();
-        ResponseData<String> responseData = AiChatService.generate( saasId, userId, userType, userInfo, param.getConfigId(), userPrompt, systemPrompt, null, null,null );
+        ResponseData<String> responseData = AiChatService.generate( saasId, userId, userType, userInfo, param.getConfigId(), systemPrompt, userPrompt, null, null, null, null );
         if (responseData.isSuccess()) {
             responseData.setData( BEAN_OUTPUT_CONVERTER.cleanJson( responseData.getData() ) );
         }
@@ -92,7 +92,7 @@ public class AiTranslateService {
         String userPrompt = String.format( TRANSLATE_USER_PROMPT_TEMPLATE, JsonInterfaceHelper.JSON_CONVERTER.toString( param.getLangList() ),
                 JsonInterfaceHelper.JSON_CONVERTER.toString( param.getTextMap() ) );
         String systemPrompt = param.getSystemPrompt() + "\n\n" + BEAN_OUTPUT_CONVERTER.getFormat();
-        ResponseData<String> responseData = AiChatService.generate( saasId, userId, userType, userInfo, param.getConfigId(), userPrompt, systemPrompt, null, null,null );
+        ResponseData<String> responseData = AiChatService.generate( saasId, userId, userType, userInfo, param.getConfigId(), systemPrompt, userPrompt, null, null, null, null );
         if (responseData.isSuccess()) {
             responseData.setData( BEAN_OUTPUT_CONVERTER.cleanJson( responseData.getData() ) );
         }

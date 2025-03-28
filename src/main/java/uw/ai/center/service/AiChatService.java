@@ -1,6 +1,5 @@
 package uw.ai.center.service;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,7 +11,6 @@ import org.springframework.ai.reader.tika.TikaDocumentReader;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Flux;
-import uw.ai.center.advisor.AiRagChatAdvisor;
 import uw.ai.center.constant.SessionType;
 import uw.ai.center.dto.AiSessionInfoQueryParam;
 import uw.ai.center.dto.AiSessionMsgQueryParam;
@@ -50,8 +48,8 @@ public class AiChatService {
     /**
      * ChatClient 简单调用。
      */
-    public static ResponseData<String> generate(long saasId, long userId, int userType, String userInfo, long configId, String userPrompt, String systemPrompt,
-                                                List<AiToolCallInfo> toolList, Map<String,Object> toolContext, MultipartFile[] fileList) {
+    public static ResponseData<String> generate(long saasId, long userId, int userType, String userInfo, long configId, String systemPrompt, String userPrompt,
+                                                List<AiToolCallInfo> toolList, Map<String, Object> toolContext, MultipartFile[] fileList, long[] ragLibIds) {
         // 获取ChatClient
         AiVendorClientWrapper chatClientWrapper = AiVendorHelper.getChatClient( configId );
         if (chatClientWrapper == null) {
@@ -66,15 +64,16 @@ public class AiChatService {
         AiSessionInfo sessionInfo = loadSession( saasId, userId, SessionType.COMMON.getValue(), null ).getData();
         if (sessionInfo == null) {
             ResponseData<AiSessionInfo> responseData = initSession( saasId, userId, userType, userInfo, configId, SessionType.COMMON.getValue(), userPrompt, null, systemPrompt,
-                    null );
+                    toolList,ragLibIds );
             if (responseData.isNotSuccess()) {
                 return responseData.prototype();
             } else {
                 sessionInfo = responseData.getData();
             }
         }
-        // 构建文档信息
+        // 构建附件信息
         String fileInfo = null;
+        String fileContent = null;
         if (fileList != null) {
             ResponseData<String[]> readFileData = readFileData( fileList );
             if (readFileData.isNotSuccess()) {
@@ -82,30 +81,47 @@ public class AiChatService {
             } else {
                 String[] fileData = readFileData.getData();
                 fileInfo = fileData[0];
-                systemPrompt = buildSystemContextInfo( systemPrompt, fileData[1] );
+                fileContent = fileData[1];
             }
         }
+        //检查rag信息。
+        String ragContent = null;
+        if (ragLibIds == null || ragLibIds.length == 0) {
+            if (StringUtils.isNotBlank( sessionInfo.getRagConfig() )) {
+                ragLibIds = JsonInterfaceHelper.JSON_CONVERTER.parse( sessionInfo.getRagConfig(), long[].class );
+            }
+        }
+        if (ragLibIds != null && ragLibIds.length > 0) {
+            ragContent = queryRagInfo( ragLibIds, userPrompt ).getData();
+        }
+        String extData = null;
+        if (StringUtils.isNotBlank( ragContent ) || StringUtils.isNotBlank( fileContent )) {
+            extData = buildContextInfo( ragContent, fileContent );
+        }
         // 初始化会话消息
-        AiSessionMsg sessionMsg = initSessionMsg( sessionInfo.getId(), systemPrompt, userPrompt, toolList, fileInfo ,null,null);
+        AiSessionMsg sessionMsg = initSessionMsg( sessionInfo.getId(), systemPrompt, userPrompt, toolList, fileInfo, ragLibIds, extData );
         // 设置请求开始时间
         sessionMsg.setResponseStartDate( new Date() );
         ChatClient.ChatClientRequestSpec chatClientRequestSpec = chatClientWrapper.getChatClient().prompt();
         if (StringUtils.isNotBlank( systemPrompt )) {
             chatClientRequestSpec.system( systemPrompt );
         }
+        if (StringUtils.isNotBlank( extData )) {
+            userPrompt = userPrompt + extData;
+        }
         chatClientRequestSpec.user( userPrompt );
         // 设置工具调用
         if (toolList != null && !toolList.isEmpty()) {
             chatClientRequestSpec.tools( AiToolHelper.getToolCallbacks( toolList ) );
             Map<String, Object> paramMap = new HashMap<>();
-            if (toolContext != null){
+            if (toolContext != null) {
                 paramMap.putAll( toolContext );
             }
             paramMap.put( "saasId", saasId );
-            paramMap.put( "userId", userId);
-            paramMap.put( "userType", userType);
-            paramMap.put( "userInfo",userInfo );
-            chatClientRequestSpec.toolContext( paramMap);
+            paramMap.put( "userId", userId );
+            paramMap.put( "userType", userType );
+            paramMap.put( "userInfo", userInfo );
+            chatClientRequestSpec.toolContext( paramMap );
         }
         ChatResponse chatResponse = chatClientRequestSpec.call().chatResponse();
         String responseData = chatResponse.getResult().getOutput().getText();
@@ -133,7 +149,7 @@ public class AiChatService {
      * @return
      */
     public static ResponseData<AiSessionInfo> initSession(long saasId, long userId, int userType, String userInfo, long configId, int sessionType, String sessionName,
-                                                          Integer windowSize, String systemPrompt, List<AiToolCallInfo> toolList) {
+                                                          Integer windowSize, String systemPrompt, List<AiToolCallInfo> toolList, long[] ragLibIds) {
         // 获取ChatClient
         AiVendorClientWrapper chatClientWrapper = AiVendorHelper.getChatClient( configId );
         if (chatClientWrapper == null) {
@@ -159,7 +175,8 @@ public class AiChatService {
         if (windowSize != null) {
             sessionInfo.setWindowSize( windowSize );
         }
-        sessionInfo.setToolInfo( JsonInterfaceHelper.JSON_CONVERTER.toString( toolList ) );
+        sessionInfo.setToolConfig( JsonInterfaceHelper.JSON_CONVERTER.toString( toolList ) );
+        sessionInfo.setRagConfig( JsonInterfaceHelper.JSON_CONVERTER.toString( ragLibIds) );
         sessionInfo.setRequestTokens( 0 );
         sessionInfo.setResponseTokens( 0 );
         sessionInfo.setCreateDate( new Date() );
@@ -176,8 +193,8 @@ public class AiChatService {
     /**
      * ChatClient 流式调用
      */
-    public static Flux<String> chat(long saasId, long userId, int userType, String userInfo, long sessionId, String userPrompt, String systemPrompt,
-                                    List<AiToolCallInfo> toolList, Map<String,Object> toolContext, MultipartFile[] fileList) {
+    public static Flux<String> chat(long saasId, long userId, int userType, String userInfo, long sessionId, String systemPrompt, String userPrompt,
+                                    List<AiToolCallInfo> toolList, Map<String, Object> toolContext, MultipartFile[] fileList, long[] ragLibIds) {
         // 初始化会话信息
         AiSessionInfo sessionInfo;
         if (sessionId > 0) {
@@ -188,12 +205,14 @@ public class AiChatService {
         if (sessionInfo == null) {
             return Flux.just( ResponseData.errorMsg( "Session会话不存在！" ).toString() );
         }
+
         // 如何没有系统提示语，则使用会话的
         if (StringUtils.isBlank( systemPrompt )) {
             systemPrompt = sessionInfo.getSystemPrompt();
         }
-        // 构建文档信息
+        // 构建附件信息
         String fileInfo = null;
+        String fileContent = null;
         if (fileList != null) {
             ResponseData<String[]> readFileData = readFileData( fileList );
             if (readFileData.isNotSuccess()) {
@@ -201,23 +220,30 @@ public class AiChatService {
             } else {
                 String[] fileData = readFileData.getData();
                 fileInfo = fileData[0];
-                systemPrompt = buildSystemContextInfo( systemPrompt, fileData[1] );
+                fileContent = fileData[1];
             }
         }
-        //如果本次没有传工具类，则检查是否有会话中的工具类。
-        if (toolList == null || toolList.isEmpty()) {
-            if (StringUtils.isNotBlank( sessionInfo.getToolInfo() )) {
-                toolList = JsonInterfaceHelper.JSON_CONVERTER.parse( sessionInfo.getToolInfo(), new TypeReference<List<AiToolCallInfo>>() {
-                } );
+        //检查rag信息。
+        String ragContent = null;
+        if (ragLibIds == null || ragLibIds.length == 0) {
+            if (StringUtils.isNotBlank( sessionInfo.getRagConfig() )) {
+                ragLibIds = JsonInterfaceHelper.JSON_CONVERTER.parse( sessionInfo.getRagConfig(), long[].class );
             }
         }
+        if (ragLibIds != null && ragLibIds.length > 0) {
+            ragContent = queryRagInfo( ragLibIds, userPrompt ).getData();
+        }
+        String extData = null;
+        if (StringUtils.isNotBlank( ragContent ) || StringUtils.isNotBlank( fileContent )) {
+            extData = buildContextInfo( ragContent, fileContent );
+        }
+        // 初始化会话消息
+        AiSessionMsg sessionMsg = initSessionMsg( sessionInfo.getId(), systemPrompt, userPrompt, toolList, fileInfo, ragLibIds, extData );
         // 获取ChatClient
         AiVendorClientWrapper chatClientWrapper = AiVendorHelper.getChatClient( sessionInfo.getConfigId() );
         if (chatClientWrapper == null) {
             return Flux.just( ResponseData.errorMsg( "ChatClient获取失败！" ).toString() );
         }
-        // 初始化会话消息
-        AiSessionMsg sessionMsg = initSessionMsg( sessionInfo.getId(), systemPrompt, userPrompt, toolList, fileInfo ,null,null);
         // 会话消息的会话ID和消息ID
         SessionConversationData conversationData = new SessionConversationData( sessionMsg.getSessionId(), sessionMsg.getId() );
         // 返回信息
@@ -233,35 +259,34 @@ public class AiChatService {
         if (toolList != null && !toolList.isEmpty()) {
             chatClientRequestSpec.tools( AiToolHelper.getToolCallbacks( toolList ) );
             Map<String, Object> paramMap = new HashMap<>();
-            if (toolContext != null){
+            if (toolContext != null) {
                 paramMap.putAll( toolContext );
             }
             paramMap.put( "saasId", saasId );
-            paramMap.put( "userId", userId);
-            paramMap.put( "userType", userType);
-            paramMap.put( "userInfo",userInfo );
-            chatClientRequestSpec.toolContext( paramMap);
+            paramMap.put( "userId", userId );
+            paramMap.put( "userType", userType );
+            paramMap.put( "userInfo", userInfo );
+            chatClientRequestSpec.toolContext( paramMap );
         }
         Flux<String> chatResponse =
                 chatClientRequestSpec.advisors( spec -> spec.param( CHAT_MEMORY_CONVERSATION_ID_KEY, conversationData.toString() ).param( CHAT_MEMORY_RETRIEVE_SIZE_KEY,
-                                sessionInfo.getWindowSize() ) ).stream().chatResponse().doFirst( () -> {
-                            sessionMsg.setResponseStartDate( new Date() );
-                        } ).doOnComplete( () -> {
-                            ChatResponse lastResponse = lastResponseRef.get();
-                            Usage tokenUsage = lastResponse.getMetadata().getUsage();
-                            sessionMsg.setRequestTokens( tokenUsage.getPromptTokens() );
-                            sessionMsg.setResponseTokens( tokenUsage.getCompletionTokens() );
-                            sessionMsg.setResponseEndDate( new Date() );
-                            sessionMsg.setResponseInfo( responseData.toString() );
-                            // 保存会话信息
-                            saveSessionMsg( sessionMsg );
-                        } ).filter( x -> x != null && x.getResult() != null && x.getResult().getOutput() != null && x.getResult().getOutput().getText() != null )
-                        .map( x -> {
-                            String content = x.getResult().getOutput().getText();
-                            responseData.append( content );
-                            lastResponseRef.set( x );
-                            return content;
-                        } );
+                        sessionInfo.getWindowSize() ) ).stream().chatResponse().doFirst( () -> {
+                    sessionMsg.setResponseStartDate( new Date() );
+                } ).doOnComplete( () -> {
+                    ChatResponse lastResponse = lastResponseRef.get();
+                    Usage tokenUsage = lastResponse.getMetadata().getUsage();
+                    sessionMsg.setRequestTokens( tokenUsage.getPromptTokens() );
+                    sessionMsg.setResponseTokens( tokenUsage.getCompletionTokens() );
+                    sessionMsg.setResponseEndDate( new Date() );
+                    sessionMsg.setResponseInfo( responseData.toString() );
+                    // 保存会话信息
+                    saveSessionMsg( sessionMsg );
+                } ).filter( x -> x != null && x.getResult() != null && x.getResult().getOutput() != null && x.getResult().getOutput().getText() != null ).map( x -> {
+                    String content = x.getResult().getOutput().getText();
+                    responseData.append( content );
+                    lastResponseRef.set( x );
+                    return content;
+                } );
         return Flux.concat( Flux.just( "<session>" + JsonInterfaceHelper.JSON_CONVERTER.toString( sessionInfo ) + "</session>\n" ), chatResponse );
     }
 
@@ -320,17 +345,18 @@ public class AiChatService {
      * @param userPrompt
      * @return
      */
-    public static AiSessionMsg initSessionMsg(long sessionId, String systemPrompt, String userPrompt, List<AiToolCallInfo> toolList, String fileInfo,String ragInfo,String extData) {
+    public static AiSessionMsg initSessionMsg(long sessionId, String systemPrompt, String userPrompt, List<AiToolCallInfo> toolList, String fileInfo, long[] ragIds,
+                                              String contextInfo) {
         long msgId = dao.getSequenceId( AiSessionMsg.class );
         AiSessionMsg sessionMsg = new AiSessionMsg();
         sessionMsg.setId( msgId );
         sessionMsg.setSessionId( sessionId );
         sessionMsg.setSystemPrompt( systemPrompt );
         sessionMsg.setUserPrompt( userPrompt );
-        sessionMsg.setToolInfo( JsonInterfaceHelper.JSON_CONVERTER.toString( toolList ) );
-        sessionMsg.setFileInfo( fileInfo );
-        sessionMsg.setRagInfo( ragInfo );
-        sessionMsg.setExtData( extData );
+        sessionMsg.setToolConfig( JsonInterfaceHelper.JSON_CONVERTER.toString( toolList ) );
+        sessionMsg.setFileConfig( fileInfo );
+        sessionMsg.setRagConfig( JsonInterfaceHelper.JSON_CONVERTER.toString( ragIds ) );
+        sessionMsg.setContextData( contextInfo );
         sessionMsg.setState( StateCommon.ENABLED.getValue() );
         sessionMsg.setRequestDate( new Date() );
         return sessionMsg;
@@ -374,6 +400,39 @@ public class AiChatService {
         }
     }
 
+    /**
+     * 查询Rag信息。
+     *
+     * @param ragLibIds
+     * @param userPrompt
+     * @return
+     */
+    public static ResponseData<String> queryRagInfo(long[] ragLibIds, String userPrompt) {
+        StringBuilder sb = new StringBuilder( 1280 );
+        for (int i = 0; i < ragLibIds.length; i++) {
+            sb.append( AiRagService.query( ragLibIds[i], userPrompt ) );
+        }
+        return ResponseData.success( sb.toString() );
+    }
+
+    /**
+     * 构建上下文信息。
+     *
+     * @param contextInfos
+     * @return
+     */
+    public static String buildContextInfo(String... contextInfos) {
+        StringBuilder content = new StringBuilder( 8192 );
+        content.append( "\n\n以下内容是附件信息，在你回答问题时可以参考下面的内容，如果问题答案不在其中，请回答不知道。\n" );
+        content.append( "---------------------\n" );
+        for (String contextInfo : contextInfos) {
+            if (contextInfo != null) {
+                content.append( contextInfo ).append( "\n" );
+            }
+        }
+        content.append( "---------------------\n" );
+        return content.toString();
+    }
 
     /**
      * 读取文件内容。
@@ -387,8 +446,6 @@ public class AiChatService {
         }
         LinkedHashMap<String, Long> infoMap = new LinkedHashMap<>();
         StringBuilder content = new StringBuilder( 8192 );
-        content.append( "以下内容是附件信息，在你回答问题时可以参考下面的内容\n" );
-        content.append( "---------------------\n" );
         for (MultipartFile file : files) {
             infoMap.put( file.getOriginalFilename(), file.getSize() );
             content.append( "文件名：" ).append( file.getOriginalFilename() ).append( "的内容：\n\n" );
@@ -407,21 +464,8 @@ public class AiChatService {
                 return ResponseData.errorMsg( "处理文件[" + file.getOriginalFilename() + "]时发生错误!" + e.getMessage() );
             }
         }
-        content.append( "---------------------\n" );
         String fileInfo = JsonInterfaceHelper.JSON_CONVERTER.toString( infoMap );
         return ResponseData.success( new String[]{fileInfo, content.toString()} );
     }
 
-    /**
-     * 使用系统上下文信息。
-     *
-     * @param contextInfo
-     */
-    public static String buildSystemContextInfo(String systemPrompt, String contextInfo) {
-        if (StringUtils.isNotBlank( systemPrompt )) {
-            return systemPrompt + "\n" + contextInfo;
-        } else {
-            return contextInfo;
-        }
-    }
 }
