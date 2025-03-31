@@ -40,7 +40,7 @@ public class AiToolHelper {
     /**
      * Rest模板类
      */
-    private static RestTemplate tokenRestTemplate;
+    private static RestTemplate authRestTemplate;
 
     static {
 
@@ -54,8 +54,8 @@ public class AiToolHelper {
         } );
     }
 
-    public AiToolHelper(RestTemplate tokenRestTemplate) {
-        AiToolHelper.tokenRestTemplate = tokenRestTemplate;
+    public AiToolHelper(RestTemplate authRestTemplate) {
+        AiToolHelper.authRestTemplate = authRestTemplate;
     }
 
     /**
@@ -114,7 +114,7 @@ public class AiToolHelper {
         param.setToolInput( toolInput );
         String url = "http://" + aiToolInfo.getAppName() + "/rpc/ai/tool/execute";
         // 发送POST请求并获取响应
-        ResponseData responseData = tokenRestTemplate.postForEntity( url, param, ResponseData.class ).getBody();
+        ResponseData responseData = authRestTemplate.postForEntity( url, param, ResponseData.class ).getBody();
         return responseData;
     }
 
