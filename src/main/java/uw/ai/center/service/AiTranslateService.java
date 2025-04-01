@@ -7,6 +7,7 @@ import uw.ai.vo.AiTranslateListParam;
 import uw.ai.vo.AiTranslateMapParam;
 import uw.ai.vo.AiTranslateResultData;
 import uw.common.dto.ResponseData;
+import uw.common.util.JsonUtils;
 import uw.httpclient.json.JsonInterfaceHelper;
 
 /**
@@ -71,8 +72,7 @@ public class AiTranslateService {
                 请帮我把以下JSON数组中的文字分别翻译成 %s 语言。
                 %s
                 """;
-        String userPrompt = String.format( TRANSLATE_USER_PROMPT_TEMPLATE, JsonInterfaceHelper.JSON_CONVERTER.toString( param.getLangList() ),
-                JsonInterfaceHelper.JSON_CONVERTER.toString( param.getTextList() ) );
+        String userPrompt = String.format( TRANSLATE_USER_PROMPT_TEMPLATE, JsonUtils.toString( param.getLangList() ), JsonUtils.toString( param.getTextList() ) );
         String systemPrompt = param.getSystemPrompt() + "\n\n" + BEAN_OUTPUT_CONVERTER.getFormat();
         ResponseData<String> responseData = AiChatService.generate( saasId, userId, userType, userInfo, param.getConfigId(), systemPrompt, userPrompt, null, null, null, null );
         if (responseData.isSuccess()) {
@@ -89,8 +89,8 @@ public class AiTranslateService {
                 请帮我把以下JSON Map的Value值分别翻译成 %s 语言。
                 %s
                 """;
-        String userPrompt = String.format( TRANSLATE_USER_PROMPT_TEMPLATE, JsonInterfaceHelper.JSON_CONVERTER.toString( param.getLangList() ),
-                JsonInterfaceHelper.JSON_CONVERTER.toString( param.getTextMap() ) );
+        String userPrompt = String.format( TRANSLATE_USER_PROMPT_TEMPLATE, JsonUtils.toString( param.getLangList() ),
+                JsonUtils.toString( param.getTextMap() ) );
         String systemPrompt = param.getSystemPrompt() + "\n\n" + BEAN_OUTPUT_CONVERTER.getFormat();
         ResponseData<String> responseData = AiChatService.generate( saasId, userId, userType, userInfo, param.getConfigId(), systemPrompt, userPrompt, null, null, null, null );
         if (responseData.isSuccess()) {

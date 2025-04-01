@@ -24,6 +24,7 @@ import uw.ai.center.vo.SessionConversationData;
 import uw.ai.vo.AiToolCallInfo;
 import uw.common.constant.StateCommon;
 import uw.common.dto.ResponseData;
+import uw.common.util.JsonUtils;
 import uw.dao.DaoFactory;
 import uw.dao.DataList;
 import uw.dao.TransactionException;
@@ -88,7 +89,7 @@ public class AiChatService {
         String ragContent = null;
         if (ragLibIds == null || ragLibIds.length == 0) {
             if (StringUtils.isNotBlank( sessionInfo.getRagConfig() )) {
-                ragLibIds = JsonInterfaceHelper.JSON_CONVERTER.parse( sessionInfo.getRagConfig(), long[].class );
+                ragLibIds = JsonUtils.parse( sessionInfo.getRagConfig(), long[].class );
             }
         }
         if (ragLibIds != null && ragLibIds.length > 0) {
@@ -175,8 +176,8 @@ public class AiChatService {
         if (windowSize != null) {
             sessionInfo.setWindowSize( windowSize );
         }
-        sessionInfo.setToolConfig( JsonInterfaceHelper.JSON_CONVERTER.toString( toolList ) );
-        sessionInfo.setRagConfig( JsonInterfaceHelper.JSON_CONVERTER.toString( ragLibIds) );
+        sessionInfo.setToolConfig( JsonUtils.toString( toolList ) );
+        sessionInfo.setRagConfig( JsonUtils.toString( ragLibIds) );
         sessionInfo.setRequestTokens( 0 );
         sessionInfo.setResponseTokens( 0 );
         sessionInfo.setCreateDate( new Date() );
@@ -227,7 +228,7 @@ public class AiChatService {
         String ragContent = null;
         if (ragLibIds == null || ragLibIds.length == 0) {
             if (StringUtils.isNotBlank( sessionInfo.getRagConfig() )) {
-                ragLibIds = JsonInterfaceHelper.JSON_CONVERTER.parse( sessionInfo.getRagConfig(), long[].class );
+                ragLibIds = JsonUtils.parse( sessionInfo.getRagConfig(), long[].class );
             }
         }
         if (ragLibIds != null && ragLibIds.length > 0) {
@@ -290,7 +291,7 @@ public class AiChatService {
                     lastResponseRef.set( x );
                     return content;
                 } );
-        return Flux.concat( Flux.just( "<session>" + JsonInterfaceHelper.JSON_CONVERTER.toString( sessionInfo ) + "</session>\n" ), chatResponse );
+        return Flux.concat( Flux.just( "<session>" + JsonUtils.toString( sessionInfo ) + "</session>\n" ), chatResponse );
     }
 
 
@@ -356,9 +357,9 @@ public class AiChatService {
         sessionMsg.setSessionId( sessionId );
         sessionMsg.setSystemPrompt( systemPrompt );
         sessionMsg.setUserPrompt( userPrompt );
-        sessionMsg.setToolConfig( JsonInterfaceHelper.JSON_CONVERTER.toString( toolList ) );
+        sessionMsg.setToolConfig( JsonUtils.toString( toolList ) );
         sessionMsg.setFileConfig( fileInfo );
-        sessionMsg.setRagConfig( JsonInterfaceHelper.JSON_CONVERTER.toString( ragIds ) );
+        sessionMsg.setRagConfig( JsonUtils.toString( ragIds ) );
         sessionMsg.setContextData( contextInfo );
         sessionMsg.setState( StateCommon.ENABLED.getValue() );
         sessionMsg.setRequestDate( new Date() );
@@ -467,7 +468,7 @@ public class AiChatService {
                 return ResponseData.errorMsg( "处理文件[" + file.getOriginalFilename() + "]时发生错误!" + e.getMessage() );
             }
         }
-        String fileInfo = JsonInterfaceHelper.JSON_CONVERTER.toString( infoMap );
+        String fileInfo = JsonUtils.toString( infoMap );
         return ResponseData.success( new String[]{fileInfo, content.toString()} );
     }
 

@@ -26,6 +26,7 @@ import uw.ai.center.vendor.AiVendorClientWrapper;
 import uw.ai.center.vendor.AiVendorHelper;
 import uw.common.constant.TypeConfigParam;
 import uw.common.util.ConfigParamUtils;
+import uw.common.util.JsonUtils;
 import uw.common.vo.ConfigParam;
 import uw.common.vo.ConfigParamBox;
 import uw.dao.DaoFactory;
@@ -123,7 +124,7 @@ public class AiRagService {
     public static void deleteDocument(long ragLibId, AiRagDoc aiRagDoc) {
         if (aiRagDoc != null) {
             AiRagClientWrapper ragClientWrapper = getRagClientWrapper( ragLibId );
-            Map<String, String> docMap = JsonInterfaceHelper.JSON_CONVERTER.parse( aiRagDoc.getDocContent(), new TypeReference<Map<String, String>>() {
+            Map<String, String> docMap = JsonUtils.parse( aiRagDoc.getDocContent(), new TypeReference<Map<String, String>>() {
             } );
             ragClientWrapper.vectorStore.delete( new ArrayList<>( docMap.keySet() ) );
         }
@@ -138,7 +139,7 @@ public class AiRagService {
     public static void rebuildDocument(long ragLibId, AiRagDoc aiRagDoc) {
         if (aiRagDoc != null) {
             AiRagClientWrapper ragClientWrapper = getRagClientWrapper( ragLibId );
-            Map<String, String> docMap = JsonInterfaceHelper.JSON_CONVERTER.parse( aiRagDoc.getDocContent(), new TypeReference<Map<String, String>>() {
+            Map<String, String> docMap = JsonUtils.parse( aiRagDoc.getDocContent(), new TypeReference<Map<String, String>>() {
             } );
 //            ragClientWrapper.vectorStore.delete( new ArrayList<>( docMap.keySet() ) );
             List<Document> documentList = new ArrayList<>( docMap.size() );

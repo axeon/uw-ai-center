@@ -22,6 +22,7 @@ import uw.auth.service.constant.AuthType;
 import uw.auth.service.constant.UserType;
 import uw.common.constant.StateCommon;
 import uw.common.dto.ResponseData;
+import uw.common.util.JsonUtils;
 import uw.dao.DaoFactory;
 import uw.dao.DataList;
 import uw.dao.TransactionException;
@@ -137,7 +138,7 @@ public class AiRagDocController {
         aiRagDoc.setDocBodySize( docFile.getSize() );
         //添加文档
         Map<String,String> fileContentMap = AiRagService.buildDocument( libId, docFile );
-        aiRagDoc.setDocContent( JsonInterfaceHelper.JSON_CONVERTER.toString( fileContentMap) );
+        aiRagDoc.setDocContent( JsonUtils.toString( fileContentMap) );
         aiRagDoc.setDocContentSize( aiRagDoc.getDocContent().length() );
         aiRagDoc.setCreateDate( new Date() );
         aiRagDoc.setModifyDate( null );

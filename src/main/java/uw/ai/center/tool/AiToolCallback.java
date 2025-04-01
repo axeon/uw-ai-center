@@ -7,6 +7,7 @@ import org.springframework.ai.tool.definition.DefaultToolDefinition;
 import org.springframework.ai.tool.definition.ToolDefinition;
 import org.springframework.ai.tool.metadata.ToolMetadata;
 import uw.ai.center.entity.AiToolInfo;
+import uw.common.util.JsonUtils;
 import uw.httpclient.json.JsonInterfaceHelper;
 
 import java.util.Map;
@@ -70,7 +71,7 @@ public class AiToolCallback implements ToolCallback {
      */
     @Override
     public String call(String toolInput) {
-        return JsonInterfaceHelper.JSON_CONVERTER.toString( AiToolHelper.toolCallback( aiToolInfo, toolInput ) );
+        return JsonUtils.toString( AiToolHelper.toolCallback( aiToolInfo, toolInput ) );
     }
 
     /**
@@ -82,13 +83,13 @@ public class AiToolCallback implements ToolCallback {
      */
     @Override
     public String call(String toolInput, ToolContext toolContext) {
-        Map<String, Object> map = JsonInterfaceHelper.JSON_CONVERTER.parse( toolInput, new TypeReference<Map<String, Object>>() {
+        Map<String, Object> map = JsonUtils.parse( toolInput, new TypeReference<Map<String, Object>>() {
         } );
         //合并上下文，为了防止用户通过toolInput偷偷注入信息，必须用toolContext覆盖。
         if (toolContext != null) {
             map.putAll( toolContext.getContext() );
         }
-        toolInput =  JsonInterfaceHelper.JSON_CONVERTER.toString( map );
+        toolInput =  JsonUtils.toString( map );
         return call( toolInput );
     }
 }
