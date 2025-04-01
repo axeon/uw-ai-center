@@ -80,7 +80,7 @@ public class AiModelConfigController {
     @MscPermDeclare(user = UserType.OPS, auth = AuthType.USER, log = ActionLog.NONE)
     public List<String> listModel(@Parameter(description = "vendorClass", required = true) @RequestParam String vendorClass,
                                   @Parameter(description = "apiUrl", required = true) @RequestParam String apiUrl,
-                                  @Parameter(description = "apiKey", required = true) @RequestParam String apiKey) {
+                                  @Parameter(description = "apiKey", required = false) @RequestParam(required = false) String apiKey) {
         return AiVendorHelper.listModel( vendorClass, apiUrl, apiKey );
     }
 
