@@ -47,7 +47,7 @@ public interface AiVendor {
     @JsonProperty("vendorClass")
     @Schema(title = "供应商类名", description = "供应商类名")
     default String vendorClass() {
-        return this.getClass().getSimpleName();
+        return this.getClass().getName();
     }
 
     /**

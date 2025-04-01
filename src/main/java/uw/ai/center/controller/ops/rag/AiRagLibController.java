@@ -34,7 +34,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/ops/rag/lib")
-@Tag(name = "rag文档库管理", description = "rag文档库增删改查列管理")
+@Tag(name = "RAG文档库", description = "RAG文档库")
 @MscPermDeclare(user = UserType.OPS)
 public class AiRagLibController {
 

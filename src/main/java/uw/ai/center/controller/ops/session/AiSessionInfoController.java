@@ -31,7 +31,7 @@ import java.util.Date;
  */
 @RestController
 @RequestMapping("/ops/session/info")
-@Tag(name = "session会话管理", description = "session会话增删改查列管理")
+@Tag(name = "session会话", description = "session会话")
 @MscPermDeclare(user = UserType.OPS)
 public class AiSessionInfoController {
 
