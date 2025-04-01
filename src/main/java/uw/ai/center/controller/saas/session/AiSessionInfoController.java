@@ -24,7 +24,7 @@ import uw.dao.TransactionException;
  */
 @RestController
 @RequestMapping("/saas/session/info")
-@Tag(name = "session会话管理", description = "session会话增删改查列管理")
+@Tag(name = "session会话", description = "session会话")
 @MscPermDeclare(user = UserType.SAAS)
 public class AiSessionInfoController {
 
