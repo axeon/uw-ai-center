@@ -36,7 +36,7 @@ public class AiRagUserController {
     @MscPermDeclare(auth = AuthType.NONE, log = ActionLog.BASE)
     public DataList<AiRagLib> list(UserRagLibQueryParam queryParam) throws TransactionException {
         AuthServiceHelper.logRef( AiModelConfig.class );
-        queryParam.SELECT_SQL( "id, saas_id, lib_type, lib_name, lib_desc, embed_config_id, embed_model_name, create_date, modify_date, state FROM ai_rag_lib ");
+        queryParam.SELECT_SQL( "select id, saas_id, lib_type, lib_name, lib_desc, embed_config_id, embed_model_name, create_date, modify_date, state FROM ai_rag_lib ");
         return dao.list( AiRagLib.class, queryParam );
     }
 }
