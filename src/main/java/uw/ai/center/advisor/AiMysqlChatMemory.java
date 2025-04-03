@@ -8,7 +8,7 @@ import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.UserMessage;
 import uw.ai.center.entity.AiSessionMsg;
 import uw.ai.center.vo.SessionConversationData;
-import uw.common.constant.StateCommon;
+import uw.app.common.constant.CommonState;
 import uw.dao.DaoFactory;
 import uw.dao.DataList;
 import uw.dao.TransactionException;
@@ -75,8 +75,8 @@ public class AiMysqlChatMemory implements ChatMemory {
     public void clear(String conversationId) {
         SessionConversationData conversationData = new SessionConversationData( conversationId );
         try {
-            dao.executeCommand( "update ai_session_msg set state=? where session_id=? and state=?", new Object[]{StateCommon.DELETED.getValue(), conversationData.getSessionId(),
-                    StateCommon.ENABLED.getValue()} );
+            dao.executeCommand( "update ai_session_msg set state=? where session_id=? and state=?", new Object[]{CommonState.DELETED.getValue(), conversationData.getSessionId(),
+                    CommonState.ENABLED.getValue()} );
         } catch (TransactionException e) {
             logger.error( e.getMessage(), e );
         }

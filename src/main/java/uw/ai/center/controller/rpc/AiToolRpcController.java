@@ -14,7 +14,7 @@ import uw.ai.vo.AiToolMeta;
 import uw.auth.service.annotation.MscPermDeclare;
 import uw.auth.service.annotation.ResponseAdviceIgnore;
 import uw.auth.service.constant.UserType;
-import uw.common.constant.StateCommon;
+import uw.app.common.constant.CommonState;
 import uw.common.dto.ResponseData;
 import uw.dao.DaoFactory;
 
@@ -48,7 +48,7 @@ public class AiToolRpcController implements AiToolRpc {
             if (StringUtils.isNotBlank( appName )) {
                 dataList = dao.list( AiToolInfo.class, "select * from ai_tool_info where app_name=?", new Object[]{appName} ).results();
             } else {
-                dataList = dao.list( AiToolInfo.class, "select * from ai_tool_info where state=?", new Object[]{StateCommon.ENABLED.getValue()} ).results();
+                dataList = dao.list( AiToolInfo.class, "select * from ai_tool_info where state=?", new Object[]{CommonState.ENABLED.getValue()} ).results();
             }
             List<AiToolMeta> aiToolMetaList = dataList.stream().map( x -> new AiToolMeta( x.getId(), x.getAppName(), x.getToolClass(), x.getToolVersion(), x.getToolName(), x.getToolDesc(), x.getToolInput(), x.getToolOutput() ) ).toList();
             return ResponseData.success( aiToolMetaList );
@@ -75,7 +75,7 @@ public class AiToolRpcController implements AiToolRpc {
             AiToolInfo aiToolConfig = null;
             if (aiToolMeta.getId() <= 0) {
                 long count = dao.queryForSingleValue( Long.class, "select count(*) from ai_tool_info where app_name=? and tool_class=? and state=?",
-                        new Object[]{aiToolMeta.getAppName(), aiToolMeta.getToolClass(), StateCommon.ENABLED.getValue()} );
+                        new Object[]{aiToolMeta.getAppName(), aiToolMeta.getToolClass(), CommonState.ENABLED.getValue()} );
                 if (count > 0) {
                     return ResponseData.errorMsg( "toolClass已经存在！请传递完整ID！" );
                 }
@@ -90,7 +90,7 @@ public class AiToolRpcController implements AiToolRpc {
                 aiToolConfig.setToolOutput( aiToolMeta.getToolOutput() );
                 aiToolConfig.setCreateDate( new java.util.Date() );
                 aiToolConfig.setModifyDate( new java.util.Date() );
-                aiToolConfig.setState( StateCommon.ENABLED.getValue() );
+                aiToolConfig.setState( CommonState.ENABLED.getValue() );
                 dao.save( aiToolConfig );
             } else {
                 aiToolConfig = dao.load( AiToolInfo.class, aiToolMeta.getId() );

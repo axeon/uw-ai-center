@@ -18,7 +18,7 @@ import uw.auth.service.annotation.MscPermDeclare;
 import uw.auth.service.constant.ActionLog;
 import uw.auth.service.constant.AuthType;
 import uw.auth.service.constant.UserType;
-import uw.common.constant.StateCommon;
+import uw.app.common.constant.CommonState;
 import uw.common.dto.ResponseData;
 import uw.dao.DaoFactory;
 import uw.dao.DataList;
@@ -178,11 +178,11 @@ public class AiRagLibController {
         if (aiRagLib == null) {
             return ResponseData.warnMsg("未找到指定id的rag文档库！");
         }
-        if (aiRagLib.getState()!=StateCommon.DISABLED.getValue()){
+        if (aiRagLib.getState()!= CommonState.DISABLED.getValue()){
             return ResponseData.warnMsg("启用rag文档库失败！当前状态不是禁用状态！");                
         }
         aiRagLib.setModifyDate(new Date());
-        aiRagLib.setState(StateCommon.ENABLED.getValue());
+        aiRagLib.setState( CommonState.ENABLED.getValue());
         dao.update(aiRagLib);
         return ResponseData.success();
     }
@@ -202,11 +202,11 @@ public class AiRagLibController {
         if (aiRagLib == null) {
             return ResponseData.warnMsg("未找到指定id的rag文档库！");
         }			
-        if (aiRagLib.getState()!=StateCommon.ENABLED.getValue()){
+        if (aiRagLib.getState()!= CommonState.ENABLED.getValue()){
             return ResponseData.warnMsg("禁用rag文档库失败！当前状态不是启用状态！");                
         }            
         aiRagLib.setModifyDate(new Date());
-        aiRagLib.setState(StateCommon.DISABLED.getValue());
+        aiRagLib.setState( CommonState.DISABLED.getValue());
         dao.update(aiRagLib);
         return ResponseData.success();
     }
@@ -226,11 +226,11 @@ public class AiRagLibController {
         if (aiRagLib == null) {
             return ResponseData.warnMsg("未找到指定id的rag文档库！");
         }
-        if (aiRagLib.getState()!=StateCommon.DISABLED.getValue()){
+        if (aiRagLib.getState()!= CommonState.DISABLED.getValue()){
             return ResponseData.warnMsg("删除rag文档库失败！当前状态不是禁用状态！");
         }            
         aiRagLib.setModifyDate(new Date());
-        aiRagLib.setState(StateCommon.DELETED.getValue());
+        aiRagLib.setState( CommonState.DELETED.getValue());
         dao.update(aiRagLib);
         AiRagService.deleteLib( aiRagLib.getId() );
         return ResponseData.success();

@@ -19,7 +19,7 @@ import uw.auth.service.annotation.MscPermDeclare;
 import uw.auth.service.constant.ActionLog;
 import uw.auth.service.constant.AuthType;
 import uw.auth.service.constant.UserType;
-import uw.common.constant.StateCommon;
+import uw.app.common.constant.CommonState;
 import uw.common.dto.ResponseData;
 import uw.dao.DaoFactory;
 import uw.dao.DataList;
@@ -158,7 +158,7 @@ public class AiModelConfigController {
         aiModelConfig.setSaasId( AuthServiceHelper.getSaasId() );
         aiModelConfig.setCreateDate( new Date() );
         aiModelConfig.setModifyDate( null );
-        aiModelConfig.setState( 1 );
+        aiModelConfig.setState( CommonState.ENABLED.getValue() );
         dao.save( aiModelConfig );
         //保存历史记录
         SysDataHistoryHelper.saveHistory( aiModelConfig.getId(), aiModelConfig, "AI服务模型", "新增AI服务模型" );
@@ -214,11 +214,11 @@ public class AiModelConfigController {
         if (aiModelConfig == null) {
             return ResponseData.warnMsg( "未找到指定id的AI服务模型！" );
         }
-        if (aiModelConfig.getState() != StateCommon.DISABLED.getValue()) {
+        if (aiModelConfig.getState() != CommonState.DISABLED.getValue()) {
             return ResponseData.warnMsg( "启用AI服务模型失败！当前状态不是禁用状态！" );
         }
         aiModelConfig.setModifyDate( new Date() );
-        aiModelConfig.setState( StateCommon.ENABLED.getValue() );
+        aiModelConfig.setState( CommonState.ENABLED.getValue() );
         dao.update( aiModelConfig );
         return ResponseData.success();
     }
@@ -238,11 +238,11 @@ public class AiModelConfigController {
         if (aiModelConfig == null) {
             return ResponseData.warnMsg( "未找到指定id的AI服务模型！" );
         }
-        if (aiModelConfig.getState() != StateCommon.ENABLED.getValue()) {
+        if (aiModelConfig.getState() != CommonState.ENABLED.getValue()) {
             return ResponseData.warnMsg( "禁用AI服务模型失败！当前状态不是启用状态！" );
         }
         aiModelConfig.setModifyDate( new Date() );
-        aiModelConfig.setState( StateCommon.DISABLED.getValue() );
+        aiModelConfig.setState( CommonState.DISABLED.getValue() );
         dao.update( aiModelConfig );
         return ResponseData.success();
     }
@@ -262,11 +262,11 @@ public class AiModelConfigController {
         if (aiModelConfig == null) {
             return ResponseData.warnMsg( "未找到指定id的AI服务模型！" );
         }
-        if (aiModelConfig.getState() != StateCommon.DISABLED.getValue()) {
+        if (aiModelConfig.getState() != CommonState.DISABLED.getValue()) {
             return ResponseData.warnMsg( "删除AI服务模型失败！当前状态不是禁用状态！" );
         }
         aiModelConfig.setModifyDate( new Date() );
-        aiModelConfig.setState( StateCommon.DELETED.getValue() );
+        aiModelConfig.setState( CommonState.DELETED.getValue() );
         dao.update( aiModelConfig );
         return ResponseData.success();
     }

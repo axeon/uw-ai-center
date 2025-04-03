@@ -23,8 +23,8 @@ import uw.ai.center.constant.TypeConfigData;
 import uw.ai.center.vendor.AiVendor;
 import uw.ai.center.vendor.AiVendorClientWrapper;
 import uw.ai.center.vo.AiModelConfigData;
-import uw.common.vo.ConfigParam;
-import uw.common.vo.ConfigParamBox;
+import uw.app.common.vo.ConfigParam;
+import uw.app.common.vo.ConfigParamBox;
 
 import java.io.IOException;
 import java.util.List;

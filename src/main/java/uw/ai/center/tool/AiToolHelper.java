@@ -10,7 +10,7 @@ import uw.ai.vo.AiToolCallInfo;
 import uw.ai.vo.AiToolExecuteParam;
 import uw.cache.CacheDataLoader;
 import uw.cache.FusionCache;
-import uw.common.constant.StateCommon;
+import uw.app.common.constant.CommonState;
 import uw.common.dto.ResponseData;
 import uw.dao.DaoFactory;
 import uw.dao.DataList;
@@ -48,7 +48,7 @@ public class AiToolHelper {
         FusionCache.config( FusionCache.Config.builder().cacheName( TOOL_CACHE_NAME ).localCacheMaxNum( 3 ).globalCacheExpireMillis( 86400_000L ).nullProtectMillis( 10_000L ).build(), new CacheDataLoader<String, Map<String, AiToolInfo>>() {
             @Override
             public Map<String, AiToolInfo> load(String toolCode) throws Exception {
-                DataList<AiToolInfo> dataList = dao.list( AiToolInfo.class, "select * from ai_tool_info where state=?", new Object[]{StateCommon.ENABLED.getValue()} );
+                DataList<AiToolInfo> dataList = dao.list( AiToolInfo.class, "select * from ai_tool_info where state=?", new Object[]{CommonState.ENABLED.getValue()} );
                 return dataList.results().stream().collect( Collectors.toMap( x -> x.getAppName() + "/" + x.getToolClass(), x -> x, (existingValue, newValue) -> existingValue ) );
             }
         } );

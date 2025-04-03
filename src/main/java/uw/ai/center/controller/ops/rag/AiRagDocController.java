@@ -18,7 +18,7 @@ import uw.app.common.helper.SysDataHistoryHelper;
 import uw.auth.service.constant.ActionLog;
 import uw.auth.service.constant.AuthType;
 import uw.auth.service.constant.UserType;
-import uw.common.constant.StateCommon;
+import uw.app.common.constant.CommonState;
 import uw.auth.service.AuthServiceHelper;
 import uw.auth.service.annotation.MscPermDeclare;
 import uw.common.dto.ResponseData;
@@ -26,7 +26,6 @@ import uw.common.util.JsonUtils;
 import uw.dao.DaoFactory;
 import uw.dao.DataList;
 import uw.dao.TransactionException;
-import uw.httpclient.json.JsonInterfaceHelper;
 
 import java.util.Date;
 import java.util.Map;
@@ -144,7 +143,7 @@ public class AiRagDocController {
         aiRagDoc.setDocContentSize( aiRagDoc.getDocContent().length() );
         aiRagDoc.setCreateDate( new Date() );
         aiRagDoc.setModifyDate( null );
-        aiRagDoc.setState( 1 );
+        aiRagDoc.setState( CommonState.ENABLED.getValue() );
         dao.save( aiRagDoc );
         //保存历史记录
         SysDataHistoryHelper.saveHistory( aiRagDoc.getId(), aiRagDoc, "rag文档信息", "新增rag文档信息" );
@@ -166,11 +165,11 @@ public class AiRagDocController {
         if (aiRagDoc == null) {
             return ResponseData.warnMsg("未找到指定id的rag文档信息！");
         }
-        if (aiRagDoc.getState()!=StateCommon.DISABLED.getValue()){
+        if (aiRagDoc.getState()!= CommonState.DISABLED.getValue()){
             return ResponseData.warnMsg("启用rag文档信息失败！当前状态不是禁用状态！");                
         }
         aiRagDoc.setModifyDate(new Date());
-        aiRagDoc.setState(StateCommon.ENABLED.getValue());
+        aiRagDoc.setState( CommonState.ENABLED.getValue());
         dao.update(aiRagDoc);
         AiRagService.rebuildDocument( aiRagDoc.getLibId(), aiRagDoc );
         return ResponseData.success();
@@ -191,11 +190,11 @@ public class AiRagDocController {
         if (aiRagDoc == null) {
             return ResponseData.warnMsg("未找到指定id的rag文档信息！");
         }			
-        if (aiRagDoc.getState()!=StateCommon.ENABLED.getValue()){
+        if (aiRagDoc.getState()!= CommonState.ENABLED.getValue()){
             return ResponseData.warnMsg("禁用rag文档信息失败！当前状态不是启用状态！");                
         }            
         aiRagDoc.setModifyDate(new Date());
-        aiRagDoc.setState(StateCommon.DISABLED.getValue());
+        aiRagDoc.setState( CommonState.DISABLED.getValue());
         dao.update(aiRagDoc);
         AiRagService.deleteDocument( aiRagDoc.getLibId(), aiRagDoc );
         return ResponseData.success();
@@ -216,11 +215,11 @@ public class AiRagDocController {
         if (aiRagDoc == null) {
             return ResponseData.warnMsg("未找到指定id的rag文档信息！");
         }
-        if (aiRagDoc.getState()!=StateCommon.DISABLED.getValue()){
+        if (aiRagDoc.getState()!= CommonState.DISABLED.getValue()){
             return ResponseData.warnMsg("删除rag文档信息失败！当前状态不是禁用状态！");
         }            
         aiRagDoc.setModifyDate(new Date());
-        aiRagDoc.setState(StateCommon.DELETED.getValue());
+        aiRagDoc.setState( CommonState.DELETED.getValue());
         dao.update(aiRagDoc);
         return ResponseData.success();
     }

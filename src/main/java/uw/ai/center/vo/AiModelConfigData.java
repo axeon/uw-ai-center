@@ -5,8 +5,8 @@ import org.slf4j.LoggerFactory;
 import uw.ai.center.entity.AiModelConfig;
 import uw.ai.center.vendor.AiVendor;
 import uw.ai.center.vendor.AiVendorHelper;
-import uw.common.util.ConfigParamUtils;
-import uw.common.vo.ConfigParamBox;
+import uw.app.common.helper.ConfigParamHelper;
+import uw.app.common.vo.ConfigParamBox;
 
 import java.util.Date;
 
@@ -38,9 +38,9 @@ public class AiModelConfigData {
         this.aiModelConfig = aiModelConfig;
         AiVendor aiVendor = AiVendorHelper.getVendor( aiModelConfig.getVendorClass() );
         if (aiVendor != null) {
-            vendorParamBox = ConfigParamUtils.buildParamBox( aiVendor.vendorParam(), aiModelConfig.getVendorData() ).getData();
-            modelParamBox = ConfigParamUtils.buildParamBox( aiVendor.modelParam(), aiModelConfig.getModelData() ).getData();
-            embedParamBox = ConfigParamUtils.buildParamBox( aiVendor.embedParam(), aiModelConfig.getEmbedData() ).getData();
+            vendorParamBox = ConfigParamHelper.buildParamBox( aiVendor.vendorParam(), aiModelConfig.getVendorData() ).getData();
+            modelParamBox = ConfigParamHelper.buildParamBox( aiVendor.modelParam(), aiModelConfig.getModelData() ).getData();
+            embedParamBox = ConfigParamHelper.buildParamBox( aiVendor.embedParam(), aiModelConfig.getEmbedData() ).getData();
         }
     }
 

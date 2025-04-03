@@ -15,7 +15,7 @@ import uw.app.common.helper.SysDataHistoryHelper;
 import uw.auth.service.constant.ActionLog;
 import uw.auth.service.constant.AuthType;
 import uw.auth.service.constant.UserType;
-import uw.common.constant.StateCommon;
+import uw.app.common.constant.CommonState;
 import uw.auth.service.AuthServiceHelper;
 import uw.auth.service.annotation.MscPermDeclare;
 import uw.common.dto.ResponseData;
@@ -154,11 +154,11 @@ public class AiToolInfoController {
         if (aiToolConfig == null) {
             return ResponseData.warnMsg("未找到指定id的AI工具信息！");
         }
-        if (aiToolConfig.getState()!=StateCommon.DISABLED.getValue()){
+        if (aiToolConfig.getState()!= CommonState.DISABLED.getValue()){
             return ResponseData.warnMsg("启用AI工具信息失败！当前状态不是禁用状态！");                
         }
         aiToolConfig.setModifyDate(new Date());
-        aiToolConfig.setState(StateCommon.ENABLED.getValue());
+        aiToolConfig.setState( CommonState.ENABLED.getValue());
         dao.update(aiToolConfig);
         AiToolHelper.invalidateToolCache();
         return ResponseData.success();
@@ -179,11 +179,11 @@ public class AiToolInfoController {
         if (aiToolConfig == null) {
             return ResponseData.warnMsg("未找到指定id的AI工具信息！");
         }			
-        if (aiToolConfig.getState()!=StateCommon.ENABLED.getValue()){
+        if (aiToolConfig.getState()!= CommonState.ENABLED.getValue()){
             return ResponseData.warnMsg("禁用AI工具信息失败！当前状态不是启用状态！");                
         }            
         aiToolConfig.setModifyDate(new Date());
-        aiToolConfig.setState(StateCommon.DISABLED.getValue());
+        aiToolConfig.setState( CommonState.DISABLED.getValue());
         dao.update(aiToolConfig);
         AiToolHelper.invalidateToolCache();
         return ResponseData.success();
@@ -204,11 +204,11 @@ public class AiToolInfoController {
         if (aiToolConfig == null) {
             return ResponseData.warnMsg("未找到指定id的AI工具信息！");
         }
-        if (aiToolConfig.getState()!=StateCommon.DISABLED.getValue()){
+        if (aiToolConfig.getState()!= CommonState.DISABLED.getValue()){
             return ResponseData.warnMsg("删除AI工具信息失败！当前状态不是禁用状态！");
         }            
         aiToolConfig.setModifyDate(new Date());
-        aiToolConfig.setState(StateCommon.DELETED.getValue());
+        aiToolConfig.setState( CommonState.DELETED.getValue());
         dao.update(aiToolConfig);
         return ResponseData.success();
     }

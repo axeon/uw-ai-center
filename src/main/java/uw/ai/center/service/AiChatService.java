@@ -22,13 +22,12 @@ import uw.ai.center.vendor.AiVendorHelper;
 import uw.ai.center.vo.AiModelConfigData;
 import uw.ai.center.vo.SessionConversationData;
 import uw.ai.vo.AiToolCallInfo;
-import uw.common.constant.StateCommon;
+import uw.app.common.constant.CommonState;
 import uw.common.dto.ResponseData;
 import uw.common.util.JsonUtils;
 import uw.dao.DaoFactory;
 import uw.dao.DataList;
 import uw.dao.TransactionException;
-import uw.httpclient.json.JsonInterfaceHelper;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -182,7 +181,7 @@ public class AiChatService {
         sessionInfo.setResponseTokens( 0 );
         sessionInfo.setCreateDate( new Date() );
         sessionInfo.setLastUpdate( null );
-        sessionInfo.setState( StateCommon.ENABLED.getValue() );
+        sessionInfo.setState( CommonState.ENABLED.getValue() );
         try {
             return ResponseData.success( dao.save( sessionInfo ) );
         } catch (Exception e) {
@@ -361,7 +360,7 @@ public class AiChatService {
         sessionMsg.setFileConfig( fileInfo );
         sessionMsg.setRagConfig( JsonUtils.toString( ragIds ) );
         sessionMsg.setContextData( contextInfo );
-        sessionMsg.setState( StateCommon.ENABLED.getValue() );
+        sessionMsg.setState( CommonState.ENABLED.getValue() );
         sessionMsg.setRequestDate( new Date() );
         return sessionMsg;
     }

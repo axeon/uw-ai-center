@@ -12,7 +12,7 @@ import uw.auth.service.annotation.MscPermDeclare;
 import uw.auth.service.constant.ActionLog;
 import uw.auth.service.constant.AuthType;
 import uw.auth.service.constant.UserType;
-import uw.common.constant.StateCommon;
+import uw.app.common.constant.CommonState;
 import uw.common.dto.ResponseData;
 import uw.dao.DaoFactory;
 import uw.dao.DataList;
@@ -87,11 +87,11 @@ public class AiSessionInfoController {
         if (aiSessionInfo == null) {
             return ResponseData.warnMsg("未找到指定id的session会话！");
         }
-        if (aiSessionInfo.getState()!=StateCommon.DISABLED.getValue()){
+        if (aiSessionInfo.getState()!= CommonState.DISABLED.getValue()){
             return ResponseData.warnMsg("删除session会话失败！当前状态不是禁用状态！");
         }            
 //        aiSessionInfo.setModifyDate(new Date());
-        aiSessionInfo.setState(StateCommon.DELETED.getValue());
+        aiSessionInfo.setState( CommonState.DELETED.getValue());
         dao.update(aiSessionInfo);
         return ResponseData.success();
     }

@@ -11,7 +11,7 @@ import uw.auth.service.annotation.MscPermDeclare;
 import uw.auth.service.constant.ActionLog;
 import uw.auth.service.constant.AuthType;
 import uw.auth.service.constant.UserType;
-import uw.common.constant.StateCommon;
+import uw.app.common.constant.CommonState;
 import uw.common.dto.ResponseData;
 import uw.dao.DaoFactory;
 import uw.dao.DataList;
@@ -86,10 +86,10 @@ public class AiSessionMsgController {
         if (aiSessionMsg == null) {
             return ResponseData.warnMsg("未找到指定id的session消息！");
         }
-        if (aiSessionMsg.getState()!=StateCommon.ENABLED.getValue()){
+        if (aiSessionMsg.getState()!= CommonState.ENABLED.getValue()){
             return ResponseData.warnMsg("删除session消息失败！当前状态不是正常状态！");
         }            
-        aiSessionMsg.setState(StateCommon.DELETED.getValue());
+        aiSessionMsg.setState( CommonState.DELETED.getValue());
         dao.update(aiSessionMsg);
         return ResponseData.success();
     }

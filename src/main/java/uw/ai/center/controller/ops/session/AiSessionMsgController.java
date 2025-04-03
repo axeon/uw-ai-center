@@ -6,23 +6,16 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 import uw.ai.center.dto.AiSessionMsgQueryParam;
 import uw.ai.center.entity.AiSessionMsg;
-import uw.app.common.dto.SysCritLogQueryParam;
-import uw.app.common.dto.SysDataHistoryQueryParam;
-import uw.app.common.entity.SysCritLog;
-import uw.app.common.entity.SysDataHistory;
-import uw.app.common.helper.SysDataHistoryHelper;
 import uw.auth.service.constant.ActionLog;
 import uw.auth.service.constant.AuthType;
 import uw.auth.service.constant.UserType;
-import uw.common.constant.StateCommon;
+import uw.app.common.constant.CommonState;
 import uw.auth.service.AuthServiceHelper;
 import uw.auth.service.annotation.MscPermDeclare;
 import uw.common.dto.ResponseData;
 import uw.dao.DaoFactory;
 import uw.dao.DataList;
 import uw.dao.TransactionException;
-
-import java.util.Date;
 
 
 /**
@@ -93,10 +86,10 @@ public class AiSessionMsgController {
         if (aiSessionMsg == null) {
             return ResponseData.warnMsg("未找到指定id的session消息！");
         }
-        if (aiSessionMsg.getState()!=StateCommon.ENABLED.getValue()){
+        if (aiSessionMsg.getState()!= CommonState.ENABLED.getValue()){
             return ResponseData.warnMsg("删除session消息失败！当前状态不是正常状态！");
         }            
-        aiSessionMsg.setState(StateCommon.DELETED.getValue());
+        aiSessionMsg.setState( CommonState.DELETED.getValue());
         dao.update(aiSessionMsg);
         return ResponseData.success();
     }

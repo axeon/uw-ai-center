@@ -7,23 +7,16 @@ import org.springframework.web.bind.annotation.*;
 import uw.ai.center.dto.AiSessionInfoQueryParam;
 import uw.ai.center.entity.AiSessionInfo;
 import uw.app.common.dto.AuthIdQueryParam;
-import uw.app.common.dto.SysCritLogQueryParam;
-import uw.app.common.dto.SysDataHistoryQueryParam;
-import uw.app.common.entity.SysCritLog;
-import uw.app.common.entity.SysDataHistory;
-import uw.app.common.helper.SysDataHistoryHelper;
 import uw.auth.service.constant.ActionLog;
 import uw.auth.service.constant.AuthType;
 import uw.auth.service.constant.UserType;
-import uw.common.constant.StateCommon;
+import uw.app.common.constant.CommonState;
 import uw.auth.service.AuthServiceHelper;
 import uw.auth.service.annotation.MscPermDeclare;
 import uw.common.dto.ResponseData;
 import uw.dao.DaoFactory;
 import uw.dao.DataList;
 import uw.dao.TransactionException;
-
-import java.util.Date;
 
 
 /**
@@ -94,11 +87,11 @@ public class AiSessionInfoController {
         if (aiSessionInfo == null) {
             return ResponseData.warnMsg("未找到指定id的session会话！");
         }
-        if (aiSessionInfo.getState()!=StateCommon.DISABLED.getValue()){
+        if (aiSessionInfo.getState()!= CommonState.DISABLED.getValue()){
             return ResponseData.warnMsg("删除session会话失败！当前状态不是禁用状态！");
         }            
 //        aiSessionInfo.setModifyDate(new Date());
-        aiSessionInfo.setState(StateCommon.DELETED.getValue());
+        aiSessionInfo.setState( CommonState.DELETED.getValue());
         dao.update(aiSessionInfo);
         return ResponseData.success();
     }
