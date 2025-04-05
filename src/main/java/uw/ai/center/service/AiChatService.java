@@ -66,7 +66,7 @@ public class AiChatService {
             ResponseData<AiSessionInfo> responseData = initSession( saasId, userId, userType, userInfo, configId, SessionType.COMMON.getValue(), userPrompt, null, systemPrompt,
                     toolList,ragLibIds );
             if (responseData.isNotSuccess()) {
-                return responseData.prototype();
+                return responseData.raw();
             } else {
                 sessionInfo = responseData.getData();
             }
@@ -77,7 +77,7 @@ public class AiChatService {
         if (fileList != null) {
             ResponseData<String[]> readFileData = readFileData( fileList );
             if (readFileData.isNotSuccess()) {
-                return readFileData.prototype();
+                return readFileData.raw();
             } else {
                 String[] fileData = readFileData.getData();
                 fileInfo = fileData[0];

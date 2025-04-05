@@ -3,7 +3,7 @@ package uw.ai.center.vendor;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import uw.ai.center.vo.AiModelConfigData;
-import uw.app.common.vo.ConfigParam;
+import uw.app.common.vo.JsonParam;
 
 import java.util.List;
 
@@ -55,21 +55,21 @@ public interface AiVendor {
      */
     @JsonProperty("vendorParam")
     @Schema(title = "Vendor参数信息集合", description = "Vendor参数信息集合，管理员可见。")
-    List<ConfigParam> vendorParam();
+    List<JsonParam> vendorParam();
 
     /**
      * model参数信息集合，管理员可见。
      */
     @JsonProperty("modelParam")
     @Schema(title = "model参数信息集合", description = "model参数信息集合，管理员可见。")
-    List<ConfigParam> modelParam();
+    List<JsonParam> modelParam();
 
     /**
      * embed参数信息集合，仅管理员可见。
      */
     @JsonProperty("embedParam")
     @Schema(title = "embed参数信息集合", description = "embed参数信息集合，仅管理员可见。")
-    List<ConfigParam> embedParam();
+    List<JsonParam> embedParam();
 
     /**
      * 构造模型实例。

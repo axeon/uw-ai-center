@@ -20,7 +20,7 @@ import uw.auth.service.constant.AuthType;
 import uw.auth.service.constant.UserType;
 import uw.app.common.constant.CommonState;
 import uw.common.dto.ResponseData;
-import uw.app.common.vo.ConfigParam;
+import uw.app.common.vo.JsonParam;
 import uw.dao.DaoFactory;
 import uw.dao.DataList;
 import uw.dao.TransactionException;
@@ -106,7 +106,7 @@ public class AiRagLibController {
     @GetMapping("/loadConfigParam")
     @Operation(summary = "加载配置参数", description = "加载配置参数")
     @MscPermDeclare(user = UserType.OPS, auth = AuthType.USER, log = ActionLog.NONE)
-    public List<ConfigParam> loadConfigParam() {
+    public List<JsonParam> loadConfigParam() {
         return AiRagService.RAG_LIB_CONFIG_PARAMS;
     }
 

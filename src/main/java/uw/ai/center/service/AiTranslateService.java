@@ -8,7 +8,6 @@ import uw.ai.vo.AiTranslateMapParam;
 import uw.ai.vo.AiTranslateResultData;
 import uw.common.dto.ResponseData;
 import uw.common.util.JsonUtils;
-import uw.httpclient.json.JsonInterfaceHelper;
 
 /**
  * AI翻译服务。
@@ -36,7 +35,7 @@ public class AiTranslateService {
     public static ResponseData<AiTranslateResultData[]> translateListEntity(long saasId, long userId, int userType, String userInfo, AiTranslateListParam param) {
         ResponseData<String> responseData = translateList( saasId, userId, userType, userInfo, param );
         if (responseData.isNotSuccess()) {
-            return responseData.prototype();
+            return responseData.raw();
         } else {
             AiTranslateResultData[] data = BEAN_OUTPUT_CONVERTER.convert( responseData.getData() );
             return ResponseData.success( data );
@@ -57,7 +56,7 @@ public class AiTranslateService {
     public static ResponseData<AiTranslateResultData[]> translateMapEntity(long saasId, long userId, int userType, String userInfo, AiTranslateMapParam param) {
         ResponseData<String> responseData = translateMap( saasId, userId, userType, userInfo, param );
         if (responseData.isNotSuccess()) {
-            return responseData.prototype();
+            return responseData.raw();
         } else {
             AiTranslateResultData[] data = BEAN_OUTPUT_CONVERTER.convert( responseData.getData() );
             return ResponseData.success( data );
