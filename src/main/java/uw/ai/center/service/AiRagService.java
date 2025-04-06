@@ -24,11 +24,11 @@ import uw.ai.center.entity.AiRagDoc;
 import uw.ai.center.entity.AiRagLib;
 import uw.ai.center.vendor.AiVendorClientWrapper;
 import uw.ai.center.vendor.AiVendorHelper;
-import uw.app.common.constant.JsonParamType;
-import uw.app.common.helper.JsonParamHelper;
+import uw.app.common.helper.JsonConfigHelper;
+import uw.app.common.vo.JsonConfigBox;
+import uw.app.common.vo.JsonConfigParam;
+import uw.common.util.EnumUtils;
 import uw.common.util.JsonUtils;
-import uw.app.common.vo.JsonParam;
-import uw.app.common.vo.JsonParamBox;
 import uw.dao.DaoFactory;
 
 import java.io.IOException;
@@ -47,11 +47,7 @@ public class AiRagService {
     /**
      * RAG库配置参数.
      */
-    public static final List<JsonParam> RAG_LIB_CONFIG_PARAMS = List.of( new JsonParam( JsonParamType.INT, "chunk-size", "800", "文本块大小", "文本块大小" ),
-            new JsonParam( JsonParamType.INT, "chunk-min-char-size", "350", "文本块最小字符数", "文本块大小" ), new JsonParam( JsonParamType.INT, "chunk-min-embed-size", "5",
-                    "文本块embed最小长度", "文本块embed最小长度，低于这个长度将会不会embed。" ), new JsonParam( JsonParamType.INT, "chunk-max-num", "10000",
-                    "文本块最大数量", "文本块最大数量" ), new JsonParam( JsonParamType.DOUBLE, "search-similarity-threshold", "0.0", "搜索匹配下限", "搜索匹配下限，低于此下限值的将不会被使用" ),
-            new JsonParam( JsonParamType.INT, "search-top-k", "4", "搜索topK", "搜索topK" ) );
+    public static final List<JsonConfigParam> RAG_LIB_CONFIG_PARAMS = List.of( RagLibConfigParam.values() );
     /**
      * RAG库ES索引前缀.
      */
@@ -77,7 +73,6 @@ public class AiRagService {
             return buildRagClientWrapper( libId );
         }
     } );
-
 
     private AiRagService(RestClient restClient) {
         AiRagService.restClient = restClient;
@@ -128,7 +123,6 @@ public class AiRagService {
             ragClientWrapper.vectorStore.delete( new ArrayList<>( docMap.keySet() ) );
         }
     }
-
 
     /**
      * 删除文档.
@@ -209,7 +203,7 @@ public class AiRagService {
             AiRagLib ragLib = dao.load( AiRagLib.class, ragLibId );
             if (ragLib != null) {
                 String configData = ragLib.getLibConfig();
-                JsonParamBox configParamBox = JsonParamHelper.buildParamBox( RAG_LIB_CONFIG_PARAMS, configData ).getData();
+                JsonConfigBox configParamBox = JsonConfigHelper.buildParamBox( RAG_LIB_CONFIG_PARAMS, configData ).getData();
                 int chunkSize = configParamBox.getIntParam( "chunk-size" );
                 int chunkMinCharSize = configParamBox.getIntParam( "chunk-min-char-size" );
                 int chunkMinEmbedSize = configParamBox.getIntParam( "chunk-min-embed-size" );
@@ -232,6 +226,36 @@ public class AiRagService {
             logger.error( e.getMessage(), e );
         }
         return null;
+    }
+
+    /**
+     * RAG客户端包装类.
+     */
+    public enum RagLibConfigParam implements JsonConfigParam {
+        CHUNK_SIZE( JsonConfigParam.ParamType.INT, "800", "文本块大小", "文本块大小", null ),
+        CHUNK_MIN_CHAR_SIZE( JsonConfigParam.ParamType.INT, "350", "文本块最小字符数", "文本块最小字符数", null ),
+        CHUNK_MIN_EMBED_SIZE( JsonConfigParam.ParamType.INT, "5", "文本块embed最小长度", "文本块embed最小长度，低于这个长度将会不会embed。", null ),
+        CHUNK_MAX_NUM( JsonConfigParam.ParamType.INT, "10000", "文本块最大数量", "文本块最大数量", null ),
+        SEARCH_SIMILARITY_THRESHOLD( JsonConfigParam.ParamType.DOUBLE, "0.0", "搜索匹配下限", "搜索匹配下限，低于此下限值的将不会被使用", null ),
+        SEARCH_TOP_K( JsonConfigParam.ParamType.INT, "4", "搜索topK", "搜索topK", null ),
+        ;
+
+        private final ParamData paramData;
+
+        RagLibConfigParam(ParamType type, String value, String name, String desc, String regex) {
+            this.paramData = new ParamData( EnumUtils.enumNameToDotCase( name() ), type, value, name, desc, regex );
+        }
+
+        /**
+         * 配置参数数据。
+         *
+         * @return
+         */
+        @Override
+        public ParamData getParamData() {
+            return paramData;
+        }
+
     }
 
     /**

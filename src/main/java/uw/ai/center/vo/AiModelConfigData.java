@@ -5,8 +5,8 @@ import org.slf4j.LoggerFactory;
 import uw.ai.center.entity.AiModelConfig;
 import uw.ai.center.vendor.AiVendor;
 import uw.ai.center.vendor.AiVendorHelper;
-import uw.app.common.helper.JsonParamHelper;
-import uw.app.common.vo.JsonParamBox;
+import uw.app.common.helper.JsonConfigHelper;
+import uw.app.common.vo.JsonConfigBox;
 
 import java.util.Date;
 
@@ -24,23 +24,23 @@ public class AiModelConfigData {
     /**
      * vendor参数信息集合，所有人可见。
      */
-    private JsonParamBox vendorParamBox;
+    private JsonConfigBox vendorParamBox;
     /**
      * model参数信息集合，管理员可见。
      */
-    private JsonParamBox modelParamBox;
+    private JsonConfigBox modelParamBox;
     /**
      * 嵌入参数信息集合，仅管理员可见。
      */
-    private JsonParamBox embedParamBox;
+    private JsonConfigBox embedParamBox;
 
     public AiModelConfigData(AiModelConfig aiModelConfig) {
         this.aiModelConfig = aiModelConfig;
         AiVendor aiVendor = AiVendorHelper.getVendor( aiModelConfig.getVendorClass() );
         if (aiVendor != null) {
-            vendorParamBox = JsonParamHelper.buildParamBox( aiVendor.vendorParam(), aiModelConfig.getVendorData() ).getData();
-            modelParamBox = JsonParamHelper.buildParamBox( aiVendor.modelParam(), aiModelConfig.getModelData() ).getData();
-            embedParamBox = JsonParamHelper.buildParamBox( aiVendor.embedParam(), aiModelConfig.getEmbedData() ).getData();
+            vendorParamBox = JsonConfigHelper.buildParamBox( aiVendor.vendorParam(), aiModelConfig.getVendorData() ).getData();
+            modelParamBox = JsonConfigHelper.buildParamBox( aiVendor.modelParam(), aiModelConfig.getModelData() ).getData();
+            embedParamBox = JsonConfigHelper.buildParamBox( aiVendor.embedParam(), aiModelConfig.getEmbedData() ).getData();
         }
     }
 
@@ -166,21 +166,21 @@ public class AiModelConfigData {
     /**
      * 获取服务商参数。
      */
-    public JsonParamBox getVendorParamBox() {
+    public JsonConfigBox getVendorParamBox() {
         return vendorParamBox;
     }
 
     /**
      * 获取模型参数。
      */
-    public JsonParamBox getModelParamBox() {
+    public JsonConfigBox getModelParamBox() {
         return modelParamBox;
     }
 
     /**
      * 获取嵌入参数。
      */
-    public JsonParamBox getEmbedParamBox() {
+    public JsonConfigBox getEmbedParamBox() {
         return embedParamBox;
     }
 }

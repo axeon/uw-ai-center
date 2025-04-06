@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import uw.auth.service.util.EnumUtils;
+import uw.common.util.EnumUtils;
 
 import java.util.Map;
 
