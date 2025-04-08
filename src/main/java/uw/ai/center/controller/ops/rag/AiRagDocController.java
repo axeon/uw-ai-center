@@ -125,7 +125,7 @@ public class AiRagDocController {
      */
     @PostMapping("/save")
     @Operation(summary = "新增rag文档信息", description = "新增rag文档信息")
-    @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
+    @MscPermDeclare(user = UserType.OPS, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData<AiRagDoc> save(@RequestParam long libId, @RequestParam String docDesc, @RequestParam MultipartFile docFile) throws TransactionException {
         long id = dao.getSequenceId( AiRagDoc.class );
         AuthServiceHelper.logRef( AiRagDoc.class, id );
