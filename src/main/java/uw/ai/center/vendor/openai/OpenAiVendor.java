@@ -22,8 +22,8 @@ import uw.ai.center.advisor.AiMysqlChatMemory;
 import uw.ai.center.vendor.AiVendor;
 import uw.ai.center.vendor.AiVendorClientWrapper;
 import uw.ai.center.vo.AiModelConfigData;
-import uw.app.common.vo.JsonConfigBox;
-import uw.app.common.vo.JsonConfigParam;
+import uw.common.app.vo.JsonConfigBox;
+import uw.common.app.vo.JsonConfigParam;
 
 import java.io.IOException;
 import java.util.Arrays;

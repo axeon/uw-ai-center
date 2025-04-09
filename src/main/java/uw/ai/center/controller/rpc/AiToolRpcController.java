@@ -14,7 +14,7 @@ import uw.ai.vo.AiToolMeta;
 import uw.auth.service.annotation.MscPermDeclare;
 import uw.auth.service.annotation.ResponseAdviceIgnore;
 import uw.auth.service.constant.UserType;
-import uw.app.common.constant.CommonState;
+import uw.common.app.constant.CommonState;
 import uw.common.dto.ResponseData;
 import uw.dao.DaoFactory;
 

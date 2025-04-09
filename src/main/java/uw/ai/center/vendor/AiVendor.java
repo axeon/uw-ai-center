@@ -3,7 +3,7 @@ package uw.ai.center.vendor;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import uw.ai.center.vo.AiModelConfigData;
-import uw.app.common.vo.JsonConfigParam;
+import uw.common.app.vo.JsonConfigParam;
 
 import java.util.List;
 

@@ -1,6 +1,6 @@
 package uw.ai.center.vendor.ollama;
 
-import uw.app.common.vo.JsonConfigParam;
+import uw.common.app.vo.JsonConfigParam;
 import uw.common.util.EnumUtils;
 
 /**

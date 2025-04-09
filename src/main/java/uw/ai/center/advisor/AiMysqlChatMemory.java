@@ -8,7 +8,7 @@ import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.UserMessage;
 import uw.ai.center.entity.AiSessionMsg;
 import uw.ai.center.vo.SessionConversationData;
-import uw.app.common.constant.CommonState;
+import uw.common.app.constant.CommonState;
 import uw.dao.DaoFactory;
 import uw.dao.DataList;
 import uw.dao.TransactionException;

@@ -10,7 +10,7 @@ import uw.ai.vo.AiToolCallInfo;
 import uw.ai.vo.AiToolExecuteParam;
 import uw.cache.CacheDataLoader;
 import uw.cache.FusionCache;
-import uw.app.common.constant.CommonState;
+import uw.common.app.constant.CommonState;
 import uw.common.dto.ResponseData;
 import uw.dao.DaoFactory;
 import uw.dao.DataList;

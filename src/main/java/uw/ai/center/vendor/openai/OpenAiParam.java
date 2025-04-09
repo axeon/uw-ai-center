@@ -1,6 +1,6 @@
 package uw.ai.center.vendor.openai;
 
-import uw.app.common.vo.JsonConfigParam;
+import uw.common.app.vo.JsonConfigParam;
 import uw.common.util.EnumUtils;
 
 public class OpenAiParam {

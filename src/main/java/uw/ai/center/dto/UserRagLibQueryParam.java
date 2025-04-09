@@ -1,7 +1,6 @@
 package uw.ai.center.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import uw.app.common.dto.AuthPageQueryParam;
 import uw.dao.PageQueryParam;
 import uw.dao.annotation.QueryMeta;
 

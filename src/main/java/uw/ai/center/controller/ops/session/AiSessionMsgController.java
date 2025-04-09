@@ -9,7 +9,7 @@ import uw.ai.center.entity.AiSessionMsg;
 import uw.auth.service.constant.ActionLog;
 import uw.auth.service.constant.AuthType;
 import uw.auth.service.constant.UserType;
-import uw.app.common.constant.CommonState;
+import uw.common.app.constant.CommonState;
 import uw.auth.service.AuthServiceHelper;
 import uw.auth.service.annotation.MscPermDeclare;
 import uw.common.dto.ResponseData;

@@ -8,18 +8,18 @@ import uw.ai.center.dto.AiModelConfigQueryParam;
 import uw.ai.center.entity.AiModelConfig;
 import uw.ai.center.vendor.AiVendor;
 import uw.ai.center.vendor.AiVendorHelper;
-import uw.app.common.dto.AuthIdQueryParam;
-import uw.app.common.dto.SysCritLogQueryParam;
-import uw.app.common.dto.SysDataHistoryQueryParam;
-import uw.app.common.entity.SysCritLog;
-import uw.app.common.entity.SysDataHistory;
-import uw.app.common.helper.SysDataHistoryHelper;
+import uw.common.app.dto.AuthIdQueryParam;
+import uw.common.app.dto.SysCritLogQueryParam;
+import uw.common.app.dto.SysDataHistoryQueryParam;
+import uw.common.app.entity.SysCritLog;
+import uw.common.app.entity.SysDataHistory;
+import uw.common.app.helper.SysDataHistoryHelper;
 import uw.auth.service.AuthServiceHelper;
 import uw.auth.service.annotation.MscPermDeclare;
 import uw.auth.service.constant.ActionLog;
 import uw.auth.service.constant.AuthType;
 import uw.auth.service.constant.UserType;
-import uw.app.common.constant.CommonState;
+import uw.common.app.constant.CommonState;
 import uw.common.dto.ResponseData;
 import uw.dao.DaoFactory;
 import uw.dao.DataList;
@@ -136,8 +136,8 @@ public class AiModelConfigController {
     @Operation(summary = "查询操作日志", description = "查询操作日志")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.REQUEST)
     public DataList<SysCritLog> listCritLog(SysCritLogQueryParam queryParam) throws TransactionException {
-        AuthServiceHelper.logRef( AiModelConfig.class, queryParam.getRefId() );
-        queryParam.setRefTypeClass( AiModelConfig.class );
+        AuthServiceHelper.logRef( AiModelConfig.class, queryParam.getBizId() );
+        queryParam.setBizTypeClass( AiModelConfig.class );
         return dao.list( SysCritLog.class, queryParam );
     }
 

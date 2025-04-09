@@ -22,7 +22,7 @@ import uw.ai.center.vendor.AiVendorHelper;
 import uw.ai.center.vo.AiModelConfigData;
 import uw.ai.center.vo.SessionConversationData;
 import uw.ai.vo.AiToolCallInfo;
-import uw.app.common.constant.CommonState;
+import uw.common.app.constant.CommonState;
 import uw.common.dto.ResponseData;
 import uw.common.util.JsonUtils;
 import uw.dao.DaoFactory;

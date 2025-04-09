@@ -5,8 +5,8 @@ import org.slf4j.LoggerFactory;
 import uw.ai.center.entity.AiModelConfig;
 import uw.ai.center.vendor.AiVendor;
 import uw.ai.center.vendor.AiVendorHelper;
-import uw.app.common.helper.JsonConfigHelper;
-import uw.app.common.vo.JsonConfigBox;
+import uw.common.app.helper.JsonConfigHelper;
+import uw.common.app.vo.JsonConfigBox;
 
 import java.util.Date;
 
