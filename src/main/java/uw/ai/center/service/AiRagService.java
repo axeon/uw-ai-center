@@ -1,10 +1,12 @@
 package uw.ai.center.service;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.benmanes.caffeine.cache.CacheLoader;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.elasticsearch.client.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -229,8 +231,10 @@ public class AiRagService {
     }
 
     /**
-     * RAG客户端包装类.
+     * RAG文档库配置.
      */
+    @JsonFormat(shape = JsonFormat.Shape.OBJECT)
+    @Schema(title = "文档库参数", description = "文档库参数")
     public enum RagLibConfigParam implements JsonConfigParam {
         CHUNK_SIZE( JsonConfigParam.ParamType.INT, "800", "文本块大小", "文本块大小", null ),
         CHUNK_MIN_CHAR_SIZE( JsonConfigParam.ParamType.INT, "350", "文本块最小字符数", "文本块最小字符数", null ),

@@ -1,11 +1,14 @@
 package uw.ai.center.vendor.openai;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import io.swagger.v3.oas.annotations.media.Schema;
 import uw.common.app.vo.JsonConfigParam;
 import uw.common.util.EnumUtils;
 
 public class OpenAiParam {
 
-
+    @JsonFormat(shape = JsonFormat.Shape.OBJECT)
+    @Schema(title = "vendor参数", description = "vendor参数")
     enum Vendor implements JsonConfigParam {
         API_PATH(ParamType.STRING, "/v1/chat/completions", "api.path", "api路径", "api路径"),
         TEMPERATURE(ParamType.FLOAT, "0.8", "temperature", "采样温度控制", "控制生成的明显创造性"),
@@ -43,7 +46,8 @@ public class OpenAiParam {
 
     }
 
-
+    @JsonFormat(shape = JsonFormat.Shape.OBJECT)
+    @Schema(title = "embed参数", description = "embed参数")
     enum Embed implements JsonConfigParam {
         API_PATH(ParamType.STRING, "/v1/embeddings", "api.path", "API路径", "Embedding API路径");
         ;

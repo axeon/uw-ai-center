@@ -1,5 +1,7 @@
 package uw.ai.center.vendor.ollama;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import io.swagger.v3.oas.annotations.media.Schema;
 import uw.common.app.vo.JsonConfigParam;
 import uw.common.util.EnumUtils;
 
@@ -8,6 +10,8 @@ import uw.common.util.EnumUtils;
  */
 public class OllamaParam {
 
+    @JsonFormat(shape = JsonFormat.Shape.OBJECT)
+    @Schema(title = "vendor参数", description = "vendor参数")
     enum Vendor implements JsonConfigParam {
         // 定义所有枚举项
         NUMA(ParamType.BOOLEAN, "false", "numa", "是否使用 NUMA。", null),
