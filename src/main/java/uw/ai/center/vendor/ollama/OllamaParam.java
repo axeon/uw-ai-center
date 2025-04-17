@@ -25,7 +25,7 @@ public class OllamaParam {
         VOCAB_ONLY(ParamType.BOOLEAN, "true", "vocab.only", "只加载词汇表，不加载权重（适用于仅需要词汇表的场景）。", null),
         USE_MMAP(ParamType.BOOLEAN, "true", "use.mmap", "默认情况下，模型会被映射到内存中，这使得系统可以根据需要只加载模型的必要部分。然而，如果模型的大小超过了你的总 RAM 量，或者你的系统可用内存不足，使用 mmap 可能会增加页面换出的风险，从而负面影响性能。禁用 mmap 会导致加载时间变慢，但如果不用 mlock，可能会减少页面换出。请注意，如果模型的大小超过了总 RAM 量，关闭 mmap 将阻止模型加载。", null),
         USE_MLOCK(ParamType.BOOLEAN, "false", "use.mlock", "将模型锁定在内存中，防止在内存映射时将其交换出去。这可以提高性能，但会牺牲一些内存映射的优势，因为它需要更多的 RAM 来运行，并且可能在模型加载到 RAM 时减慢加载时间。", null),
-        NUM_THREAD(ParamType.INT, "0", "num.thread", "设置在计算过程中使用的线程数量。默认情况下，Ollama 会检测此值以获得最佳性能。建议将此值设置为系统中的物理 CPU 核心数（而不是逻辑核心数）。0 表示由运行时决定。", null),
+        NUM_THREAD(ParamType.INT, "0", "num.thread", "设置在计算过程中使用的线程数量。默认情况下，Ollama 会检测此值以获取最佳性能。建议将此值设置为系统中的物理 CPU 核心数（而不是逻辑核心数）。0 表示由运行时决定。", null),
         NUM_KEEP(ParamType.INT, "4", "num.keep", "保留的模型副本数量。", null),
         SEED(ParamType.INT, "-1", "seed", "设置生成时使用的随机数种子。将此值设置为特定数字，可以在相同的提示下生成相同的文本。", null),
         NUM_PREDICT(ParamType.INT, "-1", "num.predict", "生成文本时预测的最大 token 数。（-1 表示无限生成，-2 表示填充上下文）", null),

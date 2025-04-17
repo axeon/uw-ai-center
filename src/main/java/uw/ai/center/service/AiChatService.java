@@ -55,7 +55,7 @@ public class AiChatService {
         if (chatClientWrapper == null) {
             return ResponseData.errorMsg( "ChatClient获取失败!" );
         }
-        //获得基础信息。
+        //获取基础信息。
         AiModelConfigData configData = chatClientWrapper.getConfigData();
         if (StringUtils.isBlank( systemPrompt )) {
             systemPrompt = configData.getModelParamBox().getParam( "systemPrompt", "" );
@@ -155,7 +155,7 @@ public class AiChatService {
         if (chatClientWrapper == null) {
             return ResponseData.errorMsg( "ChatClient获取失败!" );
         }
-        //获得基础信息。
+        //获取基础信息。
         AiModelConfigData configData = chatClientWrapper.getConfigData();
         if (StringUtils.isBlank( systemPrompt )) {
             systemPrompt = configData.getModelParamBox().getParam( "systemPrompt", "" );
