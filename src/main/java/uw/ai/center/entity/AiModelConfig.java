@@ -154,6 +154,32 @@ public class AiModelConfig implements DataEntity,Serializable{
      */
     private transient StringBuilder UPDATED_INFO = null;
 
+
+    /**
+     * 获得实体的表名。
+     */
+    @Override
+    public String ENTITY_TABLE(){
+         return "ai_model_config";
+       }
+
+    /**
+     * 获得实体的表注释。
+     */
+    @Override
+    public String ENTITY_NAME(){
+          return "AI服务模型";
+       }
+
+    /**
+     * 获得主键
+     */
+    @Override
+    public Serializable ENTITY_ID(){
+          return getId();
+       }
+
+
     /**
      * 获取更改的字段列表.
      */
@@ -322,10 +348,18 @@ public class AiModelConfig implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("id");
-            this.UPDATED_INFO.append("id:\"" + this.id+ "\"=>\"" + id + "\"\r\n");
+            this.UPDATED_INFO.append("id:\"").append(this.id).append("\"=>\"").append(id).append("\"\n");
             this.id = id;
         }
     }
+
+    /**
+     *  设置ID链式调用。
+     */
+    public AiModelConfig id(long id){
+        setId(id);
+        return this;
+        }
 
     /**
      * 设置SAAS ID。
@@ -336,10 +370,18 @@ public class AiModelConfig implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("saas_id");
-            this.UPDATED_INFO.append("saas_id:\"" + this.saasId+ "\"=>\"" + saasId + "\"\r\n");
+            this.UPDATED_INFO.append("saas_id:\"").append(this.saasId).append("\"=>\"").append(saasId).append("\"\n");
             this.saasId = saasId;
         }
     }
+
+    /**
+     *  设置SAAS ID链式调用。
+     */
+    public AiModelConfig saasId(long saasId){
+        setSaasId(saasId);
+        return this;
+        }
 
     /**
      * 设置商户ID。
@@ -350,10 +392,18 @@ public class AiModelConfig implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("mch_id");
-            this.UPDATED_INFO.append("mch_id:\"" + this.mchId+ "\"=>\"" + mchId + "\"\r\n");
+            this.UPDATED_INFO.append("mch_id:\"").append(this.mchId).append("\"=>\"").append(mchId).append("\"\n");
             this.mchId = mchId;
         }
     }
+
+    /**
+     *  设置商户ID链式调用。
+     */
+    public AiModelConfig mchId(long mchId){
+        setMchId(mchId);
+        return this;
+        }
 
     /**
      * 设置服务商类。
@@ -364,10 +414,18 @@ public class AiModelConfig implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("vendor_class");
-            this.UPDATED_INFO.append("vendor_class:\"" + this.vendorClass+ "\"=>\"" + vendorClass + "\"\r\n");
+            this.UPDATED_INFO.append("vendor_class:\"").append(this.vendorClass).append("\"=>\"").append(vendorClass).append("\"\n");
             this.vendorClass = vendorClass;
         }
     }
+
+    /**
+     *  设置服务商类链式调用。
+     */
+    public AiModelConfig vendorClass(String vendorClass){
+        setVendorClass(vendorClass);
+        return this;
+        }
 
     /**
      * 设置服务商代码。
@@ -378,10 +436,18 @@ public class AiModelConfig implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("config_code");
-            this.UPDATED_INFO.append("config_code:\"" + this.configCode+ "\"=>\"" + configCode + "\"\r\n");
+            this.UPDATED_INFO.append("config_code:\"").append(this.configCode).append("\"=>\"").append(configCode).append("\"\n");
             this.configCode = configCode;
         }
     }
+
+    /**
+     *  设置服务商代码链式调用。
+     */
+    public AiModelConfig configCode(String configCode){
+        setConfigCode(configCode);
+        return this;
+        }
 
     /**
      * 设置服务商名称。
@@ -392,10 +458,18 @@ public class AiModelConfig implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("config_name");
-            this.UPDATED_INFO.append("config_name:\"" + this.configName+ "\"=>\"" + configName + "\"\r\n");
+            this.UPDATED_INFO.append("config_name:\"").append(this.configName).append("\"=>\"").append(configName).append("\"\n");
             this.configName = configName;
         }
     }
+
+    /**
+     *  设置服务商名称链式调用。
+     */
+    public AiModelConfig configName(String configName){
+        setConfigName(configName);
+        return this;
+        }
 
     /**
      * 设置服务商描述。
@@ -406,10 +480,18 @@ public class AiModelConfig implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("config_desc");
-            this.UPDATED_INFO.append("config_desc:\"" + this.configDesc+ "\"=>\"" + configDesc + "\"\r\n");
+            this.UPDATED_INFO.append("config_desc:\"").append(this.configDesc).append("\"=>\"").append(configDesc).append("\"\n");
             this.configDesc = configDesc;
         }
     }
+
+    /**
+     *  设置服务商描述链式调用。
+     */
+    public AiModelConfig configDesc(String configDesc){
+        setConfigDesc(configDesc);
+        return this;
+        }
 
     /**
      * 设置api地址。
@@ -420,10 +502,18 @@ public class AiModelConfig implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("api_url");
-            this.UPDATED_INFO.append("api_url:\"" + this.apiUrl+ "\"=>\"" + apiUrl + "\"\r\n");
+            this.UPDATED_INFO.append("api_url:\"").append(this.apiUrl).append("\"=>\"").append(apiUrl).append("\"\n");
             this.apiUrl = apiUrl;
         }
     }
+
+    /**
+     *  设置api地址链式调用。
+     */
+    public AiModelConfig apiUrl(String apiUrl){
+        setApiUrl(apiUrl);
+        return this;
+        }
 
     /**
      * 设置api key。
@@ -434,10 +524,18 @@ public class AiModelConfig implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("api_key");
-            this.UPDATED_INFO.append("api_key:\"" + this.apiKey+ "\"=>\"" + apiKey + "\"\r\n");
+            this.UPDATED_INFO.append("api_key:\"").append(this.apiKey).append("\"=>\"").append(apiKey).append("\"\n");
             this.apiKey = apiKey;
         }
     }
+
+    /**
+     *  设置api key链式调用。
+     */
+    public AiModelConfig apiKey(String apiKey){
+        setApiKey(apiKey);
+        return this;
+        }
 
     /**
      * 设置主模型。
@@ -448,10 +546,18 @@ public class AiModelConfig implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("model_main");
-            this.UPDATED_INFO.append("model_main:\"" + this.modelMain+ "\"=>\"" + modelMain + "\"\r\n");
+            this.UPDATED_INFO.append("model_main:\"").append(this.modelMain).append("\"=>\"").append(modelMain).append("\"\n");
             this.modelMain = modelMain;
         }
     }
+
+    /**
+     *  设置主模型链式调用。
+     */
+    public AiModelConfig modelMain(String modelMain){
+        setModelMain(modelMain);
+        return this;
+        }
 
     /**
      * 设置嵌入模型。
@@ -462,10 +568,18 @@ public class AiModelConfig implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("model_embed");
-            this.UPDATED_INFO.append("model_embed:\"" + this.modelEmbed+ "\"=>\"" + modelEmbed + "\"\r\n");
+            this.UPDATED_INFO.append("model_embed:\"").append(this.modelEmbed).append("\"=>\"").append(modelEmbed).append("\"\n");
             this.modelEmbed = modelEmbed;
         }
     }
+
+    /**
+     *  设置嵌入模型链式调用。
+     */
+    public AiModelConfig modelEmbed(String modelEmbed){
+        setModelEmbed(modelEmbed);
+        return this;
+        }
 
     /**
      * 设置服务商配置。
@@ -476,10 +590,18 @@ public class AiModelConfig implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("vendor_data");
-            this.UPDATED_INFO.append("vendor_data:\"" + this.vendorData+ "\"=>\"" + vendorData + "\"\r\n");
+            this.UPDATED_INFO.append("vendor_data:\"").append(this.vendorData).append("\"=>\"").append(vendorData).append("\"\n");
             this.vendorData = vendorData;
         }
     }
+
+    /**
+     *  设置服务商配置链式调用。
+     */
+    public AiModelConfig vendorData(String vendorData){
+        setVendorData(vendorData);
+        return this;
+        }
 
     /**
      * 设置模型配置。
@@ -490,10 +612,18 @@ public class AiModelConfig implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("model_data");
-            this.UPDATED_INFO.append("model_data:\"" + this.modelData+ "\"=>\"" + modelData + "\"\r\n");
+            this.UPDATED_INFO.append("model_data:\"").append(this.modelData).append("\"=>\"").append(modelData).append("\"\n");
             this.modelData = modelData;
         }
     }
+
+    /**
+     *  设置模型配置链式调用。
+     */
+    public AiModelConfig modelData(String modelData){
+        setModelData(modelData);
+        return this;
+        }
 
     /**
      * 设置嵌入配置。
@@ -504,10 +634,18 @@ public class AiModelConfig implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("embed_data");
-            this.UPDATED_INFO.append("embed_data:\"" + this.embedData+ "\"=>\"" + embedData + "\"\r\n");
+            this.UPDATED_INFO.append("embed_data:\"").append(this.embedData).append("\"=>\"").append(embedData).append("\"\n");
             this.embedData = embedData;
         }
     }
+
+    /**
+     *  设置嵌入配置链式调用。
+     */
+    public AiModelConfig embedData(String embedData){
+        setEmbedData(embedData);
+        return this;
+        }
 
     /**
      * 设置创建时间。
@@ -518,10 +656,18 @@ public class AiModelConfig implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("create_date");
-            this.UPDATED_INFO.append("create_date:\"" + this.createDate+ "\"=>\"" + createDate + "\"\r\n");
+            this.UPDATED_INFO.append("create_date:\"").append(this.createDate).append("\"=>\"").append(createDate).append("\"\n");
             this.createDate = createDate;
         }
     }
+
+    /**
+     *  设置创建时间链式调用。
+     */
+    public AiModelConfig createDate(java.util.Date createDate){
+        setCreateDate(createDate);
+        return this;
+        }
 
     /**
      * 设置修改时间。
@@ -532,10 +678,18 @@ public class AiModelConfig implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("modify_date");
-            this.UPDATED_INFO.append("modify_date:\"" + this.modifyDate+ "\"=>\"" + modifyDate + "\"\r\n");
+            this.UPDATED_INFO.append("modify_date:\"").append(this.modifyDate).append("\"=>\"").append(modifyDate).append("\"\n");
             this.modifyDate = modifyDate;
         }
     }
+
+    /**
+     *  设置修改时间链式调用。
+     */
+    public AiModelConfig modifyDate(java.util.Date modifyDate){
+        setModifyDate(modifyDate);
+        return this;
+        }
 
     /**
      * 设置状态。
@@ -546,10 +700,18 @@ public class AiModelConfig implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("state");
-            this.UPDATED_INFO.append("state:\"" + this.state+ "\"=>\"" + state + "\"\r\n");
+            this.UPDATED_INFO.append("state:\"").append(this.state).append("\"=>\"").append(state).append("\"\n");
             this.state = state;
         }
     }
+
+    /**
+     *  设置状态链式调用。
+     */
+    public AiModelConfig state(int state){
+        setState(state);
+        return this;
+        }
 
     /**
      * 重载toString方法.

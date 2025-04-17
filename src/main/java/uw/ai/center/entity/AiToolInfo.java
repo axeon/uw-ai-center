@@ -111,6 +111,32 @@ public class AiToolInfo implements DataEntity,Serializable{
      */
     private transient StringBuilder UPDATED_INFO = null;
 
+
+    /**
+     * 获得实体的表名。
+     */
+    @Override
+    public String ENTITY_TABLE(){
+         return "ai_tool_info";
+       }
+
+    /**
+     * 获得实体的表注释。
+     */
+    @Override
+    public String ENTITY_NAME(){
+          return "AI工具信息";
+       }
+
+    /**
+     * 获得主键
+     */
+    @Override
+    public Serializable ENTITY_ID(){
+          return getId();
+       }
+
+
     /**
      * 获取更改的字段列表.
      */
@@ -237,10 +263,18 @@ public class AiToolInfo implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("id");
-            this.UPDATED_INFO.append("id:\"" + this.id+ "\"=>\"" + id + "\"\r\n");
+            this.UPDATED_INFO.append("id:\"").append(this.id).append("\"=>\"").append(id).append("\"\n");
             this.id = id;
         }
     }
+
+    /**
+     *  设置ID链式调用。
+     */
+    public AiToolInfo id(long id){
+        setId(id);
+        return this;
+        }
 
     /**
      * 设置应用名。
@@ -251,10 +285,18 @@ public class AiToolInfo implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("app_name");
-            this.UPDATED_INFO.append("app_name:\"" + this.appName+ "\"=>\"" + appName + "\"\r\n");
+            this.UPDATED_INFO.append("app_name:\"").append(this.appName).append("\"=>\"").append(appName).append("\"\n");
             this.appName = appName;
         }
     }
+
+    /**
+     *  设置应用名链式调用。
+     */
+    public AiToolInfo appName(String appName){
+        setAppName(appName);
+        return this;
+        }
 
     /**
      * 设置工具类。
@@ -265,10 +307,18 @@ public class AiToolInfo implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("tool_class");
-            this.UPDATED_INFO.append("tool_class:\"" + this.toolClass+ "\"=>\"" + toolClass + "\"\r\n");
+            this.UPDATED_INFO.append("tool_class:\"").append(this.toolClass).append("\"=>\"").append(toolClass).append("\"\n");
             this.toolClass = toolClass;
         }
     }
+
+    /**
+     *  设置工具类链式调用。
+     */
+    public AiToolInfo toolClass(String toolClass){
+        setToolClass(toolClass);
+        return this;
+        }
 
     /**
      * 设置工具版本。
@@ -279,10 +329,18 @@ public class AiToolInfo implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("tool_version");
-            this.UPDATED_INFO.append("tool_version:\"" + this.toolVersion+ "\"=>\"" + toolVersion + "\"\r\n");
+            this.UPDATED_INFO.append("tool_version:\"").append(this.toolVersion).append("\"=>\"").append(toolVersion).append("\"\n");
             this.toolVersion = toolVersion;
         }
     }
+
+    /**
+     *  设置工具版本链式调用。
+     */
+    public AiToolInfo toolVersion(String toolVersion){
+        setToolVersion(toolVersion);
+        return this;
+        }
 
     /**
      * 设置工具名称。
@@ -293,10 +351,18 @@ public class AiToolInfo implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("tool_name");
-            this.UPDATED_INFO.append("tool_name:\"" + this.toolName+ "\"=>\"" + toolName + "\"\r\n");
+            this.UPDATED_INFO.append("tool_name:\"").append(this.toolName).append("\"=>\"").append(toolName).append("\"\n");
             this.toolName = toolName;
         }
     }
+
+    /**
+     *  设置工具名称链式调用。
+     */
+    public AiToolInfo toolName(String toolName){
+        setToolName(toolName);
+        return this;
+        }
 
     /**
      * 设置工具描述。
@@ -307,10 +373,18 @@ public class AiToolInfo implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("tool_desc");
-            this.UPDATED_INFO.append("tool_desc:\"" + this.toolDesc+ "\"=>\"" + toolDesc + "\"\r\n");
+            this.UPDATED_INFO.append("tool_desc:\"").append(this.toolDesc).append("\"=>\"").append(toolDesc).append("\"\n");
             this.toolDesc = toolDesc;
         }
     }
+
+    /**
+     *  设置工具描述链式调用。
+     */
+    public AiToolInfo toolDesc(String toolDesc){
+        setToolDesc(toolDesc);
+        return this;
+        }
 
     /**
      * 设置工具参数配置。
@@ -321,10 +395,18 @@ public class AiToolInfo implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("tool_input");
-            this.UPDATED_INFO.append("tool_input:\"" + this.toolInput+ "\"=>\"" + toolInput + "\"\r\n");
+            this.UPDATED_INFO.append("tool_input:\"").append(this.toolInput).append("\"=>\"").append(toolInput).append("\"\n");
             this.toolInput = toolInput;
         }
     }
+
+    /**
+     *  设置工具参数配置链式调用。
+     */
+    public AiToolInfo toolInput(String toolInput){
+        setToolInput(toolInput);
+        return this;
+        }
 
     /**
      * 设置工具返回配置。
@@ -335,10 +417,18 @@ public class AiToolInfo implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("tool_output");
-            this.UPDATED_INFO.append("tool_output:\"" + this.toolOutput+ "\"=>\"" + toolOutput + "\"\r\n");
+            this.UPDATED_INFO.append("tool_output:\"").append(this.toolOutput).append("\"=>\"").append(toolOutput).append("\"\n");
             this.toolOutput = toolOutput;
         }
     }
+
+    /**
+     *  设置工具返回配置链式调用。
+     */
+    public AiToolInfo toolOutput(String toolOutput){
+        setToolOutput(toolOutput);
+        return this;
+        }
 
     /**
      * 设置创建时间。
@@ -349,10 +439,18 @@ public class AiToolInfo implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("create_date");
-            this.UPDATED_INFO.append("create_date:\"" + this.createDate+ "\"=>\"" + createDate + "\"\r\n");
+            this.UPDATED_INFO.append("create_date:\"").append(this.createDate).append("\"=>\"").append(createDate).append("\"\n");
             this.createDate = createDate;
         }
     }
+
+    /**
+     *  设置创建时间链式调用。
+     */
+    public AiToolInfo createDate(java.util.Date createDate){
+        setCreateDate(createDate);
+        return this;
+        }
 
     /**
      * 设置修改时间。
@@ -363,10 +461,18 @@ public class AiToolInfo implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("modify_date");
-            this.UPDATED_INFO.append("modify_date:\"" + this.modifyDate+ "\"=>\"" + modifyDate + "\"\r\n");
+            this.UPDATED_INFO.append("modify_date:\"").append(this.modifyDate).append("\"=>\"").append(modifyDate).append("\"\n");
             this.modifyDate = modifyDate;
         }
     }
+
+    /**
+     *  设置修改时间链式调用。
+     */
+    public AiToolInfo modifyDate(java.util.Date modifyDate){
+        setModifyDate(modifyDate);
+        return this;
+        }
 
     /**
      * 设置状态。
@@ -377,10 +483,18 @@ public class AiToolInfo implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("state");
-            this.UPDATED_INFO.append("state:\"" + this.state+ "\"=>\"" + state + "\"\r\n");
+            this.UPDATED_INFO.append("state:\"").append(this.state).append("\"=>\"").append(state).append("\"\n");
             this.state = state;
         }
     }
+
+    /**
+     *  设置状态链式调用。
+     */
+    public AiToolInfo state(int state){
+        setState(state);
+        return this;
+        }
 
     /**
      * 重载toString方法.

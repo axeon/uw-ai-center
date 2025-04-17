@@ -110,6 +110,32 @@ public class AiRagLib implements DataEntity,Serializable{
      */
     private transient StringBuilder UPDATED_INFO = null;
 
+
+    /**
+     * 获得实体的表名。
+     */
+    @Override
+    public String ENTITY_TABLE(){
+         return "ai_rag_lib";
+       }
+
+    /**
+     * 获得实体的表注释。
+     */
+    @Override
+    public String ENTITY_NAME(){
+          return "rag文档库";
+       }
+
+    /**
+     * 获得主键
+     */
+    @Override
+    public Serializable ENTITY_ID(){
+          return getId();
+       }
+
+
     /**
      * 获取更改的字段列表.
      */
@@ -236,10 +262,18 @@ public class AiRagLib implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("id");
-            this.UPDATED_INFO.append("id:\"" + this.id+ "\"=>\"" + id + "\"\r\n");
+            this.UPDATED_INFO.append("id:\"").append(this.id).append("\"=>\"").append(id).append("\"\n");
             this.id = id;
         }
     }
+
+    /**
+     *  设置ID链式调用。
+     */
+    public AiRagLib id(long id){
+        setId(id);
+        return this;
+        }
 
     /**
      * 设置saasId。
@@ -250,10 +284,18 @@ public class AiRagLib implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("saas_id");
-            this.UPDATED_INFO.append("saas_id:\"" + this.saasId+ "\"=>\"" + saasId + "\"\r\n");
+            this.UPDATED_INFO.append("saas_id:\"").append(this.saasId).append("\"=>\"").append(saasId).append("\"\n");
             this.saasId = saasId;
         }
     }
+
+    /**
+     *  设置saasId链式调用。
+     */
+    public AiRagLib saasId(long saasId){
+        setSaasId(saasId);
+        return this;
+        }
 
     /**
      * 设置文档库类型。
@@ -264,10 +306,18 @@ public class AiRagLib implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("lib_type");
-            this.UPDATED_INFO.append("lib_type:\"" + this.libType+ "\"=>\"" + libType + "\"\r\n");
+            this.UPDATED_INFO.append("lib_type:\"").append(this.libType).append("\"=>\"").append(libType).append("\"\n");
             this.libType = libType;
         }
     }
+
+    /**
+     *  设置文档库类型链式调用。
+     */
+    public AiRagLib libType(int libType){
+        setLibType(libType);
+        return this;
+        }
 
     /**
      * 设置文档库名称。
@@ -278,10 +328,18 @@ public class AiRagLib implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("lib_name");
-            this.UPDATED_INFO.append("lib_name:\"" + this.libName+ "\"=>\"" + libName + "\"\r\n");
+            this.UPDATED_INFO.append("lib_name:\"").append(this.libName).append("\"=>\"").append(libName).append("\"\n");
             this.libName = libName;
         }
     }
+
+    /**
+     *  设置文档库名称链式调用。
+     */
+    public AiRagLib libName(String libName){
+        setLibName(libName);
+        return this;
+        }
 
     /**
      * 设置文档库描述。
@@ -292,10 +350,18 @@ public class AiRagLib implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("lib_desc");
-            this.UPDATED_INFO.append("lib_desc:\"" + this.libDesc+ "\"=>\"" + libDesc + "\"\r\n");
+            this.UPDATED_INFO.append("lib_desc:\"").append(this.libDesc).append("\"=>\"").append(libDesc).append("\"\n");
             this.libDesc = libDesc;
         }
     }
+
+    /**
+     *  设置文档库描述链式调用。
+     */
+    public AiRagLib libDesc(String libDesc){
+        setLibDesc(libDesc);
+        return this;
+        }
 
     /**
      * 设置embed配置ID。
@@ -306,10 +372,18 @@ public class AiRagLib implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("embed_config_id");
-            this.UPDATED_INFO.append("embed_config_id:\"" + this.embedConfigId+ "\"=>\"" + embedConfigId + "\"\r\n");
+            this.UPDATED_INFO.append("embed_config_id:\"").append(this.embedConfigId).append("\"=>\"").append(embedConfigId).append("\"\n");
             this.embedConfigId = embedConfigId;
         }
     }
+
+    /**
+     *  设置embed配置ID链式调用。
+     */
+    public AiRagLib embedConfigId(long embedConfigId){
+        setEmbedConfigId(embedConfigId);
+        return this;
+        }
 
     /**
      * 设置embed模型名。
@@ -320,10 +394,18 @@ public class AiRagLib implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("embed_model_name");
-            this.UPDATED_INFO.append("embed_model_name:\"" + this.embedModelName+ "\"=>\"" + embedModelName + "\"\r\n");
+            this.UPDATED_INFO.append("embed_model_name:\"").append(this.embedModelName).append("\"=>\"").append(embedModelName).append("\"\n");
             this.embedModelName = embedModelName;
         }
     }
+
+    /**
+     *  设置embed模型名链式调用。
+     */
+    public AiRagLib embedModelName(String embedModelName){
+        setEmbedModelName(embedModelName);
+        return this;
+        }
 
     /**
      * 设置文档库配置。
@@ -334,10 +416,18 @@ public class AiRagLib implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("lib_config");
-            this.UPDATED_INFO.append("lib_config:\"" + this.libConfig+ "\"=>\"" + libConfig + "\"\r\n");
+            this.UPDATED_INFO.append("lib_config:\"").append(this.libConfig).append("\"=>\"").append(libConfig).append("\"\n");
             this.libConfig = libConfig;
         }
     }
+
+    /**
+     *  设置文档库配置链式调用。
+     */
+    public AiRagLib libConfig(String libConfig){
+        setLibConfig(libConfig);
+        return this;
+        }
 
     /**
      * 设置创建时间。
@@ -348,10 +438,18 @@ public class AiRagLib implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("create_date");
-            this.UPDATED_INFO.append("create_date:\"" + this.createDate+ "\"=>\"" + createDate + "\"\r\n");
+            this.UPDATED_INFO.append("create_date:\"").append(this.createDate).append("\"=>\"").append(createDate).append("\"\n");
             this.createDate = createDate;
         }
     }
+
+    /**
+     *  设置创建时间链式调用。
+     */
+    public AiRagLib createDate(java.util.Date createDate){
+        setCreateDate(createDate);
+        return this;
+        }
 
     /**
      * 设置修改时间。
@@ -362,10 +460,18 @@ public class AiRagLib implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("modify_date");
-            this.UPDATED_INFO.append("modify_date:\"" + this.modifyDate+ "\"=>\"" + modifyDate + "\"\r\n");
+            this.UPDATED_INFO.append("modify_date:\"").append(this.modifyDate).append("\"=>\"").append(modifyDate).append("\"\n");
             this.modifyDate = modifyDate;
         }
     }
+
+    /**
+     *  设置修改时间链式调用。
+     */
+    public AiRagLib modifyDate(java.util.Date modifyDate){
+        setModifyDate(modifyDate);
+        return this;
+        }
 
     /**
      * 设置状态。
@@ -376,10 +482,18 @@ public class AiRagLib implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("state");
-            this.UPDATED_INFO.append("state:\"" + this.state+ "\"=>\"" + state + "\"\r\n");
+            this.UPDATED_INFO.append("state:\"").append(this.state).append("\"=>\"").append(state).append("\"\n");
             this.state = state;
         }
     }
+
+    /**
+     *  设置状态链式调用。
+     */
+    public AiRagLib state(int state){
+        setState(state);
+        return this;
+        }
 
     /**
      * 重载toString方法.

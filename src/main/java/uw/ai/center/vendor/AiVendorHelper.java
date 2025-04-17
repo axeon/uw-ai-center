@@ -11,7 +11,7 @@ import uw.ai.center.vo.AiModelConfigData;
 import uw.cache.CacheChangeNotifyListener;
 import uw.cache.CacheDataLoader;
 import uw.cache.FusionCache;
-import uw.dao.DaoFactory;
+import uw.dao.DaoManager;
 
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -25,7 +25,7 @@ public class AiVendorHelper {
     /**
      * 数据访问对象。
      */
-    private static final DaoFactory dao = DaoFactory.getInstance();
+    private static final DaoManager dao = DaoManager.getInstance();
     /**
      * AI供应商列表。
      */
@@ -54,7 +54,10 @@ public class AiVendorHelper {
         FusionCache.config( FusionCache.Config.builder().entityClass( AiModelConfigData.class ).localCacheMaxNum( 10000 ).globalCacheExpireMillis( 86400_000L ).nullProtectMillis( 86400_000L ).build(), new CacheDataLoader<Long, AiModelConfigData>() {
             @Override
             public AiModelConfigData load(Long configId) throws Exception {
-                AiModelConfig aiModelConfig = dao.load( AiModelConfig.class, configId );
+                AiModelConfig aiModelConfig = dao.load( AiModelConfig.class, configId ).getData();
+                if (aiModelConfig == null) {
+                    return null;
+                }
                 return new AiModelConfigData( aiModelConfig );
             }
         }, (CacheChangeNotifyListener<Long, AiModelConfigData>) (key, oldValue, newValue) -> {

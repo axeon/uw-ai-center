@@ -144,6 +144,32 @@ public class AiSessionMsg implements DataEntity,Serializable{
      */
     private transient StringBuilder UPDATED_INFO = null;
 
+
+    /**
+     * 获得实体的表名。
+     */
+    @Override
+    public String ENTITY_TABLE(){
+         return "ai_session_msg";
+       }
+
+    /**
+     * 获得实体的表注释。
+     */
+    @Override
+    public String ENTITY_NAME(){
+          return "session消息";
+       }
+
+    /**
+     * 获得主键
+     */
+    @Override
+    public Serializable ENTITY_ID(){
+          return getId();
+       }
+
+
     /**
      * 获取更改的字段列表.
      */
@@ -305,10 +331,18 @@ public class AiSessionMsg implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("id");
-            this.UPDATED_INFO.append("id:\"" + this.id+ "\"=>\"" + id + "\"\r\n");
+            this.UPDATED_INFO.append("id:\"").append(this.id).append("\"=>\"").append(id).append("\"\n");
             this.id = id;
         }
     }
+
+    /**
+     *  设置ID链式调用。
+     */
+    public AiSessionMsg id(long id){
+        setId(id);
+        return this;
+        }
 
     /**
      * 设置saasId。
@@ -319,10 +353,18 @@ public class AiSessionMsg implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("saas_id");
-            this.UPDATED_INFO.append("saas_id:\"" + this.saasId+ "\"=>\"" + saasId + "\"\r\n");
+            this.UPDATED_INFO.append("saas_id:\"").append(this.saasId).append("\"=>\"").append(saasId).append("\"\n");
             this.saasId = saasId;
         }
     }
+
+    /**
+     *  设置saasId链式调用。
+     */
+    public AiSessionMsg saasId(long saasId){
+        setSaasId(saasId);
+        return this;
+        }
 
     /**
      * 设置sessionId。
@@ -333,10 +375,18 @@ public class AiSessionMsg implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("session_id");
-            this.UPDATED_INFO.append("session_id:\"" + this.sessionId+ "\"=>\"" + sessionId + "\"\r\n");
+            this.UPDATED_INFO.append("session_id:\"").append(this.sessionId).append("\"=>\"").append(sessionId).append("\"\n");
             this.sessionId = sessionId;
         }
     }
+
+    /**
+     *  设置sessionId链式调用。
+     */
+    public AiSessionMsg sessionId(long sessionId){
+        setSessionId(sessionId);
+        return this;
+        }
 
     /**
      * 设置系统提问。
@@ -347,10 +397,18 @@ public class AiSessionMsg implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("system_prompt");
-            this.UPDATED_INFO.append("system_prompt:\"" + this.systemPrompt+ "\"=>\"" + systemPrompt + "\"\r\n");
+            this.UPDATED_INFO.append("system_prompt:\"").append(this.systemPrompt).append("\"=>\"").append(systemPrompt).append("\"\n");
             this.systemPrompt = systemPrompt;
         }
     }
+
+    /**
+     *  设置系统提问链式调用。
+     */
+    public AiSessionMsg systemPrompt(String systemPrompt){
+        setSystemPrompt(systemPrompt);
+        return this;
+        }
 
     /**
      * 设置用户提问。
@@ -361,10 +419,18 @@ public class AiSessionMsg implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("user_prompt");
-            this.UPDATED_INFO.append("user_prompt:\"" + this.userPrompt+ "\"=>\"" + userPrompt + "\"\r\n");
+            this.UPDATED_INFO.append("user_prompt:\"").append(this.userPrompt).append("\"=>\"").append(userPrompt).append("\"\n");
             this.userPrompt = userPrompt;
         }
     }
+
+    /**
+     *  设置用户提问链式调用。
+     */
+    public AiSessionMsg userPrompt(String userPrompt){
+        setUserPrompt(userPrompt);
+        return this;
+        }
 
     /**
      * 设置上下文数据。
@@ -375,10 +441,18 @@ public class AiSessionMsg implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("context_data");
-            this.UPDATED_INFO.append("context_data:\"" + this.contextData+ "\"=>\"" + contextData + "\"\r\n");
+            this.UPDATED_INFO.append("context_data:\"").append(this.contextData).append("\"=>\"").append(contextData).append("\"\n");
             this.contextData = contextData;
         }
     }
+
+    /**
+     *  设置上下文数据链式调用。
+     */
+    public AiSessionMsg contextData(String contextData){
+        setContextData(contextData);
+        return this;
+        }
 
     /**
      * 设置工具信息。
@@ -389,10 +463,18 @@ public class AiSessionMsg implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("tool_config");
-            this.UPDATED_INFO.append("tool_config:\"" + this.toolConfig+ "\"=>\"" + toolConfig + "\"\r\n");
+            this.UPDATED_INFO.append("tool_config:\"").append(this.toolConfig).append("\"=>\"").append(toolConfig).append("\"\n");
             this.toolConfig = toolConfig;
         }
     }
+
+    /**
+     *  设置工具信息链式调用。
+     */
+    public AiSessionMsg toolConfig(String toolConfig){
+        setToolConfig(toolConfig);
+        return this;
+        }
 
     /**
      * 设置文件信息。
@@ -403,10 +485,18 @@ public class AiSessionMsg implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("file_config");
-            this.UPDATED_INFO.append("file_config:\"" + this.fileConfig+ "\"=>\"" + fileConfig + "\"\r\n");
+            this.UPDATED_INFO.append("file_config:\"").append(this.fileConfig).append("\"=>\"").append(fileConfig).append("\"\n");
             this.fileConfig = fileConfig;
         }
     }
+
+    /**
+     *  设置文件信息链式调用。
+     */
+    public AiSessionMsg fileConfig(String fileConfig){
+        setFileConfig(fileConfig);
+        return this;
+        }
 
     /**
      * 设置rag信息。
@@ -417,10 +507,18 @@ public class AiSessionMsg implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("rag_config");
-            this.UPDATED_INFO.append("rag_config:\"" + this.ragConfig+ "\"=>\"" + ragConfig + "\"\r\n");
+            this.UPDATED_INFO.append("rag_config:\"").append(this.ragConfig).append("\"=>\"").append(ragConfig).append("\"\n");
             this.ragConfig = ragConfig;
         }
     }
+
+    /**
+     *  设置rag信息链式调用。
+     */
+    public AiSessionMsg ragConfig(String ragConfig){
+        setRagConfig(ragConfig);
+        return this;
+        }
 
     /**
      * 设置返回信息。
@@ -431,10 +529,18 @@ public class AiSessionMsg implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("response_info");
-            this.UPDATED_INFO.append("response_info:\"" + this.responseInfo+ "\"=>\"" + responseInfo + "\"\r\n");
+            this.UPDATED_INFO.append("response_info:\"").append(this.responseInfo).append("\"=>\"").append(responseInfo).append("\"\n");
             this.responseInfo = responseInfo;
         }
     }
+
+    /**
+     *  设置返回信息链式调用。
+     */
+    public AiSessionMsg responseInfo(String responseInfo){
+        setResponseInfo(responseInfo);
+        return this;
+        }
 
     /**
      * 设置请求token数。
@@ -445,10 +551,18 @@ public class AiSessionMsg implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("request_tokens");
-            this.UPDATED_INFO.append("request_tokens:\"" + this.requestTokens+ "\"=>\"" + requestTokens + "\"\r\n");
+            this.UPDATED_INFO.append("request_tokens:\"").append(this.requestTokens).append("\"=>\"").append(requestTokens).append("\"\n");
             this.requestTokens = requestTokens;
         }
     }
+
+    /**
+     *  设置请求token数链式调用。
+     */
+    public AiSessionMsg requestTokens(long requestTokens){
+        setRequestTokens(requestTokens);
+        return this;
+        }
 
     /**
      * 设置响应token数。
@@ -459,10 +573,18 @@ public class AiSessionMsg implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("response_tokens");
-            this.UPDATED_INFO.append("response_tokens:\"" + this.responseTokens+ "\"=>\"" + responseTokens + "\"\r\n");
+            this.UPDATED_INFO.append("response_tokens:\"").append(this.responseTokens).append("\"=>\"").append(responseTokens).append("\"\n");
             this.responseTokens = responseTokens;
         }
     }
+
+    /**
+     *  设置响应token数链式调用。
+     */
+    public AiSessionMsg responseTokens(long responseTokens){
+        setResponseTokens(responseTokens);
+        return this;
+        }
 
     /**
      * 设置创建时间。
@@ -473,10 +595,18 @@ public class AiSessionMsg implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("request_date");
-            this.UPDATED_INFO.append("request_date:\"" + this.requestDate+ "\"=>\"" + requestDate + "\"\r\n");
+            this.UPDATED_INFO.append("request_date:\"").append(this.requestDate).append("\"=>\"").append(requestDate).append("\"\n");
             this.requestDate = requestDate;
         }
     }
+
+    /**
+     *  设置创建时间链式调用。
+     */
+    public AiSessionMsg requestDate(java.util.Date requestDate){
+        setRequestDate(requestDate);
+        return this;
+        }
 
     /**
      * 设置回应开始时间。
@@ -487,10 +617,18 @@ public class AiSessionMsg implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("response_start_date");
-            this.UPDATED_INFO.append("response_start_date:\"" + this.responseStartDate+ "\"=>\"" + responseStartDate + "\"\r\n");
+            this.UPDATED_INFO.append("response_start_date:\"").append(this.responseStartDate).append("\"=>\"").append(responseStartDate).append("\"\n");
             this.responseStartDate = responseStartDate;
         }
     }
+
+    /**
+     *  设置回应开始时间链式调用。
+     */
+    public AiSessionMsg responseStartDate(java.util.Date responseStartDate){
+        setResponseStartDate(responseStartDate);
+        return this;
+        }
 
     /**
      * 设置回应结束时间。
@@ -501,10 +639,18 @@ public class AiSessionMsg implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("response_end_date");
-            this.UPDATED_INFO.append("response_end_date:\"" + this.responseEndDate+ "\"=>\"" + responseEndDate + "\"\r\n");
+            this.UPDATED_INFO.append("response_end_date:\"").append(this.responseEndDate).append("\"=>\"").append(responseEndDate).append("\"\n");
             this.responseEndDate = responseEndDate;
         }
     }
+
+    /**
+     *  设置回应结束时间链式调用。
+     */
+    public AiSessionMsg responseEndDate(java.util.Date responseEndDate){
+        setResponseEndDate(responseEndDate);
+        return this;
+        }
 
     /**
      * 设置状态。
@@ -515,10 +661,18 @@ public class AiSessionMsg implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("state");
-            this.UPDATED_INFO.append("state:\"" + this.state+ "\"=>\"" + state + "\"\r\n");
+            this.UPDATED_INFO.append("state:\"").append(this.state).append("\"=>\"").append(state).append("\"\n");
             this.state = state;
         }
     }
+
+    /**
+     *  设置状态链式调用。
+     */
+    public AiSessionMsg state(int state){
+        setState(state);
+        return this;
+        }
 
     /**
      * 重载toString方法.

@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import uw.ai.center.dto.AiToolInfoQueryParam;
 import uw.ai.center.entity.AiToolInfo;
 import uw.ai.center.tool.AiToolHelper;
+import uw.common.app.dto.IdStateQueryParam;
 import uw.common.app.dto.SysCritLogQueryParam;
 import uw.common.app.dto.SysDataHistoryQueryParam;
 import uw.common.app.entity.SysCritLog;
@@ -19,7 +20,7 @@ import uw.common.app.constant.CommonState;
 import uw.auth.service.AuthServiceHelper;
 import uw.auth.service.annotation.MscPermDeclare;
 import uw.common.dto.ResponseData;
-import uw.dao.DaoFactory;
+import uw.dao.DaoManager;
 import uw.dao.DataList;
 import uw.dao.TransactionException;
 
@@ -35,21 +36,22 @@ import java.util.Date;
 @MscPermDeclare(user = UserType.OPS)
 public class AiToolInfoController {
 
-    private final DaoFactory dao = DaoFactory.getInstance();
+    private final DaoManager dao = DaoManager.getInstance();
+
 
     /**
      * 列表AI工具信息。
      *
      * @param queryParam
      * @return
-     * @throws TransactionException
+     *
      */
     @GetMapping("/list")
     @Operation(summary = "列表AI工具信息", description = "列表AI工具信息")
     @MscPermDeclare(user = UserType.OPS, auth = AuthType.PERM, log = ActionLog.REQUEST)
-    public DataList<AiToolInfo> list(AiToolInfoQueryParam queryParam) throws TransactionException {
-        AuthServiceHelper.logRef( AiToolInfo.class);
-        return dao.list( AiToolInfo.class, queryParam);
+    public ResponseData<DataList<AiToolInfo>> list(AiToolInfoQueryParam queryParam){
+        AuthServiceHelper.logRef(AiToolInfo.class);
+        return dao.list(AiToolInfo.class, queryParam);
     }
 
     /**
@@ -60,23 +62,23 @@ public class AiToolInfoController {
     @GetMapping("/liteList")
     @Operation(summary = "轻量级列表AI工具信息", description = "轻量级列表AI工具信息，一般用于select控件。")
     @MscPermDeclare(user = UserType.OPS, auth = AuthType.USER, log = ActionLog.NONE)
-    public DataList<AiToolInfo> liteList(AiToolInfoQueryParam queryParam) throws TransactionException {
-        queryParam.SELECT_SQL( "SELECT id,app_name,tool_code,tool_version,tool_name,create_date,modify_date,state from ai_tool_info " );
-        return dao.list( AiToolInfo.class, queryParam);
+    public ResponseData<DataList<AiToolInfo>> liteList(AiToolInfoQueryParam queryParam){
+        queryParam.SELECT_SQL( "SELECT id,app_name,tool_class,tool_version,tool_name,create_date,modify_date,state from ai_tool_info " );
+        return dao.list(AiToolInfo.class, queryParam);
     }
 
     /**
      * 加载AI工具信息。
      *
      * @param id
-     * @throws TransactionException
+     *
      */
     @GetMapping("/load")
     @Operation(summary = "加载AI工具信息", description = "加载AI工具信息")
     @MscPermDeclare(user = UserType.OPS, auth = AuthType.PERM, log = ActionLog.REQUEST)
-    public AiToolInfo load(@Parameter(description = "主键ID", required = true) @RequestParam long id) throws TransactionException {
-        AuthServiceHelper.logRef( AiToolInfo.class,id);
-        return dao.load( AiToolInfo.class, id);
+    public ResponseData<AiToolInfo> load(@Parameter(description = "主键ID", required = true) @RequestParam long id)  {
+        AuthServiceHelper.logRef(AiToolInfo.class,id);
+        return dao.load(AiToolInfo.class, id);
     }
 
     /**
@@ -88,9 +90,9 @@ public class AiToolInfoController {
     @GetMapping("/listDataHistory")
     @Operation(summary = "查询数据历史", description = "查询数据历史")
     @MscPermDeclare(user = UserType.OPS, auth = AuthType.PERM, log = ActionLog.REQUEST)
-    public DataList<SysDataHistory> listDataHistory(SysDataHistoryQueryParam queryParam) throws TransactionException {
-        AuthServiceHelper.logRef( AiToolInfo.class, queryParam.getEntityId());
-        queryParam.setEntityClass( AiToolInfo.class);
+    public ResponseData<DataList<SysDataHistory>> listDataHistory(SysDataHistoryQueryParam queryParam){
+        AuthServiceHelper.logRef(AiToolInfo.class, queryParam.getEntityId());
+        queryParam.setEntityClass(AiToolInfo.class);
         return dao.list(SysDataHistory.class, queryParam);
     }
 
@@ -103,114 +105,83 @@ public class AiToolInfoController {
     @GetMapping("/listCritLog")
     @Operation(summary = "查询操作日志", description = "查询操作日志")
     @MscPermDeclare(user = UserType.OPS, auth = AuthType.PERM, log = ActionLog.REQUEST)
-    public DataList<SysCritLog> listCritLog(SysCritLogQueryParam queryParam) throws TransactionException {
-        AuthServiceHelper.logRef( AiToolInfo.class, queryParam.getBizId());
-        queryParam.setBizTypeClass( AiToolInfo.class);
+    public ResponseData<DataList<SysCritLog>> listCritLog(SysCritLogQueryParam queryParam)  {
+        AuthServiceHelper.logRef(AiToolInfo.class, queryParam.getBizId());
+        queryParam.setBizTypeClass(AiToolInfo.class);
         return dao.list(SysCritLog.class, queryParam);
     }
-
     /**
      * 修改AI工具信息。
      *
-     * @param aiToolConfig
+     * @param aiToolInfo
      * @return
-     * @throws TransactionException
+     *
      */
     @PutMapping("/update")
     @Operation(summary = "修改AI工具信息", description = "修改AI工具信息")
     @MscPermDeclare(user = UserType.OPS, auth = AuthType.PERM, log = ActionLog.CRIT)
-    public ResponseData<AiToolInfo> update(@RequestBody AiToolInfo aiToolConfig, @Parameter(description = "备注") @RequestParam String remark) throws TransactionException {
-        AuthServiceHelper.logInfo( AiToolInfo.class,aiToolConfig.getId(),"修改AI工具信息！操作备注："+remark);
-        AiToolInfo aiToolConfigDb = dao.load( AiToolInfo.class, aiToolConfig.getId());
-        if (aiToolConfigDb == null) {
-            return ResponseData.warnMsg("未找到指定ID的AI工具信息！");
-        }
-        aiToolConfigDb.setAppName(aiToolConfig.getAppName());
-        aiToolConfigDb.setToolClass(aiToolConfig.getToolClass());
-        aiToolConfigDb.setToolVersion(aiToolConfig.getToolVersion());
-        aiToolConfigDb.setToolName(aiToolConfig.getToolName());
-        aiToolConfigDb.setToolDesc(aiToolConfig.getToolDesc());
-        aiToolConfigDb.setToolInput(aiToolConfig.getToolInput());
-        aiToolConfigDb.setToolOutput(aiToolConfig.getToolOutput());
-        aiToolConfigDb.setModifyDate(new Date());
-        dao.update(aiToolConfigDb);
-        AiToolHelper.invalidateToolCache();
-        SysDataHistoryHelper.saveHistory(aiToolConfigDb.getId(),aiToolConfigDb,"AI工具信息","修改AI工具信息！操作备注："+remark);
-        return ResponseData.success(aiToolConfigDb);
+    public ResponseData<AiToolInfo> update(@RequestBody AiToolInfo aiToolInfo, @Parameter(description = "备注") @RequestParam String remark){
+        AuthServiceHelper.logInfo(AiToolInfo.class,aiToolInfo.getId(),remark);
+        return  dao.load( AiToolInfo.class, aiToolInfo.getId() ).onSuccess(aiToolInfoDb-> {
+            aiToolInfoDb.setAppName(aiToolInfo.getAppName());
+            aiToolInfoDb.setToolClass(aiToolInfo.getToolClass());
+            aiToolInfoDb.setToolVersion(aiToolInfo.getToolVersion());
+            aiToolInfoDb.setToolName(aiToolInfo.getToolName());
+            aiToolInfoDb.setToolDesc(aiToolInfo.getToolDesc());
+            aiToolInfoDb.setToolInput(aiToolInfo.getToolInput());
+            aiToolInfoDb.setToolOutput(aiToolInfo.getToolOutput());
+            aiToolInfoDb.setModifyDate(new Date());
+            return dao.update( aiToolInfoDb ).onSuccess(updatedEntity -> {
+                AiToolHelper.invalidateToolCache();
+                SysDataHistoryHelper.saveHistory( aiToolInfoDb,remark );
+            } );
+        } );
     }
-    
+
+
     /**
      * 启用AI工具信息。
      *
      * @param id
-     * @throws TransactionException
+     *
      */
     @PutMapping("/enable")
     @Operation(summary = "启用AI工具信息", description = "启用AI工具信息")
     @MscPermDeclare(user = UserType.OPS, auth = AuthType.PERM, log = ActionLog.CRIT)
-    public ResponseData enable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark) throws TransactionException {
-        AuthServiceHelper.logInfo( AiToolInfo.class,id,"启用AI工具信息！操作备注："+remark);
-        AiToolInfo aiToolConfig = dao.load( AiToolInfo.class, id);
-        if (aiToolConfig == null) {
-            return ResponseData.warnMsg("未找到指定id的AI工具信息！");
-        }
-        if (aiToolConfig.getState()!= CommonState.DISABLED.getValue()){
-            return ResponseData.warnMsg("启用AI工具信息失败！当前状态不是禁用状态！");                
-        }
-        aiToolConfig.setModifyDate(new Date());
-        aiToolConfig.setState( CommonState.ENABLED.getValue());
-        dao.update(aiToolConfig);
-        AiToolHelper.invalidateToolCache();
-        return ResponseData.success();
+    public ResponseData enable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
+        AuthServiceHelper.logInfo(AiToolInfo.class,id,remark);
+        return dao.update(new AiToolInfo().modifyDate(new Date()).state(CommonState.ENABLED.getValue()), new IdStateQueryParam(id, CommonState.DISABLED.getValue())).onSuccess(updatedEntity -> {
+            AiToolHelper.invalidateToolCache();
+        });
     }
 
     /**
      * 禁用AI工具信息。
      *
      * @param id
-     * @throws TransactionException
+     *
      */
     @PutMapping("/disable")
     @Operation(summary = "禁用AI工具信息", description = "禁用AI工具信息")
     @MscPermDeclare(user = UserType.OPS, auth = AuthType.PERM, log = ActionLog.CRIT)
-    public ResponseData disable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark) throws TransactionException {
-        AuthServiceHelper.logInfo( AiToolInfo.class,id,"禁用AI工具信息！操作备注："+remark);
-        AiToolInfo aiToolConfig = dao.load( AiToolInfo.class, id);
-        if (aiToolConfig == null) {
-            return ResponseData.warnMsg("未找到指定id的AI工具信息！");
-        }			
-        if (aiToolConfig.getState()!= CommonState.ENABLED.getValue()){
-            return ResponseData.warnMsg("禁用AI工具信息失败！当前状态不是启用状态！");                
-        }            
-        aiToolConfig.setModifyDate(new Date());
-        aiToolConfig.setState( CommonState.DISABLED.getValue());
-        dao.update(aiToolConfig);
-        AiToolHelper.invalidateToolCache();
-        return ResponseData.success();
+    public ResponseData disable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
+        AuthServiceHelper.logInfo(AiToolInfo.class,id,remark);
+        return dao.update(new AiToolInfo().modifyDate(new Date()).state(CommonState.DISABLED.getValue()), new IdStateQueryParam(id, CommonState.ENABLED.getValue())).onSuccess(updatedEntity -> {
+            AiToolHelper.invalidateToolCache();
+        });
     }
 
     /**
      * 删除AI工具信息。
      *
      * @param id
-     * @throws TransactionException
+     *
      */
     @DeleteMapping("/delete")
     @Operation(summary = "删除AI工具信息", description = "删除AI工具信息")
     @MscPermDeclare(user = UserType.OPS, auth = AuthType.PERM, log = ActionLog.CRIT)
-    public ResponseData delete(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark) throws TransactionException {
-        AuthServiceHelper.logInfo( AiToolInfo.class,id,"删除AI工具信息！操作备注："+remark);
-        AiToolInfo aiToolConfig = dao.load( AiToolInfo.class, id);
-        if (aiToolConfig == null) {
-            return ResponseData.warnMsg("未找到指定id的AI工具信息！");
-        }
-        if (aiToolConfig.getState()!= CommonState.DISABLED.getValue()){
-            return ResponseData.warnMsg("删除AI工具信息失败！当前状态不是禁用状态！");
-        }            
-        aiToolConfig.setModifyDate(new Date());
-        aiToolConfig.setState( CommonState.DELETED.getValue());
-        dao.update(aiToolConfig);
-        return ResponseData.success();
+    public ResponseData delete(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
+        AuthServiceHelper.logInfo(AiToolInfo.class,id,remark);
+        return dao.update(new AiToolInfo().modifyDate(new Date()).state(CommonState.DELETED.getValue()), new IdStateQueryParam(id, CommonState.DISABLED.getValue()));
     }
-
 }

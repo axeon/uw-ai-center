@@ -10,6 +10,7 @@ import uw.ai.center.dto.AiRagDocQueryParam;
 import uw.ai.center.entity.AiRagDoc;
 import uw.ai.center.service.AiRagService;
 import uw.common.app.dto.AuthIdQueryParam;
+import uw.common.app.dto.IdStateQueryParam;
 import uw.common.app.dto.SysCritLogQueryParam;
 import uw.common.app.dto.SysDataHistoryQueryParam;
 import uw.common.app.entity.SysCritLog;
@@ -23,7 +24,7 @@ import uw.auth.service.constant.UserType;
 import uw.common.app.constant.CommonState;
 import uw.common.dto.ResponseData;
 import uw.common.util.JsonUtils;
-import uw.dao.DaoFactory;
+import uw.dao.DaoManager;
 import uw.dao.DataList;
 import uw.dao.TransactionException;
 
@@ -40,22 +41,21 @@ import java.util.Map;
 @MscPermDeclare(user = UserType.SAAS)
 public class AiRagDocController {
 
-    private final DaoFactory dao = DaoFactory.getInstance();
+    private final DaoManager dao = DaoManager.getInstance();
 
     /**
      * 列表rag文档信息。
      *
      * @param queryParam
      * @return
-     * @throws TransactionException
+     *
      */
     @GetMapping("/list")
     @Operation(summary = "列表rag文档信息", description = "列表rag文档信息")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.REQUEST)
-    public DataList<AiRagDoc> list(AiRagDocQueryParam queryParam) throws TransactionException {
-        AuthServiceHelper.logRef( AiRagDoc.class );
-        queryParam.SELECT_SQL( "SELECT id,saas_id,lib_id,doc_type,doc_name,doc_body_size,doc_content_size,create_date,modify_date,state from ai_rag_doc " );
-        return dao.list( AiRagDoc.class, queryParam );
+    public ResponseData<DataList<AiRagDoc>> list(AiRagDocQueryParam queryParam){
+        AuthServiceHelper.logRef(AiRagDoc.class);
+        return dao.list(AiRagDoc.class, queryParam);
     }
 
     /**
@@ -66,23 +66,23 @@ public class AiRagDocController {
     @GetMapping("/liteList")
     @Operation(summary = "轻量级列表rag文档信息", description = "轻量级列表rag文档信息，一般用于select控件。")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.USER, log = ActionLog.NONE)
-    public DataList<AiRagDoc> liteList(AiRagDocQueryParam queryParam) throws TransactionException {
+    public ResponseData<DataList<AiRagDoc>> liteList(AiRagDocQueryParam queryParam){
         queryParam.SELECT_SQL( "SELECT id,saas_id,lib_id,doc_type,doc_name,doc_body_size,doc_content_size,create_date,modify_date,state from ai_rag_doc " );
-        return dao.list( AiRagDoc.class, queryParam );
+        return dao.list(AiRagDoc.class, queryParam);
     }
 
     /**
      * 加载rag文档信息。
      *
      * @param id
-     * @throws TransactionException
+     *
      */
     @GetMapping("/load")
     @Operation(summary = "加载rag文档信息", description = "加载rag文档信息")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.REQUEST)
-    public AiRagDoc load(@Parameter(description = "主键ID", required = true) @RequestParam long id) throws TransactionException {
-        AuthServiceHelper.logRef( AiRagDoc.class, id );
-        return dao.queryForSingleObject( AiRagDoc.class, new AuthIdQueryParam( id ) );
+    public ResponseData<AiRagDoc> load(@Parameter(description = "主键ID", required = true) @RequestParam long id)  {
+        AuthServiceHelper.logRef(AiRagDoc.class,id);
+        return dao.queryForSingleObject(AiRagDoc.class, new AuthIdQueryParam(id));
     }
 
     /**
@@ -94,10 +94,10 @@ public class AiRagDocController {
     @GetMapping("/listDataHistory")
     @Operation(summary = "查询数据历史", description = "查询数据历史")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.REQUEST)
-    public DataList<SysDataHistory> listDataHistory(SysDataHistoryQueryParam queryParam) throws TransactionException {
-        AuthServiceHelper.logRef( AiRagDoc.class, queryParam.getEntityId() );
-        queryParam.setEntityClass( AiRagDoc.class );
-        return dao.list( SysDataHistory.class, queryParam );
+    public ResponseData<DataList<SysDataHistory>> listDataHistory(SysDataHistoryQueryParam queryParam){
+        AuthServiceHelper.logRef(AiRagDoc.class, queryParam.getEntityId());
+        queryParam.setEntityClass(AiRagDoc.class);
+        return dao.list(SysDataHistory.class, queryParam);
     }
 
     /**
@@ -109,22 +109,22 @@ public class AiRagDocController {
     @GetMapping("/listCritLog")
     @Operation(summary = "查询操作日志", description = "查询操作日志")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.REQUEST)
-    public DataList<SysCritLog> listCritLog(SysCritLogQueryParam queryParam) throws TransactionException {
-        AuthServiceHelper.logRef( AiRagDoc.class, queryParam.getBizId() );
-        queryParam.setBizTypeClass( AiRagDoc.class );
-        return dao.list( SysCritLog.class, queryParam );
+    public ResponseData<DataList<SysCritLog>> listCritLog(SysCritLogQueryParam queryParam)  {
+        AuthServiceHelper.logRef(AiRagDoc.class, queryParam.getBizId());
+        queryParam.setBizTypeClass(AiRagDoc.class);
+        return dao.list(SysCritLog.class, queryParam);
     }
 
     /**
      * 新增rag文档信息。
      *
      * @return
-     * @throws TransactionException
+     *
      */
     @PostMapping("/save")
     @Operation(summary = "新增rag文档信息", description = "新增rag文档信息")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
-    public ResponseData<AiRagDoc> save(@RequestParam long libId, @RequestParam String docDesc, @RequestParam MultipartFile docFile) throws TransactionException {
+    public ResponseData<AiRagDoc> save(@RequestParam long libId, @RequestParam String docDesc, @RequestParam MultipartFile docFile) {
         long id = dao.getSequenceId( AiRagDoc.class );
         AuthServiceHelper.logRef( AiRagDoc.class, id );
         AiRagDoc aiRagDoc = new AiRagDoc();
@@ -142,84 +142,59 @@ public class AiRagDocController {
         aiRagDoc.setCreateDate( new Date() );
         aiRagDoc.setModifyDate( null );
         aiRagDoc.setState( CommonState.ENABLED.getValue() );
-        dao.save( aiRagDoc );
         //保存历史记录
-        SysDataHistoryHelper.saveHistory( aiRagDoc.getId(), aiRagDoc, "rag文档信息", "新增rag文档信息" );
-        return ResponseData.success( aiRagDoc );
+        return dao.save( aiRagDoc ).onSuccess(savedEntity -> {
+            SysDataHistoryHelper.saveHistory(aiRagDoc);
+        });
     }
+
+
 
     /**
      * 启用rag文档信息。
      *
      * @param id
-     * @throws TransactionException
+     *
      */
     @PutMapping("/enable")
     @Operation(summary = "启用rag文档信息", description = "启用rag文档信息")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
-    public ResponseData enable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark) throws TransactionException {
-        AuthServiceHelper.logInfo( AiRagDoc.class, id, "启用rag文档信息！操作备注：" + remark );
-        AiRagDoc aiRagDoc = dao.queryForSingleObject( AiRagDoc.class, new AuthIdQueryParam( id ) );
-        if (aiRagDoc == null) {
-            return ResponseData.warnMsg( "未找到指定id的rag文档信息！" );
-        }
-        if (aiRagDoc.getState() != CommonState.DISABLED.getValue()) {
-            return ResponseData.warnMsg( "启用rag文档信息失败！当前状态不是禁用状态！" );
-        }
-        aiRagDoc.setModifyDate( new Date() );
-        aiRagDoc.setState( CommonState.ENABLED.getValue() );
-        dao.update( aiRagDoc );
-        AiRagService.rebuildDocument( aiRagDoc.getLibId(), aiRagDoc );
-        return ResponseData.success();
+    public ResponseData enable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
+        AuthServiceHelper.logInfo(AiRagDoc.class,id,remark);
+        return dao.update(new AiRagDoc().modifyDate(new Date()).state(CommonState.ENABLED.getValue()), new IdStateQueryParam(id, CommonState.DISABLED.getValue())).onSuccess(updatedEntity -> {
+            AiRagService.rebuildDocument( id );
+
+        });
     }
 
     /**
      * 禁用rag文档信息。
      *
      * @param id
-     * @throws TransactionException
+     *
      */
     @PutMapping("/disable")
     @Operation(summary = "禁用rag文档信息", description = "禁用rag文档信息")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
-    public ResponseData disable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark) throws TransactionException {
-        AuthServiceHelper.logInfo( AiRagDoc.class, id, "禁用rag文档信息！操作备注：" + remark );
-        AiRagDoc aiRagDoc = dao.queryForSingleObject( AiRagDoc.class, new AuthIdQueryParam( id ) );
-        if (aiRagDoc == null) {
-            return ResponseData.warnMsg( "未找到指定id的rag文档信息！" );
-        }
-        if (aiRagDoc.getState() != CommonState.ENABLED.getValue()) {
-            return ResponseData.warnMsg( "禁用rag文档信息失败！当前状态不是启用状态！" );
-        }
-        aiRagDoc.setModifyDate( new Date() );
-        aiRagDoc.setState( CommonState.DISABLED.getValue() );
-        dao.update( aiRagDoc );
-        AiRagService.deleteDocument( aiRagDoc.getLibId(), aiRagDoc );
-        return ResponseData.success();
+    public ResponseData disable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
+        AuthServiceHelper.logInfo(AiRagDoc.class,id,remark);
+        return dao.update(new AiRagDoc().modifyDate(new Date()).state(CommonState.DISABLED.getValue()), new IdStateQueryParam(id, CommonState.ENABLED.getValue())).onSuccess(updatedEntity -> {
+            AiRagService.deleteDocument( id );
+        });
     }
 
     /**
      * 删除rag文档信息。
      *
      * @param id
-     * @throws TransactionException
+     *
      */
     @DeleteMapping("/delete")
     @Operation(summary = "删除rag文档信息", description = "删除rag文档信息")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
-    public ResponseData delete(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark) throws TransactionException {
-        AuthServiceHelper.logInfo( AiRagDoc.class, id, "删除rag文档信息！操作备注：" + remark );
-        AiRagDoc aiRagDoc = dao.queryForSingleObject( AiRagDoc.class, new AuthIdQueryParam( id ) );
-        if (aiRagDoc == null) {
-            return ResponseData.warnMsg( "未找到指定id的rag文档信息！" );
-        }
-        if (aiRagDoc.getState() != CommonState.DISABLED.getValue()) {
-            return ResponseData.warnMsg( "删除rag文档信息失败！当前状态不是禁用状态！" );
-        }
-        aiRagDoc.setModifyDate( new Date() );
-        aiRagDoc.setState( CommonState.DELETED.getValue() );
-        dao.update( aiRagDoc );
-        return ResponseData.success();
+    public ResponseData delete(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
+        AuthServiceHelper.logInfo(AiRagDoc.class,id,remark);
+        return dao.update(new AiRagDoc().modifyDate(new Date()).state(CommonState.DELETED.getValue()), new IdStateQueryParam(id, CommonState.DISABLED.getValue()));
     }
 
 }

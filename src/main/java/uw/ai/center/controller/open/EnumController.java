@@ -23,7 +23,7 @@ public class EnumController {
 
     @GetMapping("/getAllEnumMap")
     @Operation(summary = "获取所有枚举", description = "获取所有枚举")
-    public Map<String, Object> getAllEnumMap() throws Exception {
+    public Map<String, Object> getAllEnumMap() {
         return EnumUtils.getEnumMap( BASE_PACKAGE );
     }
 

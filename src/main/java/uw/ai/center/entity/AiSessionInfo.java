@@ -165,6 +165,32 @@ public class AiSessionInfo implements DataEntity,Serializable{
      */
     private transient StringBuilder UPDATED_INFO = null;
 
+
+    /**
+     * 获得实体的表名。
+     */
+    @Override
+    public String ENTITY_TABLE(){
+         return "ai_session_info";
+       }
+
+    /**
+     * 获得实体的表注释。
+     */
+    @Override
+    public String ENTITY_NAME(){
+          return "session会话";
+       }
+
+    /**
+     * 获得主键
+     */
+    @Override
+    public Serializable ENTITY_ID(){
+          return getId();
+       }
+
+
     /**
      * 获取更改的字段列表.
      */
@@ -347,10 +373,18 @@ public class AiSessionInfo implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("id");
-            this.UPDATED_INFO.append("id:\"" + this.id+ "\"=>\"" + id + "\"\r\n");
+            this.UPDATED_INFO.append("id:\"").append(this.id).append("\"=>\"").append(id).append("\"\n");
             this.id = id;
         }
     }
+
+    /**
+     *  设置ID链式调用。
+     */
+    public AiSessionInfo id(long id){
+        setId(id);
+        return this;
+        }
 
     /**
      * 设置saasId。
@@ -361,10 +395,18 @@ public class AiSessionInfo implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("saas_id");
-            this.UPDATED_INFO.append("saas_id:\"" + this.saasId+ "\"=>\"" + saasId + "\"\r\n");
+            this.UPDATED_INFO.append("saas_id:\"").append(this.saasId).append("\"=>\"").append(saasId).append("\"\n");
             this.saasId = saasId;
         }
     }
+
+    /**
+     *  设置saasId链式调用。
+     */
+    public AiSessionInfo saasId(long saasId){
+        setSaasId(saasId);
+        return this;
+        }
 
     /**
      * 设置用户id。
@@ -375,10 +417,18 @@ public class AiSessionInfo implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("user_id");
-            this.UPDATED_INFO.append("user_id:\"" + this.userId+ "\"=>\"" + userId + "\"\r\n");
+            this.UPDATED_INFO.append("user_id:\"").append(this.userId).append("\"=>\"").append(userId).append("\"\n");
             this.userId = userId;
         }
     }
+
+    /**
+     *  设置用户id链式调用。
+     */
+    public AiSessionInfo userId(long userId){
+        setUserId(userId);
+        return this;
+        }
 
     /**
      * 设置用户类型。
@@ -389,10 +439,18 @@ public class AiSessionInfo implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("user_type");
-            this.UPDATED_INFO.append("user_type:\"" + this.userType+ "\"=>\"" + userType + "\"\r\n");
+            this.UPDATED_INFO.append("user_type:\"").append(this.userType).append("\"=>\"").append(userType).append("\"\n");
             this.userType = userType;
         }
     }
+
+    /**
+     *  设置用户类型链式调用。
+     */
+    public AiSessionInfo userType(int userType){
+        setUserType(userType);
+        return this;
+        }
 
     /**
      * 设置用户名。
@@ -403,10 +461,18 @@ public class AiSessionInfo implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("user_info");
-            this.UPDATED_INFO.append("user_info:\"" + this.userInfo+ "\"=>\"" + userInfo + "\"\r\n");
+            this.UPDATED_INFO.append("user_info:\"").append(this.userInfo).append("\"=>\"").append(userInfo).append("\"\n");
             this.userInfo = userInfo;
         }
     }
+
+    /**
+     *  设置用户名链式调用。
+     */
+    public AiSessionInfo userInfo(String userInfo){
+        setUserInfo(userInfo);
+        return this;
+        }
 
     /**
      * 设置配置ID。
@@ -417,10 +483,18 @@ public class AiSessionInfo implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("config_id");
-            this.UPDATED_INFO.append("config_id:\"" + this.configId+ "\"=>\"" + configId + "\"\r\n");
+            this.UPDATED_INFO.append("config_id:\"").append(this.configId).append("\"=>\"").append(configId).append("\"\n");
             this.configId = configId;
         }
     }
+
+    /**
+     *  设置配置ID链式调用。
+     */
+    public AiSessionInfo configId(long configId){
+        setConfigId(configId);
+        return this;
+        }
 
     /**
      * 设置session类型。
@@ -431,10 +505,18 @@ public class AiSessionInfo implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("session_type");
-            this.UPDATED_INFO.append("session_type:\"" + this.sessionType+ "\"=>\"" + sessionType + "\"\r\n");
+            this.UPDATED_INFO.append("session_type:\"").append(this.sessionType).append("\"=>\"").append(sessionType).append("\"\n");
             this.sessionType = sessionType;
         }
     }
+
+    /**
+     *  设置session类型链式调用。
+     */
+    public AiSessionInfo sessionType(int sessionType){
+        setSessionType(sessionType);
+        return this;
+        }
 
     /**
      * 设置session名称。
@@ -445,10 +527,18 @@ public class AiSessionInfo implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("session_name");
-            this.UPDATED_INFO.append("session_name:\"" + this.sessionName+ "\"=>\"" + sessionName + "\"\r\n");
+            this.UPDATED_INFO.append("session_name:\"").append(this.sessionName).append("\"=>\"").append(sessionName).append("\"\n");
             this.sessionName = sessionName;
         }
     }
+
+    /**
+     *  设置session名称链式调用。
+     */
+    public AiSessionInfo sessionName(String sessionName){
+        setSessionName(sessionName);
+        return this;
+        }
 
     /**
      * 设置session大小。
@@ -459,10 +549,18 @@ public class AiSessionInfo implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("msg_num");
-            this.UPDATED_INFO.append("msg_num:\"" + this.msgNum+ "\"=>\"" + msgNum + "\"\r\n");
+            this.UPDATED_INFO.append("msg_num:\"").append(this.msgNum).append("\"=>\"").append(msgNum).append("\"\n");
             this.msgNum = msgNum;
         }
     }
+
+    /**
+     *  设置session大小链式调用。
+     */
+    public AiSessionInfo msgNum(int msgNum){
+        setMsgNum(msgNum);
+        return this;
+        }
 
     /**
      * 设置历史长度。
@@ -473,10 +571,18 @@ public class AiSessionInfo implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("window_size");
-            this.UPDATED_INFO.append("window_size:\"" + this.windowSize+ "\"=>\"" + windowSize + "\"\r\n");
+            this.UPDATED_INFO.append("window_size:\"").append(this.windowSize).append("\"=>\"").append(windowSize).append("\"\n");
             this.windowSize = windowSize;
         }
     }
+
+    /**
+     *  设置历史长度链式调用。
+     */
+    public AiSessionInfo windowSize(int windowSize){
+        setWindowSize(windowSize);
+        return this;
+        }
 
     /**
      * 设置请求token数。
@@ -487,10 +593,18 @@ public class AiSessionInfo implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("request_tokens");
-            this.UPDATED_INFO.append("request_tokens:\"" + this.requestTokens+ "\"=>\"" + requestTokens + "\"\r\n");
+            this.UPDATED_INFO.append("request_tokens:\"").append(this.requestTokens).append("\"=>\"").append(requestTokens).append("\"\n");
             this.requestTokens = requestTokens;
         }
     }
+
+    /**
+     *  设置请求token数链式调用。
+     */
+    public AiSessionInfo requestTokens(long requestTokens){
+        setRequestTokens(requestTokens);
+        return this;
+        }
 
     /**
      * 设置响应token数。
@@ -501,10 +615,18 @@ public class AiSessionInfo implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("response_tokens");
-            this.UPDATED_INFO.append("response_tokens:\"" + this.responseTokens+ "\"=>\"" + responseTokens + "\"\r\n");
+            this.UPDATED_INFO.append("response_tokens:\"").append(this.responseTokens).append("\"=>\"").append(responseTokens).append("\"\n");
             this.responseTokens = responseTokens;
         }
     }
+
+    /**
+     *  设置响应token数链式调用。
+     */
+    public AiSessionInfo responseTokens(long responseTokens){
+        setResponseTokens(responseTokens);
+        return this;
+        }
 
     /**
      * 设置系统信息。
@@ -515,10 +637,18 @@ public class AiSessionInfo implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("system_prompt");
-            this.UPDATED_INFO.append("system_prompt:\"" + this.systemPrompt+ "\"=>\"" + systemPrompt + "\"\r\n");
+            this.UPDATED_INFO.append("system_prompt:\"").append(this.systemPrompt).append("\"=>\"").append(systemPrompt).append("\"\n");
             this.systemPrompt = systemPrompt;
         }
     }
+
+    /**
+     *  设置系统信息链式调用。
+     */
+    public AiSessionInfo systemPrompt(String systemPrompt){
+        setSystemPrompt(systemPrompt);
+        return this;
+        }
 
     /**
      * 设置工具信息。
@@ -529,10 +659,18 @@ public class AiSessionInfo implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("tool_config");
-            this.UPDATED_INFO.append("tool_config:\"" + this.toolConfig+ "\"=>\"" + toolConfig + "\"\r\n");
+            this.UPDATED_INFO.append("tool_config:\"").append(this.toolConfig).append("\"=>\"").append(toolConfig).append("\"\n");
             this.toolConfig = toolConfig;
         }
     }
+
+    /**
+     *  设置工具信息链式调用。
+     */
+    public AiSessionInfo toolConfig(String toolConfig){
+        setToolConfig(toolConfig);
+        return this;
+        }
 
     /**
      * 设置rag信息。
@@ -543,10 +681,18 @@ public class AiSessionInfo implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("rag_config");
-            this.UPDATED_INFO.append("rag_config:\"" + this.ragConfig+ "\"=>\"" + ragConfig + "\"\r\n");
+            this.UPDATED_INFO.append("rag_config:\"").append(this.ragConfig).append("\"=>\"").append(ragConfig).append("\"\n");
             this.ragConfig = ragConfig;
         }
     }
+
+    /**
+     *  设置rag信息链式调用。
+     */
+    public AiSessionInfo ragConfig(String ragConfig){
+        setRagConfig(ragConfig);
+        return this;
+        }
 
     /**
      * 设置创建时间。
@@ -557,10 +703,18 @@ public class AiSessionInfo implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("create_date");
-            this.UPDATED_INFO.append("create_date:\"" + this.createDate+ "\"=>\"" + createDate + "\"\r\n");
+            this.UPDATED_INFO.append("create_date:\"").append(this.createDate).append("\"=>\"").append(createDate).append("\"\n");
             this.createDate = createDate;
         }
     }
+
+    /**
+     *  设置创建时间链式调用。
+     */
+    public AiSessionInfo createDate(java.util.Date createDate){
+        setCreateDate(createDate);
+        return this;
+        }
 
     /**
      * 设置修改时间。
@@ -571,10 +725,18 @@ public class AiSessionInfo implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("modify_date");
-            this.UPDATED_INFO.append("modify_date:\"" + this.modifyDate+ "\"=>\"" + modifyDate + "\"\r\n");
+            this.UPDATED_INFO.append("modify_date:\"").append(this.modifyDate).append("\"=>\"").append(modifyDate).append("\"\n");
             this.modifyDate = modifyDate;
         }
     }
+
+    /**
+     *  设置修改时间链式调用。
+     */
+    public AiSessionInfo modifyDate(java.util.Date modifyDate){
+        setModifyDate(modifyDate);
+        return this;
+        }
 
     /**
      * 设置最后更新时间。
@@ -585,10 +747,18 @@ public class AiSessionInfo implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("last_update");
-            this.UPDATED_INFO.append("last_update:\"" + this.lastUpdate+ "\"=>\"" + lastUpdate + "\"\r\n");
+            this.UPDATED_INFO.append("last_update:\"").append(this.lastUpdate).append("\"=>\"").append(lastUpdate).append("\"\n");
             this.lastUpdate = lastUpdate;
         }
     }
+
+    /**
+     *  设置最后更新时间链式调用。
+     */
+    public AiSessionInfo lastUpdate(java.util.Date lastUpdate){
+        setLastUpdate(lastUpdate);
+        return this;
+        }
 
     /**
      * 设置状态。
@@ -599,10 +769,18 @@ public class AiSessionInfo implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("state");
-            this.UPDATED_INFO.append("state:\"" + this.state+ "\"=>\"" + state + "\"\r\n");
+            this.UPDATED_INFO.append("state:\"").append(this.state).append("\"=>\"").append(state).append("\"\n");
             this.state = state;
         }
     }
+
+    /**
+     *  设置状态链式调用。
+     */
+    public AiSessionInfo state(int state){
+        setState(state);
+        return this;
+        }
 
     /**
      * 重载toString方法.

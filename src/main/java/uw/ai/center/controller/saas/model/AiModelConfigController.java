@@ -9,6 +9,7 @@ import uw.ai.center.entity.AiModelConfig;
 import uw.ai.center.vendor.AiVendor;
 import uw.ai.center.vendor.AiVendorHelper;
 import uw.common.app.dto.AuthIdQueryParam;
+import uw.common.app.dto.IdStateQueryParam;
 import uw.common.app.dto.SysCritLogQueryParam;
 import uw.common.app.dto.SysDataHistoryQueryParam;
 import uw.common.app.entity.SysCritLog;
@@ -21,7 +22,7 @@ import uw.auth.service.constant.AuthType;
 import uw.auth.service.constant.UserType;
 import uw.common.app.constant.CommonState;
 import uw.common.dto.ResponseData;
-import uw.dao.DaoFactory;
+import uw.dao.DaoManager;
 import uw.dao.DataList;
 import uw.dao.TransactionException;
 
@@ -38,21 +39,22 @@ import java.util.List;
 @MscPermDeclare(user = UserType.SAAS)
 public class AiModelConfigController {
 
-    private final DaoFactory dao = DaoFactory.getInstance();
+    private final DaoManager dao = DaoManager.getInstance();
+
 
     /**
      * 列表AI服务模型。
      *
      * @param queryParam
      * @return
-     * @throws TransactionException
+     *
      */
     @GetMapping("/list")
     @Operation(summary = "列表AI服务模型", description = "列表AI服务模型")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.REQUEST)
-    public DataList<AiModelConfig> list(AiModelConfigQueryParam queryParam) throws TransactionException {
-        AuthServiceHelper.logRef( AiModelConfig.class );
-        return dao.list( AiModelConfig.class, queryParam );
+    public ResponseData<DataList<AiModelConfig>> list(AiModelConfigQueryParam queryParam){
+        AuthServiceHelper.logRef(AiModelConfig.class);
+        return dao.list(AiModelConfig.class, queryParam);
     }
 
     /**
@@ -92,23 +94,23 @@ public class AiModelConfigController {
     @GetMapping("/liteList")
     @Operation(summary = "轻量级列表AI服务模型", description = "轻量级列表AI服务模型，一般用于select控件。")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.USER, log = ActionLog.NONE)
-    public DataList<AiModelConfig> liteList(AiModelConfigQueryParam queryParam) throws TransactionException {
-        queryParam.SELECT_SQL( "SELECT id,saas_id,mch_id,vendor_class,model_code,model_name,create_date,modify_date,state from ai_model_config " );
-        return dao.list( AiModelConfig.class, queryParam );
+    public ResponseData<DataList<AiModelConfig>> liteList(AiModelConfigQueryParam queryParam){
+        queryParam.SELECT_SQL( "SELECT id,saas_id,mch_id,vendor_class,config_code,config_name,api_url,api_key,model_main,model_embed,create_date,modify_date,state from ai_model_config " );
+        return dao.list(AiModelConfig.class, queryParam);
     }
 
     /**
      * 加载AI服务模型。
      *
      * @param id
-     * @throws TransactionException
+     *
      */
     @GetMapping("/load")
     @Operation(summary = "加载AI服务模型", description = "加载AI服务模型")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.REQUEST)
-    public AiModelConfig load(@Parameter(description = "主键ID", required = true) @RequestParam long id) throws TransactionException {
-        AuthServiceHelper.logRef( AiModelConfig.class, id );
-        return dao.queryForSingleObject( AiModelConfig.class, new AuthIdQueryParam( id ) );
+    public ResponseData<AiModelConfig> load(@Parameter(description = "主键ID", required = true) @RequestParam long id)  {
+        AuthServiceHelper.logRef(AiModelConfig.class,id);
+        return dao.queryForSingleObject(AiModelConfig.class, new AuthIdQueryParam(id));
     }
 
     /**
@@ -120,10 +122,10 @@ public class AiModelConfigController {
     @GetMapping("/listDataHistory")
     @Operation(summary = "查询数据历史", description = "查询数据历史")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.REQUEST)
-    public DataList<SysDataHistory> listDataHistory(SysDataHistoryQueryParam queryParam) throws TransactionException {
-        AuthServiceHelper.logRef( AiModelConfig.class, queryParam.getEntityId() );
-        queryParam.setEntityClass( AiModelConfig.class );
-        return dao.list( SysDataHistory.class, queryParam );
+    public ResponseData<DataList<SysDataHistory>> listDataHistory(SysDataHistoryQueryParam queryParam){
+        AuthServiceHelper.logRef(AiModelConfig.class, queryParam.getEntityId());
+        queryParam.setEntityClass(AiModelConfig.class);
+        return dao.list(SysDataHistory.class, queryParam);
     }
 
     /**
@@ -135,10 +137,10 @@ public class AiModelConfigController {
     @GetMapping("/listCritLog")
     @Operation(summary = "查询操作日志", description = "查询操作日志")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.REQUEST)
-    public DataList<SysCritLog> listCritLog(SysCritLogQueryParam queryParam) throws TransactionException {
-        AuthServiceHelper.logRef( AiModelConfig.class, queryParam.getBizId() );
-        queryParam.setBizTypeClass( AiModelConfig.class );
-        return dao.list( SysCritLog.class, queryParam );
+    public ResponseData<DataList<SysCritLog>> listCritLog(SysCritLogQueryParam queryParam)  {
+        AuthServiceHelper.logRef(AiModelConfig.class, queryParam.getBizId());
+        queryParam.setBizTypeClass(AiModelConfig.class);
+        return dao.list(SysCritLog.class, queryParam);
     }
 
     /**
@@ -146,105 +148,72 @@ public class AiModelConfigController {
      *
      * @param aiModelConfig
      * @return
-     * @throws TransactionException
+     *
      */
     @PutMapping("/update")
     @Operation(summary = "修改AI服务模型", description = "修改AI服务模型")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
-    public ResponseData<AiModelConfig> update(@RequestBody AiModelConfig aiModelConfig, @Parameter(description = "备注") @RequestParam String remark) throws TransactionException {
-        AuthServiceHelper.logInfo( AiModelConfig.class, aiModelConfig.getId(), "修改AI服务模型！操作备注：" + remark );
-        AiModelConfig aiModelConfigDb = dao.queryForSingleObject( AiModelConfig.class, new AuthIdQueryParam( aiModelConfig.getId() ) );
-        if (aiModelConfigDb == null) {
-            return ResponseData.warnMsg( "未找到指定ID的AI服务模型！" );
-        }
-        aiModelConfigDb.setMchId( aiModelConfig.getMchId() );
-        aiModelConfigDb.setVendorClass( aiModelConfig.getVendorClass() );
-        aiModelConfigDb.setConfigCode( aiModelConfig.getConfigCode() );
-        aiModelConfigDb.setConfigName( aiModelConfig.getConfigName() );
-        aiModelConfigDb.setConfigDesc( aiModelConfig.getConfigDesc() );
-        aiModelConfigDb.setApiUrl( aiModelConfig.getApiUrl() );
-        aiModelConfigDb.setApiKey( aiModelConfig.getApiKey() );
-        aiModelConfigDb.setModelMain( aiModelConfig.getModelMain() );
-        aiModelConfigDb.setModelEmbed( aiModelConfig.getModelEmbed() );
-        aiModelConfigDb.setVendorData( aiModelConfig.getVendorData() );
-        aiModelConfigDb.setModelData( aiModelConfig.getModelData() );
-        aiModelConfigDb.setEmbedData( aiModelConfig.getEmbedData() );
-        aiModelConfigDb.setModifyDate( new Date() );
-        dao.update( aiModelConfigDb );
-        SysDataHistoryHelper.saveHistory( aiModelConfigDb.getId(), aiModelConfigDb, "AI服务模型", "修改AI服务模型！操作备注：" + remark );
-        return ResponseData.success( aiModelConfigDb );
+    public ResponseData<AiModelConfig> update(@RequestBody AiModelConfig aiModelConfig, @Parameter(description = "备注") @RequestParam String remark){
+        AuthServiceHelper.logInfo(AiModelConfig.class,aiModelConfig.getId(),remark);
+        return  dao.load( AiModelConfig.class, aiModelConfig.getId() ).onSuccess(aiModelConfigDb-> {
+            aiModelConfigDb.setMchId(aiModelConfig.getMchId());
+            aiModelConfigDb.setVendorClass(aiModelConfig.getVendorClass());
+            aiModelConfigDb.setConfigCode(aiModelConfig.getConfigCode());
+            aiModelConfigDb.setConfigName(aiModelConfig.getConfigName());
+            aiModelConfigDb.setConfigDesc(aiModelConfig.getConfigDesc());
+            aiModelConfigDb.setApiUrl(aiModelConfig.getApiUrl());
+            aiModelConfigDb.setApiKey(aiModelConfig.getApiKey());
+            aiModelConfigDb.setModelMain(aiModelConfig.getModelMain());
+            aiModelConfigDb.setModelEmbed(aiModelConfig.getModelEmbed());
+            aiModelConfigDb.setVendorData(aiModelConfig.getVendorData());
+            aiModelConfigDb.setModelData(aiModelConfig.getModelData());
+            aiModelConfigDb.setEmbedData(aiModelConfig.getEmbedData());
+            aiModelConfigDb.setModifyDate(new Date());
+            return dao.update( aiModelConfigDb ).onSuccess(updatedEntity -> {
+                SysDataHistoryHelper.saveHistory( aiModelConfigDb,remark );
+            } );
+        } );
     }
 
     /**
      * 启用AI服务模型。
      *
      * @param id
-     * @throws TransactionException
+     *
      */
     @PutMapping("/enable")
     @Operation(summary = "启用AI服务模型", description = "启用AI服务模型")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
-    public ResponseData enable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark) throws TransactionException {
-        AuthServiceHelper.logInfo( AiModelConfig.class, id, "启用AI服务模型！操作备注：" + remark );
-        AiModelConfig aiModelConfig = dao.queryForSingleObject( AiModelConfig.class, new AuthIdQueryParam( id ) );
-        if (aiModelConfig == null) {
-            return ResponseData.warnMsg( "未找到指定id的AI服务模型！" );
-        }
-        if (aiModelConfig.getState() != CommonState.DISABLED.getValue()) {
-            return ResponseData.warnMsg( "启用AI服务模型失败！当前状态不是禁用状态！" );
-        }
-        aiModelConfig.setModifyDate( new Date() );
-        aiModelConfig.setState( CommonState.ENABLED.getValue() );
-        dao.update( aiModelConfig );
-        return ResponseData.success();
+    public ResponseData enable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
+        AuthServiceHelper.logInfo(AiModelConfig.class,id,remark);
+        return dao.update(new AiModelConfig().modifyDate(new Date()).state(CommonState.ENABLED.getValue()), new IdStateQueryParam(id, CommonState.DISABLED.getValue()));
     }
 
     /**
      * 禁用AI服务模型。
      *
      * @param id
-     * @throws TransactionException
+     *
      */
     @PutMapping("/disable")
     @Operation(summary = "禁用AI服务模型", description = "禁用AI服务模型")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
-    public ResponseData disable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark) throws TransactionException {
-        AuthServiceHelper.logInfo( AiModelConfig.class, id, "禁用AI服务模型！操作备注：" + remark );
-        AiModelConfig aiModelConfig = dao.queryForSingleObject( AiModelConfig.class, new AuthIdQueryParam( id ) );
-        if (aiModelConfig == null) {
-            return ResponseData.warnMsg( "未找到指定id的AI服务模型！" );
-        }
-        if (aiModelConfig.getState() != CommonState.ENABLED.getValue()) {
-            return ResponseData.warnMsg( "禁用AI服务模型失败！当前状态不是启用状态！" );
-        }
-        aiModelConfig.setModifyDate( new Date() );
-        aiModelConfig.setState( CommonState.DISABLED.getValue() );
-        dao.update( aiModelConfig );
-        return ResponseData.success();
+    public ResponseData disable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
+        AuthServiceHelper.logInfo(AiModelConfig.class,id,remark);
+        return dao.update(new AiModelConfig().modifyDate(new Date()).state(CommonState.DISABLED.getValue()), new IdStateQueryParam(id, CommonState.ENABLED.getValue()));
     }
 
     /**
      * 删除AI服务模型。
      *
      * @param id
-     * @throws TransactionException
+     *
      */
     @DeleteMapping("/delete")
     @Operation(summary = "删除AI服务模型", description = "删除AI服务模型")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
-    public ResponseData delete(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark) throws TransactionException {
-        AuthServiceHelper.logInfo( AiModelConfig.class, id, "删除AI服务模型！操作备注：" + remark );
-        AiModelConfig aiModelConfig = dao.queryForSingleObject( AiModelConfig.class, new AuthIdQueryParam( id ) );
-        if (aiModelConfig == null) {
-            return ResponseData.warnMsg( "未找到指定id的AI服务模型！" );
-        }
-        if (aiModelConfig.getState() != CommonState.DISABLED.getValue()) {
-            return ResponseData.warnMsg( "删除AI服务模型失败！当前状态不是禁用状态！" );
-        }
-        aiModelConfig.setModifyDate( new Date() );
-        aiModelConfig.setState( CommonState.DELETED.getValue() );
-        dao.update( aiModelConfig );
-        return ResponseData.success();
+    public ResponseData delete(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
+        AuthServiceHelper.logInfo(AiModelConfig.class,id,remark);
+        return dao.update(new AiModelConfig().modifyDate(new Date()).state(CommonState.DELETED.getValue()), new IdStateQueryParam(id, CommonState.DISABLED.getValue()));
     }
-
 }

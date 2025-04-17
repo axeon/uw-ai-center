@@ -124,6 +124,32 @@ public class AiRagDoc implements DataEntity,Serializable{
      */
     private transient StringBuilder UPDATED_INFO = null;
 
+
+    /**
+     * 获得实体的表名。
+     */
+    @Override
+    public String ENTITY_TABLE(){
+         return "ai_rag_doc";
+       }
+
+    /**
+     * 获得实体的表注释。
+     */
+    @Override
+    public String ENTITY_NAME(){
+          return "rag文档信息";
+       }
+
+    /**
+     * 获得主键
+     */
+    @Override
+    public Serializable ENTITY_ID(){
+          return getId();
+       }
+
+
     /**
      * 获取更改的字段列表.
      */
@@ -264,10 +290,18 @@ public class AiRagDoc implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("id");
-            this.UPDATED_INFO.append("id:\"" + this.id+ "\"=>\"" + id + "\"\r\n");
+            this.UPDATED_INFO.append("id:\"").append(this.id).append("\"=>\"").append(id).append("\"\n");
             this.id = id;
         }
     }
+
+    /**
+     *  设置ID链式调用。
+     */
+    public AiRagDoc id(long id){
+        setId(id);
+        return this;
+        }
 
     /**
      * 设置saasId。
@@ -278,10 +312,18 @@ public class AiRagDoc implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("saas_id");
-            this.UPDATED_INFO.append("saas_id:\"" + this.saasId+ "\"=>\"" + saasId + "\"\r\n");
+            this.UPDATED_INFO.append("saas_id:\"").append(this.saasId).append("\"=>\"").append(saasId).append("\"\n");
             this.saasId = saasId;
         }
     }
+
+    /**
+     *  设置saasId链式调用。
+     */
+    public AiRagDoc saasId(long saasId){
+        setSaasId(saasId);
+        return this;
+        }
 
     /**
      * 设置libId。
@@ -292,10 +334,18 @@ public class AiRagDoc implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("lib_id");
-            this.UPDATED_INFO.append("lib_id:\"" + this.libId+ "\"=>\"" + libId + "\"\r\n");
+            this.UPDATED_INFO.append("lib_id:\"").append(this.libId).append("\"=>\"").append(libId).append("\"\n");
             this.libId = libId;
         }
     }
+
+    /**
+     *  设置libId链式调用。
+     */
+    public AiRagDoc libId(long libId){
+        setLibId(libId);
+        return this;
+        }
 
     /**
      * 设置文档类型。
@@ -306,10 +356,18 @@ public class AiRagDoc implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("doc_type");
-            this.UPDATED_INFO.append("doc_type:\"" + this.docType+ "\"=>\"" + docType + "\"\r\n");
+            this.UPDATED_INFO.append("doc_type:\"").append(this.docType).append("\"=>\"").append(docType).append("\"\n");
             this.docType = docType;
         }
     }
+
+    /**
+     *  设置文档类型链式调用。
+     */
+    public AiRagDoc docType(String docType){
+        setDocType(docType);
+        return this;
+        }
 
     /**
      * 设置文档名称。
@@ -320,10 +378,18 @@ public class AiRagDoc implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("doc_name");
-            this.UPDATED_INFO.append("doc_name:\"" + this.docName+ "\"=>\"" + docName + "\"\r\n");
+            this.UPDATED_INFO.append("doc_name:\"").append(this.docName).append("\"=>\"").append(docName).append("\"\n");
             this.docName = docName;
         }
     }
+
+    /**
+     *  设置文档名称链式调用。
+     */
+    public AiRagDoc docName(String docName){
+        setDocName(docName);
+        return this;
+        }
 
     /**
      * 设置文档描述。
@@ -334,10 +400,18 @@ public class AiRagDoc implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("doc_desc");
-            this.UPDATED_INFO.append("doc_desc:\"" + this.docDesc+ "\"=>\"" + docDesc + "\"\r\n");
+            this.UPDATED_INFO.append("doc_desc:\"").append(this.docDesc).append("\"=>\"").append(docDesc).append("\"\n");
             this.docDesc = docDesc;
         }
     }
+
+    /**
+     *  设置文档描述链式调用。
+     */
+    public AiRagDoc docDesc(String docDesc){
+        setDocDesc(docDesc);
+        return this;
+        }
 
     /**
      * 设置文档主体。
@@ -348,10 +422,18 @@ public class AiRagDoc implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("doc_body");
-            this.UPDATED_INFO.append("doc_body:\"" + this.docBody+ "\"=>\"" + docBody + "\"\r\n");
+            this.UPDATED_INFO.append("doc_body:\"").append(this.docBody).append("\"=>\"").append(docBody).append("\"\n");
             this.docBody = docBody;
         }
     }
+
+    /**
+     *  设置文档主体链式调用。
+     */
+    public AiRagDoc docBody(Object docBody){
+        setDocBody(docBody);
+        return this;
+        }
 
     /**
      * 设置文档内容。
@@ -362,10 +444,18 @@ public class AiRagDoc implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("doc_content");
-            this.UPDATED_INFO.append("doc_content:\"" + this.docContent+ "\"=>\"" + docContent + "\"\r\n");
+            this.UPDATED_INFO.append("doc_content:\"").append(this.docContent).append("\"=>\"").append(docContent).append("\"\n");
             this.docContent = docContent;
         }
     }
+
+    /**
+     *  设置文档内容链式调用。
+     */
+    public AiRagDoc docContent(String docContent){
+        setDocContent(docContent);
+        return this;
+        }
 
     /**
      * 设置文档主体大小。
@@ -376,10 +466,18 @@ public class AiRagDoc implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("doc_body_size");
-            this.UPDATED_INFO.append("doc_body_size:\"" + this.docBodySize+ "\"=>\"" + docBodySize + "\"\r\n");
+            this.UPDATED_INFO.append("doc_body_size:\"").append(this.docBodySize).append("\"=>\"").append(docBodySize).append("\"\n");
             this.docBodySize = docBodySize;
         }
     }
+
+    /**
+     *  设置文档主体大小链式调用。
+     */
+    public AiRagDoc docBodySize(long docBodySize){
+        setDocBodySize(docBodySize);
+        return this;
+        }
 
     /**
      * 设置文档内容大小。
@@ -390,10 +488,18 @@ public class AiRagDoc implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("doc_content_size");
-            this.UPDATED_INFO.append("doc_content_size:\"" + this.docContentSize+ "\"=>\"" + docContentSize + "\"\r\n");
+            this.UPDATED_INFO.append("doc_content_size:\"").append(this.docContentSize).append("\"=>\"").append(docContentSize).append("\"\n");
             this.docContentSize = docContentSize;
         }
     }
+
+    /**
+     *  设置文档内容大小链式调用。
+     */
+    public AiRagDoc docContentSize(long docContentSize){
+        setDocContentSize(docContentSize);
+        return this;
+        }
 
     /**
      * 设置创建时间。
@@ -404,10 +510,18 @@ public class AiRagDoc implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("create_date");
-            this.UPDATED_INFO.append("create_date:\"" + this.createDate+ "\"=>\"" + createDate + "\"\r\n");
+            this.UPDATED_INFO.append("create_date:\"").append(this.createDate).append("\"=>\"").append(createDate).append("\"\n");
             this.createDate = createDate;
         }
     }
+
+    /**
+     *  设置创建时间链式调用。
+     */
+    public AiRagDoc createDate(java.util.Date createDate){
+        setCreateDate(createDate);
+        return this;
+        }
 
     /**
      * 设置修改时间。
@@ -418,10 +532,18 @@ public class AiRagDoc implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("modify_date");
-            this.UPDATED_INFO.append("modify_date:\"" + this.modifyDate+ "\"=>\"" + modifyDate + "\"\r\n");
+            this.UPDATED_INFO.append("modify_date:\"").append(this.modifyDate).append("\"=>\"").append(modifyDate).append("\"\n");
             this.modifyDate = modifyDate;
         }
     }
+
+    /**
+     *  设置修改时间链式调用。
+     */
+    public AiRagDoc modifyDate(java.util.Date modifyDate){
+        setModifyDate(modifyDate);
+        return this;
+        }
 
     /**
      * 设置状态。
@@ -432,10 +554,18 @@ public class AiRagDoc implements DataEntity,Serializable{
                 _INIT_UPDATE_INFO();
             }
             this.UPDATED_COLUMN.add("state");
-            this.UPDATED_INFO.append("state:\"" + this.state+ "\"=>\"" + state + "\"\r\n");
+            this.UPDATED_INFO.append("state:\"").append(this.state).append("\"=>\"").append(state).append("\"\n");
             this.state = state;
         }
     }
+
+    /**
+     *  设置状态链式调用。
+     */
+    public AiRagDoc state(int state){
+        setState(state);
+        return this;
+        }
 
     /**
      * 重载toString方法.

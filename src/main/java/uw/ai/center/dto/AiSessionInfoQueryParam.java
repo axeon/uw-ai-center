@@ -58,10 +58,10 @@ public class AiSessionInfoQueryParam extends AuthPageQueryParam{
     private Long id;
 
     /**
-    * 数组ID。
+    * ID数组。
     */
     @QueryMeta(expr = "id in (?)")
-    @Schema(title="数组ID", description = "ID数组，可同时匹配多个。")
+    @Schema(title="ID数组", description = "ID数组，可同时匹配多个。")
     private Long[] ids;
 
     /**
@@ -191,10 +191,10 @@ public class AiSessionInfoQueryParam extends AuthPageQueryParam{
     private Integer state;
 
     /**
-    * 数组状态。
+    * 状态数组。
     */
     @QueryMeta(expr = "state in (?)")
-    @Schema(title="数组状态", description = "状态数组，可同时匹配多个状态。")
+    @Schema(title="状态数组", description = "状态数组，可同时匹配多个状态。")
     private Integer[] states;
 
     /**
@@ -235,21 +235,21 @@ public class AiSessionInfoQueryParam extends AuthPageQueryParam{
     }
 
     /**
-    * 获取数组ID。
+    * 获取ID数组。
     */
     public Long[] getIds() {
         return this.ids;
     }
 
     /**
-    * 设置数组ID。
+    * 设置ID数组。
     */
     public void setIds(Long[] ids) {
         this.ids = ids;
     }
 
     /**
-    * 设置数组ID链式调用。
+    * 设置ID数组链式调用。
     */
     public AiSessionInfoQueryParam ids(Long[] ids) {
         setIds(ids);
@@ -653,21 +653,21 @@ public class AiSessionInfoQueryParam extends AuthPageQueryParam{
     }
 
     /**
-    * 获取数组状态。
+    * 获取状态数组。
     */
     public Integer[] getStates(){
         return this.states;
     }
 
     /**
-    * 设置数组状态。
+    * 设置状态数组。
     */
     public void setStates(Integer[] states){
         this.states = states;
     }
 	
     /**
-    * 设置数组状态链式调用。
+    * 设置状态数组链式调用。
     */
     public AiSessionInfoQueryParam states(Integer[] states) {
         setStates(states);
