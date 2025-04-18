@@ -24,7 +24,7 @@ import uw.dao.TransactionException;
  * session会话管理。
  */
 @RestController
-@RequestMapping("/saas/session/info")
+@RequestMapping("/ops/session/info")
 @Tag(name = "session会话", description = "session会话")
 @MscPermDeclare(user = UserType.OPS)
 public class AiSessionInfoController {

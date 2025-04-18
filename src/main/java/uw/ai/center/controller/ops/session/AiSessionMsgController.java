@@ -23,7 +23,7 @@ import uw.dao.TransactionException;
  * session消息管理。
  */
 @RestController
-@RequestMapping("/saas/session/info/msg")
+@RequestMapping("/ops/session/info/msg")
 @Tag(name = "session消息管理", description = "session消息增删改查列管理")
 @MscPermDeclare(user = UserType.OPS)
 public class AiSessionMsgController {

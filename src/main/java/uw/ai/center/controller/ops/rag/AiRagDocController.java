@@ -35,7 +35,7 @@ import java.util.Map;
  * rag文档信息管理。
  */
 @RestController
-@RequestMapping("/saas/rag/lib/doc")
+@RequestMapping("/ops/rag/lib/doc")
 @Tag(name = "rag文档信息管理", description = "rag文档信息增删改查列管理")
 @MscPermDeclare(user = UserType.OPS)
 public class AiRagDocController {

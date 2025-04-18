@@ -30,7 +30,7 @@ import java.util.Date;
  * rag文档库管理。
  */
 @RestController
-@RequestMapping("/saas/rag/lib")
+@RequestMapping("/ops/rag/lib")
 @Tag(name = "RAG文档库", description = "RAG文档库")
 @MscPermDeclare(user = UserType.OPS)
 public class AiRagLibController {
