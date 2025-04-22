@@ -52,7 +52,7 @@ public class AiToolHelper {
                 if (dataList == null) {
                     return null;
                 }
-                return dataList.results().stream().collect( Collectors.toMap( x -> x.getAppName() + "/" + x.getToolClass(), x -> x, (existingValue, newValue) -> existingValue ) );
+                return dataList.stream().collect( Collectors.toMap( x -> x.getAppName() + "/" + x.getToolClass(), x -> x, (existingValue, newValue) -> existingValue ) );
             }
         } );
     }
