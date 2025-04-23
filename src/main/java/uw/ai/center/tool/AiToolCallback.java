@@ -8,7 +8,6 @@ import org.springframework.ai.tool.definition.ToolDefinition;
 import org.springframework.ai.tool.metadata.ToolMetadata;
 import uw.ai.center.entity.AiToolInfo;
 import uw.common.util.JsonUtils;
-import uw.httpclient.json.JsonInterfaceHelper;
 
 import java.util.Map;
 

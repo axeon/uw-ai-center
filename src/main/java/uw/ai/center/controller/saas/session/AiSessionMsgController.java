@@ -18,8 +18,6 @@ import uw.dao.DaoManager;
 import uw.dao.DataList;
 import uw.dao.TransactionException;
 
-import java.util.Date;
-
 
 /**
  * session消息管理。
