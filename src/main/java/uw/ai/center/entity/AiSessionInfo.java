@@ -1,14 +1,15 @@
 package uw.ai.center.entity;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import uw.dao.DataEntity;
-import uw.dao.annotation.ColumnMeta;
-import uw.dao.annotation.TableMeta;
-
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+
+import com.fasterxml.jackson.annotation.JsonRawValue;
+import io.swagger.v3.oas.annotations.media.Schema;
+import uw.dao.DataEntity;
+import uw.dao.annotation.ColumnMeta;
+import uw.dao.annotation.TableMeta;
 
 /**
  * AiSessionInfo实体类
@@ -157,12 +158,18 @@ public class AiSessionInfo implements DataEntity,Serializable{
     /**
      * 轻量级状态下更新列表list.
      */
-    private transient Set<String> UPDATED_COLUMN = null;
+    private transient Set<String> _UPDATED_COLUMN = null;
 
     /**
      * 更新的信息.
      */
-    private transient StringBuilder UPDATED_INFO = null;
+    private transient StringBuilder _UPDATED_INFO = null;
+
+
+    /**
+     * 是否加载完成.
+     */
+    private transient boolean _IS_LOADED;
 
 
     /**
@@ -170,24 +177,24 @@ public class AiSessionInfo implements DataEntity,Serializable{
      */
     @Override
     public String ENTITY_TABLE(){
-         return "ai_session_info";
-       }
+        return "ai_session_info";
+    }
 
     /**
      * 获得实体的表注释。
      */
     @Override
     public String ENTITY_NAME(){
-          return "session会话";
-       }
+        return "session会话";
+    }
 
     /**
      * 获得主键
      */
     @Override
     public Serializable ENTITY_ID(){
-          return getId();
-       }
+        return getId();
+    }
 
 
     /**
@@ -195,7 +202,7 @@ public class AiSessionInfo implements DataEntity,Serializable{
      */
     @Override
     public Set<String> GET_UPDATED_COLUMN() {
-        return UPDATED_COLUMN;
+        return _UPDATED_COLUMN;
     }
 
     /**
@@ -203,10 +210,10 @@ public class AiSessionInfo implements DataEntity,Serializable{
      */
     @Override
     public String GET_UPDATED_INFO() {
-        if (this.UPDATED_INFO == null) {
+        if (this._UPDATED_INFO == null) {
             return null;
         } else {
-            return this.UPDATED_INFO.toString();
+            return this._UPDATED_INFO.toString();
         }
     }
 
@@ -215,16 +222,16 @@ public class AiSessionInfo implements DataEntity,Serializable{
      */
     @Override
     public void CLEAR_UPDATED_INFO() {
-        UPDATED_COLUMN = null;
-        UPDATED_INFO = null;
+        _UPDATED_COLUMN = null;
+        _UPDATED_INFO = null;
     }
 
     /**
      * 初始化set相关的信息.
      */
     private void _INIT_UPDATE_INFO() {
-        this.UPDATED_COLUMN = new HashSet<String>();
-        this.UPDATED_INFO = new StringBuilder("表ai_session_info主键\"" + 
+        this._UPDATED_COLUMN = new HashSet<String>();
+        this._UPDATED_INFO = new StringBuilder("表ai_session_info主键\"" + 
         this.id+ "\"更新为:\r\n");
     }
 
@@ -367,12 +374,12 @@ public class AiSessionInfo implements DataEntity,Serializable{
      * 设置ID。
      */
     public void setId(long id){
-        if (!Objects.equals(this.id, id)){
-            if (this.UPDATED_COLUMN == null) {
+        if (!_IS_LOADED||!Objects.equals(this.id, id)){
+            if (this._UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("id");
-            this.UPDATED_INFO.append("id:\"").append(this.id).append("\"=>\"").append(id).append("\"\n");
+            this._UPDATED_COLUMN.add("id");
+            this._UPDATED_INFO.append("id:\"").append(this.id).append("\"=>\"").append(id).append("\"\n");
             this.id = id;
         }
     }
@@ -389,12 +396,12 @@ public class AiSessionInfo implements DataEntity,Serializable{
      * 设置saasId。
      */
     public void setSaasId(long saasId){
-        if (!Objects.equals(this.saasId, saasId)){
-            if (this.UPDATED_COLUMN == null) {
+        if (!_IS_LOADED||!Objects.equals(this.saasId, saasId)){
+            if (this._UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("saas_id");
-            this.UPDATED_INFO.append("saas_id:\"").append(this.saasId).append("\"=>\"").append(saasId).append("\"\n");
+            this._UPDATED_COLUMN.add("saas_id");
+            this._UPDATED_INFO.append("saas_id:\"").append(this.saasId).append("\"=>\"").append(saasId).append("\"\n");
             this.saasId = saasId;
         }
     }
@@ -411,12 +418,12 @@ public class AiSessionInfo implements DataEntity,Serializable{
      * 设置用户id。
      */
     public void setUserId(long userId){
-        if (!Objects.equals(this.userId, userId)){
-            if (this.UPDATED_COLUMN == null) {
+        if (!_IS_LOADED||!Objects.equals(this.userId, userId)){
+            if (this._UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("user_id");
-            this.UPDATED_INFO.append("user_id:\"").append(this.userId).append("\"=>\"").append(userId).append("\"\n");
+            this._UPDATED_COLUMN.add("user_id");
+            this._UPDATED_INFO.append("user_id:\"").append(this.userId).append("\"=>\"").append(userId).append("\"\n");
             this.userId = userId;
         }
     }
@@ -433,12 +440,12 @@ public class AiSessionInfo implements DataEntity,Serializable{
      * 设置用户类型。
      */
     public void setUserType(int userType){
-        if (!Objects.equals(this.userType, userType)){
-            if (this.UPDATED_COLUMN == null) {
+        if (!_IS_LOADED||!Objects.equals(this.userType, userType)){
+            if (this._UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("user_type");
-            this.UPDATED_INFO.append("user_type:\"").append(this.userType).append("\"=>\"").append(userType).append("\"\n");
+            this._UPDATED_COLUMN.add("user_type");
+            this._UPDATED_INFO.append("user_type:\"").append(this.userType).append("\"=>\"").append(userType).append("\"\n");
             this.userType = userType;
         }
     }
@@ -455,12 +462,12 @@ public class AiSessionInfo implements DataEntity,Serializable{
      * 设置用户名。
      */
     public void setUserInfo(String userInfo){
-        if (!Objects.equals(this.userInfo, userInfo)){
-            if (this.UPDATED_COLUMN == null) {
+        if (!_IS_LOADED||!Objects.equals(this.userInfo, userInfo)){
+            if (this._UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("user_info");
-            this.UPDATED_INFO.append("user_info:\"").append(this.userInfo).append("\"=>\"").append(userInfo).append("\"\n");
+            this._UPDATED_COLUMN.add("user_info");
+            this._UPDATED_INFO.append("user_info:\"").append(this.userInfo).append("\"=>\"").append(userInfo).append("\"\n");
             this.userInfo = userInfo;
         }
     }
@@ -477,12 +484,12 @@ public class AiSessionInfo implements DataEntity,Serializable{
      * 设置配置ID。
      */
     public void setConfigId(long configId){
-        if (!Objects.equals(this.configId, configId)){
-            if (this.UPDATED_COLUMN == null) {
+        if (!_IS_LOADED||!Objects.equals(this.configId, configId)){
+            if (this._UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("config_id");
-            this.UPDATED_INFO.append("config_id:\"").append(this.configId).append("\"=>\"").append(configId).append("\"\n");
+            this._UPDATED_COLUMN.add("config_id");
+            this._UPDATED_INFO.append("config_id:\"").append(this.configId).append("\"=>\"").append(configId).append("\"\n");
             this.configId = configId;
         }
     }
@@ -499,12 +506,12 @@ public class AiSessionInfo implements DataEntity,Serializable{
      * 设置session类型。
      */
     public void setSessionType(int sessionType){
-        if (!Objects.equals(this.sessionType, sessionType)){
-            if (this.UPDATED_COLUMN == null) {
+        if (!_IS_LOADED||!Objects.equals(this.sessionType, sessionType)){
+            if (this._UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("session_type");
-            this.UPDATED_INFO.append("session_type:\"").append(this.sessionType).append("\"=>\"").append(sessionType).append("\"\n");
+            this._UPDATED_COLUMN.add("session_type");
+            this._UPDATED_INFO.append("session_type:\"").append(this.sessionType).append("\"=>\"").append(sessionType).append("\"\n");
             this.sessionType = sessionType;
         }
     }
@@ -521,12 +528,12 @@ public class AiSessionInfo implements DataEntity,Serializable{
      * 设置session名称。
      */
     public void setSessionName(String sessionName){
-        if (!Objects.equals(this.sessionName, sessionName)){
-            if (this.UPDATED_COLUMN == null) {
+        if (!_IS_LOADED||!Objects.equals(this.sessionName, sessionName)){
+            if (this._UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("session_name");
-            this.UPDATED_INFO.append("session_name:\"").append(this.sessionName).append("\"=>\"").append(sessionName).append("\"\n");
+            this._UPDATED_COLUMN.add("session_name");
+            this._UPDATED_INFO.append("session_name:\"").append(this.sessionName).append("\"=>\"").append(sessionName).append("\"\n");
             this.sessionName = sessionName;
         }
     }
@@ -543,12 +550,12 @@ public class AiSessionInfo implements DataEntity,Serializable{
      * 设置session大小。
      */
     public void setMsgNum(int msgNum){
-        if (!Objects.equals(this.msgNum, msgNum)){
-            if (this.UPDATED_COLUMN == null) {
+        if (!_IS_LOADED||!Objects.equals(this.msgNum, msgNum)){
+            if (this._UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("msg_num");
-            this.UPDATED_INFO.append("msg_num:\"").append(this.msgNum).append("\"=>\"").append(msgNum).append("\"\n");
+            this._UPDATED_COLUMN.add("msg_num");
+            this._UPDATED_INFO.append("msg_num:\"").append(this.msgNum).append("\"=>\"").append(msgNum).append("\"\n");
             this.msgNum = msgNum;
         }
     }
@@ -565,12 +572,12 @@ public class AiSessionInfo implements DataEntity,Serializable{
      * 设置历史长度。
      */
     public void setWindowSize(int windowSize){
-        if (!Objects.equals(this.windowSize, windowSize)){
-            if (this.UPDATED_COLUMN == null) {
+        if (!_IS_LOADED||!Objects.equals(this.windowSize, windowSize)){
+            if (this._UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("window_size");
-            this.UPDATED_INFO.append("window_size:\"").append(this.windowSize).append("\"=>\"").append(windowSize).append("\"\n");
+            this._UPDATED_COLUMN.add("window_size");
+            this._UPDATED_INFO.append("window_size:\"").append(this.windowSize).append("\"=>\"").append(windowSize).append("\"\n");
             this.windowSize = windowSize;
         }
     }
@@ -587,12 +594,12 @@ public class AiSessionInfo implements DataEntity,Serializable{
      * 设置请求token数。
      */
     public void setRequestTokens(long requestTokens){
-        if (!Objects.equals(this.requestTokens, requestTokens)){
-            if (this.UPDATED_COLUMN == null) {
+        if (!_IS_LOADED||!Objects.equals(this.requestTokens, requestTokens)){
+            if (this._UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("request_tokens");
-            this.UPDATED_INFO.append("request_tokens:\"").append(this.requestTokens).append("\"=>\"").append(requestTokens).append("\"\n");
+            this._UPDATED_COLUMN.add("request_tokens");
+            this._UPDATED_INFO.append("request_tokens:\"").append(this.requestTokens).append("\"=>\"").append(requestTokens).append("\"\n");
             this.requestTokens = requestTokens;
         }
     }
@@ -609,12 +616,12 @@ public class AiSessionInfo implements DataEntity,Serializable{
      * 设置响应token数。
      */
     public void setResponseTokens(long responseTokens){
-        if (!Objects.equals(this.responseTokens, responseTokens)){
-            if (this.UPDATED_COLUMN == null) {
+        if (!_IS_LOADED||!Objects.equals(this.responseTokens, responseTokens)){
+            if (this._UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("response_tokens");
-            this.UPDATED_INFO.append("response_tokens:\"").append(this.responseTokens).append("\"=>\"").append(responseTokens).append("\"\n");
+            this._UPDATED_COLUMN.add("response_tokens");
+            this._UPDATED_INFO.append("response_tokens:\"").append(this.responseTokens).append("\"=>\"").append(responseTokens).append("\"\n");
             this.responseTokens = responseTokens;
         }
     }
@@ -631,12 +638,12 @@ public class AiSessionInfo implements DataEntity,Serializable{
      * 设置系统信息。
      */
     public void setSystemPrompt(String systemPrompt){
-        if (!Objects.equals(this.systemPrompt, systemPrompt)){
-            if (this.UPDATED_COLUMN == null) {
+        if (!_IS_LOADED||!Objects.equals(this.systemPrompt, systemPrompt)){
+            if (this._UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("system_prompt");
-            this.UPDATED_INFO.append("system_prompt:\"").append(this.systemPrompt).append("\"=>\"").append(systemPrompt).append("\"\n");
+            this._UPDATED_COLUMN.add("system_prompt");
+            this._UPDATED_INFO.append("system_prompt:\"").append(this.systemPrompt).append("\"=>\"").append(systemPrompt).append("\"\n");
             this.systemPrompt = systemPrompt;
         }
     }
@@ -653,12 +660,12 @@ public class AiSessionInfo implements DataEntity,Serializable{
      * 设置工具信息。
      */
     public void setToolConfig(String toolConfig){
-        if (!Objects.equals(this.toolConfig, toolConfig)){
-            if (this.UPDATED_COLUMN == null) {
+        if (!_IS_LOADED||!Objects.equals(this.toolConfig, toolConfig)){
+            if (this._UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("tool_config");
-            this.UPDATED_INFO.append("tool_config:\"").append(this.toolConfig).append("\"=>\"").append(toolConfig).append("\"\n");
+            this._UPDATED_COLUMN.add("tool_config");
+            this._UPDATED_INFO.append("tool_config:\"").append(this.toolConfig).append("\"=>\"").append(toolConfig).append("\"\n");
             this.toolConfig = toolConfig;
         }
     }
@@ -675,12 +682,12 @@ public class AiSessionInfo implements DataEntity,Serializable{
      * 设置rag信息。
      */
     public void setRagConfig(String ragConfig){
-        if (!Objects.equals(this.ragConfig, ragConfig)){
-            if (this.UPDATED_COLUMN == null) {
+        if (!_IS_LOADED||!Objects.equals(this.ragConfig, ragConfig)){
+            if (this._UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("rag_config");
-            this.UPDATED_INFO.append("rag_config:\"").append(this.ragConfig).append("\"=>\"").append(ragConfig).append("\"\n");
+            this._UPDATED_COLUMN.add("rag_config");
+            this._UPDATED_INFO.append("rag_config:\"").append(this.ragConfig).append("\"=>\"").append(ragConfig).append("\"\n");
             this.ragConfig = ragConfig;
         }
     }
@@ -697,12 +704,12 @@ public class AiSessionInfo implements DataEntity,Serializable{
      * 设置创建时间。
      */
     public void setCreateDate(java.util.Date createDate){
-        if (!Objects.equals(this.createDate, createDate)){
-            if (this.UPDATED_COLUMN == null) {
+        if (!_IS_LOADED||!Objects.equals(this.createDate, createDate)){
+            if (this._UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("create_date");
-            this.UPDATED_INFO.append("create_date:\"").append(this.createDate).append("\"=>\"").append(createDate).append("\"\n");
+            this._UPDATED_COLUMN.add("create_date");
+            this._UPDATED_INFO.append("create_date:\"").append(this.createDate).append("\"=>\"").append(createDate).append("\"\n");
             this.createDate = createDate;
         }
     }
@@ -719,12 +726,12 @@ public class AiSessionInfo implements DataEntity,Serializable{
      * 设置修改时间。
      */
     public void setModifyDate(java.util.Date modifyDate){
-        if (!Objects.equals(this.modifyDate, modifyDate)){
-            if (this.UPDATED_COLUMN == null) {
+        if (!_IS_LOADED||!Objects.equals(this.modifyDate, modifyDate)){
+            if (this._UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("modify_date");
-            this.UPDATED_INFO.append("modify_date:\"").append(this.modifyDate).append("\"=>\"").append(modifyDate).append("\"\n");
+            this._UPDATED_COLUMN.add("modify_date");
+            this._UPDATED_INFO.append("modify_date:\"").append(this.modifyDate).append("\"=>\"").append(modifyDate).append("\"\n");
             this.modifyDate = modifyDate;
         }
     }
@@ -741,12 +748,12 @@ public class AiSessionInfo implements DataEntity,Serializable{
      * 设置最后更新时间。
      */
     public void setLastUpdate(java.util.Date lastUpdate){
-        if (!Objects.equals(this.lastUpdate, lastUpdate)){
-            if (this.UPDATED_COLUMN == null) {
+        if (!_IS_LOADED||!Objects.equals(this.lastUpdate, lastUpdate)){
+            if (this._UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("last_update");
-            this.UPDATED_INFO.append("last_update:\"").append(this.lastUpdate).append("\"=>\"").append(lastUpdate).append("\"\n");
+            this._UPDATED_COLUMN.add("last_update");
+            this._UPDATED_INFO.append("last_update:\"").append(this.lastUpdate).append("\"=>\"").append(lastUpdate).append("\"\n");
             this.lastUpdate = lastUpdate;
         }
     }
@@ -763,12 +770,12 @@ public class AiSessionInfo implements DataEntity,Serializable{
      * 设置状态。
      */
     public void setState(int state){
-        if (!Objects.equals(this.state, state)){
-            if (this.UPDATED_COLUMN == null) {
+        if (!_IS_LOADED||!Objects.equals(this.state, state)){
+            if (this._UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("state");
-            this.UPDATED_INFO.append("state:\"").append(this.state).append("\"=>\"").append(state).append("\"\n");
+            this._UPDATED_COLUMN.add("state");
+            this._UPDATED_INFO.append("state:\"").append(this.state).append("\"=>\"").append(state).append("\"\n");
             this.state = state;
         }
     }

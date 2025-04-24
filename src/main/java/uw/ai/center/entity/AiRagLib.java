@@ -1,15 +1,15 @@
 package uw.ai.center.entity;
 
+import java.io.Serializable;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
+
 import com.fasterxml.jackson.annotation.JsonRawValue;
 import io.swagger.v3.oas.annotations.media.Schema;
 import uw.dao.DataEntity;
 import uw.dao.annotation.ColumnMeta;
 import uw.dao.annotation.TableMeta;
-
-import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
 
 /**
  * AiRagLib实体类
@@ -103,12 +103,18 @@ public class AiRagLib implements DataEntity,Serializable{
     /**
      * 轻量级状态下更新列表list.
      */
-    private transient Set<String> UPDATED_COLUMN = null;
+    private transient Set<String> _UPDATED_COLUMN = null;
 
     /**
      * 更新的信息.
      */
-    private transient StringBuilder UPDATED_INFO = null;
+    private transient StringBuilder _UPDATED_INFO = null;
+
+
+    /**
+     * 是否加载完成.
+     */
+    private transient boolean _IS_LOADED;
 
 
     /**
@@ -116,24 +122,24 @@ public class AiRagLib implements DataEntity,Serializable{
      */
     @Override
     public String ENTITY_TABLE(){
-         return "ai_rag_lib";
-       }
+        return "ai_rag_lib";
+    }
 
     /**
      * 获得实体的表注释。
      */
     @Override
     public String ENTITY_NAME(){
-          return "rag文档库";
-       }
+        return "rag文档库";
+    }
 
     /**
      * 获得主键
      */
     @Override
     public Serializable ENTITY_ID(){
-          return getId();
-       }
+        return getId();
+    }
 
 
     /**
@@ -141,7 +147,7 @@ public class AiRagLib implements DataEntity,Serializable{
      */
     @Override
     public Set<String> GET_UPDATED_COLUMN() {
-        return UPDATED_COLUMN;
+        return _UPDATED_COLUMN;
     }
 
     /**
@@ -149,10 +155,10 @@ public class AiRagLib implements DataEntity,Serializable{
      */
     @Override
     public String GET_UPDATED_INFO() {
-        if (this.UPDATED_INFO == null) {
+        if (this._UPDATED_INFO == null) {
             return null;
         } else {
-            return this.UPDATED_INFO.toString();
+            return this._UPDATED_INFO.toString();
         }
     }
 
@@ -161,16 +167,16 @@ public class AiRagLib implements DataEntity,Serializable{
      */
     @Override
     public void CLEAR_UPDATED_INFO() {
-        UPDATED_COLUMN = null;
-        UPDATED_INFO = null;
+        _UPDATED_COLUMN = null;
+        _UPDATED_INFO = null;
     }
 
     /**
      * 初始化set相关的信息.
      */
     private void _INIT_UPDATE_INFO() {
-        this.UPDATED_COLUMN = new HashSet<String>();
-        this.UPDATED_INFO = new StringBuilder("表ai_rag_lib主键\"" + 
+        this._UPDATED_COLUMN = new HashSet<String>();
+        this._UPDATED_INFO = new StringBuilder("表ai_rag_lib主键\"" + 
         this.id+ "\"更新为:\r\n");
     }
 
@@ -257,12 +263,12 @@ public class AiRagLib implements DataEntity,Serializable{
      * 设置ID。
      */
     public void setId(long id){
-        if (!Objects.equals(this.id, id)){
-            if (this.UPDATED_COLUMN == null) {
+        if (!_IS_LOADED||!Objects.equals(this.id, id)){
+            if (this._UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("id");
-            this.UPDATED_INFO.append("id:\"").append(this.id).append("\"=>\"").append(id).append("\"\n");
+            this._UPDATED_COLUMN.add("id");
+            this._UPDATED_INFO.append("id:\"").append(this.id).append("\"=>\"").append(id).append("\"\n");
             this.id = id;
         }
     }
@@ -279,12 +285,12 @@ public class AiRagLib implements DataEntity,Serializable{
      * 设置saasId。
      */
     public void setSaasId(long saasId){
-        if (!Objects.equals(this.saasId, saasId)){
-            if (this.UPDATED_COLUMN == null) {
+        if (!_IS_LOADED||!Objects.equals(this.saasId, saasId)){
+            if (this._UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("saas_id");
-            this.UPDATED_INFO.append("saas_id:\"").append(this.saasId).append("\"=>\"").append(saasId).append("\"\n");
+            this._UPDATED_COLUMN.add("saas_id");
+            this._UPDATED_INFO.append("saas_id:\"").append(this.saasId).append("\"=>\"").append(saasId).append("\"\n");
             this.saasId = saasId;
         }
     }
@@ -301,12 +307,12 @@ public class AiRagLib implements DataEntity,Serializable{
      * 设置文档库类型。
      */
     public void setLibType(int libType){
-        if (!Objects.equals(this.libType, libType)){
-            if (this.UPDATED_COLUMN == null) {
+        if (!_IS_LOADED||!Objects.equals(this.libType, libType)){
+            if (this._UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("lib_type");
-            this.UPDATED_INFO.append("lib_type:\"").append(this.libType).append("\"=>\"").append(libType).append("\"\n");
+            this._UPDATED_COLUMN.add("lib_type");
+            this._UPDATED_INFO.append("lib_type:\"").append(this.libType).append("\"=>\"").append(libType).append("\"\n");
             this.libType = libType;
         }
     }
@@ -323,12 +329,12 @@ public class AiRagLib implements DataEntity,Serializable{
      * 设置文档库名称。
      */
     public void setLibName(String libName){
-        if (!Objects.equals(this.libName, libName)){
-            if (this.UPDATED_COLUMN == null) {
+        if (!_IS_LOADED||!Objects.equals(this.libName, libName)){
+            if (this._UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("lib_name");
-            this.UPDATED_INFO.append("lib_name:\"").append(this.libName).append("\"=>\"").append(libName).append("\"\n");
+            this._UPDATED_COLUMN.add("lib_name");
+            this._UPDATED_INFO.append("lib_name:\"").append(this.libName).append("\"=>\"").append(libName).append("\"\n");
             this.libName = libName;
         }
     }
@@ -345,12 +351,12 @@ public class AiRagLib implements DataEntity,Serializable{
      * 设置文档库描述。
      */
     public void setLibDesc(String libDesc){
-        if (!Objects.equals(this.libDesc, libDesc)){
-            if (this.UPDATED_COLUMN == null) {
+        if (!_IS_LOADED||!Objects.equals(this.libDesc, libDesc)){
+            if (this._UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("lib_desc");
-            this.UPDATED_INFO.append("lib_desc:\"").append(this.libDesc).append("\"=>\"").append(libDesc).append("\"\n");
+            this._UPDATED_COLUMN.add("lib_desc");
+            this._UPDATED_INFO.append("lib_desc:\"").append(this.libDesc).append("\"=>\"").append(libDesc).append("\"\n");
             this.libDesc = libDesc;
         }
     }
@@ -367,12 +373,12 @@ public class AiRagLib implements DataEntity,Serializable{
      * 设置embed配置ID。
      */
     public void setEmbedConfigId(long embedConfigId){
-        if (!Objects.equals(this.embedConfigId, embedConfigId)){
-            if (this.UPDATED_COLUMN == null) {
+        if (!_IS_LOADED||!Objects.equals(this.embedConfigId, embedConfigId)){
+            if (this._UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("embed_config_id");
-            this.UPDATED_INFO.append("embed_config_id:\"").append(this.embedConfigId).append("\"=>\"").append(embedConfigId).append("\"\n");
+            this._UPDATED_COLUMN.add("embed_config_id");
+            this._UPDATED_INFO.append("embed_config_id:\"").append(this.embedConfigId).append("\"=>\"").append(embedConfigId).append("\"\n");
             this.embedConfigId = embedConfigId;
         }
     }
@@ -389,12 +395,12 @@ public class AiRagLib implements DataEntity,Serializable{
      * 设置embed模型名。
      */
     public void setEmbedModelName(String embedModelName){
-        if (!Objects.equals(this.embedModelName, embedModelName)){
-            if (this.UPDATED_COLUMN == null) {
+        if (!_IS_LOADED||!Objects.equals(this.embedModelName, embedModelName)){
+            if (this._UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("embed_model_name");
-            this.UPDATED_INFO.append("embed_model_name:\"").append(this.embedModelName).append("\"=>\"").append(embedModelName).append("\"\n");
+            this._UPDATED_COLUMN.add("embed_model_name");
+            this._UPDATED_INFO.append("embed_model_name:\"").append(this.embedModelName).append("\"=>\"").append(embedModelName).append("\"\n");
             this.embedModelName = embedModelName;
         }
     }
@@ -411,12 +417,12 @@ public class AiRagLib implements DataEntity,Serializable{
      * 设置文档库配置。
      */
     public void setLibConfig(String libConfig){
-        if (!Objects.equals(this.libConfig, libConfig)){
-            if (this.UPDATED_COLUMN == null) {
+        if (!_IS_LOADED||!Objects.equals(this.libConfig, libConfig)){
+            if (this._UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("lib_config");
-            this.UPDATED_INFO.append("lib_config:\"").append(this.libConfig).append("\"=>\"").append(libConfig).append("\"\n");
+            this._UPDATED_COLUMN.add("lib_config");
+            this._UPDATED_INFO.append("lib_config:\"").append(this.libConfig).append("\"=>\"").append(libConfig).append("\"\n");
             this.libConfig = libConfig;
         }
     }
@@ -433,12 +439,12 @@ public class AiRagLib implements DataEntity,Serializable{
      * 设置创建时间。
      */
     public void setCreateDate(java.util.Date createDate){
-        if (!Objects.equals(this.createDate, createDate)){
-            if (this.UPDATED_COLUMN == null) {
+        if (!_IS_LOADED||!Objects.equals(this.createDate, createDate)){
+            if (this._UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("create_date");
-            this.UPDATED_INFO.append("create_date:\"").append(this.createDate).append("\"=>\"").append(createDate).append("\"\n");
+            this._UPDATED_COLUMN.add("create_date");
+            this._UPDATED_INFO.append("create_date:\"").append(this.createDate).append("\"=>\"").append(createDate).append("\"\n");
             this.createDate = createDate;
         }
     }
@@ -455,12 +461,12 @@ public class AiRagLib implements DataEntity,Serializable{
      * 设置修改时间。
      */
     public void setModifyDate(java.util.Date modifyDate){
-        if (!Objects.equals(this.modifyDate, modifyDate)){
-            if (this.UPDATED_COLUMN == null) {
+        if (!_IS_LOADED||!Objects.equals(this.modifyDate, modifyDate)){
+            if (this._UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("modify_date");
-            this.UPDATED_INFO.append("modify_date:\"").append(this.modifyDate).append("\"=>\"").append(modifyDate).append("\"\n");
+            this._UPDATED_COLUMN.add("modify_date");
+            this._UPDATED_INFO.append("modify_date:\"").append(this.modifyDate).append("\"=>\"").append(modifyDate).append("\"\n");
             this.modifyDate = modifyDate;
         }
     }
@@ -477,12 +483,12 @@ public class AiRagLib implements DataEntity,Serializable{
      * 设置状态。
      */
     public void setState(int state){
-        if (!Objects.equals(this.state, state)){
-            if (this.UPDATED_COLUMN == null) {
+        if (!_IS_LOADED||!Objects.equals(this.state, state)){
+            if (this._UPDATED_COLUMN == null) {
                 _INIT_UPDATE_INFO();
             }
-            this.UPDATED_COLUMN.add("state");
-            this.UPDATED_INFO.append("state:\"").append(this.state).append("\"=>\"").append(state).append("\"\n");
+            this._UPDATED_COLUMN.add("state");
+            this._UPDATED_INFO.append("state:\"").append(this.state).append("\"=>\"").append(state).append("\"\n");
             this.state = state;
         }
     }

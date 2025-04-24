@@ -13,6 +13,7 @@ import uw.auth.service.constant.AuthType;
 import uw.auth.service.constant.UserType;
 import uw.common.app.constant.CommonState;
 import uw.common.app.dto.AuthIdQueryParam;
+import uw.common.app.dto.AuthIdStateQueryParam;
 import uw.common.app.dto.IdStateQueryParam;
 import uw.common.dto.ResponseData;
 import uw.dao.DaoManager;
@@ -84,7 +85,7 @@ public class AiSessionInfoController {
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData delete(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark) {
         AuthServiceHelper.logInfo(AiSessionInfo.class, id, remark);
-        return dao.update(new AiSessionInfo().state(CommonState.DELETED.getValue()), new IdStateQueryParam(id, CommonState.ENABLED.getValue()));
+        return dao.update(new AiSessionInfo().state(CommonState.DELETED.getValue()), new AuthIdStateQueryParam(id, CommonState.ENABLED.getValue()));
     }
 
 }
