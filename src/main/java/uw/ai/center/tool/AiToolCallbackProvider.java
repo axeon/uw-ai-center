@@ -1,6 +1,6 @@
 package uw.ai.center.tool;
 
-import org.springframework.ai.model.function.FunctionCallback;
+import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.tool.ToolCallbackProvider;
 
 /**
@@ -10,7 +10,7 @@ public class AiToolCallbackProvider implements ToolCallbackProvider {
 
 
     @Override
-    public FunctionCallback[] getToolCallbacks() {
+    public ToolCallback[] getToolCallbacks() {
         return AiToolHelper.getAllToolCallbacks();
     }
 
