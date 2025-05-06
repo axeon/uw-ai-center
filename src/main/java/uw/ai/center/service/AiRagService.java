@@ -206,12 +206,12 @@ public class AiRagService {
         }
         String configData = ragLib.getLibConfig();
         JsonConfigBox configParamBox = JsonConfigHelper.buildParamBox(RAG_LIB_CONFIG_PARAMS, configData).getData();
-        int chunkSize = configParamBox.getIntParam("chunk-size");
-        int chunkMinCharSize = configParamBox.getIntParam("chunk-min-char-size");
-        int chunkMinEmbedSize = configParamBox.getIntParam("chunk-min-embed-size");
-        int chunkMaxNum = configParamBox.getIntParam("chunk-max-num");
-        double searchSimilarityThreshold = configParamBox.getDoubleParam("search-similarity-threshold");
-        int searchTopK = configParamBox.getIntParam("search-top-k");
+        int chunkSize = configParamBox.getIntParam(RagLibConfigParam.CHUNK_SIZE);
+        int chunkMinCharSize = configParamBox.getIntParam(RagLibConfigParam.CHUNK_MIN_CHAR_SIZE);
+        int chunkMinEmbedSize = configParamBox.getIntParam(RagLibConfigParam.CHUNK_MIN_EMBED_SIZE);
+        int chunkMaxNum = configParamBox.getIntParam(RagLibConfigParam.CHUNK_MAX_NUM);
+        double searchSimilarityThreshold = configParamBox.getDoubleParam(RagLibConfigParam.SEARCH_SIMILARITY_THRESHOLD);
+        int searchTopK = configParamBox.getIntParam(RagLibConfigParam.SEARCH_TOP_K);
         TextSplitter textSplitter = new TokenTextSplitter(chunkSize, chunkMinCharSize, chunkMinEmbedSize, chunkMaxNum, true);
         SearchRequest searchRequest = SearchRequest.builder().topK(searchTopK).similarityThreshold(searchSimilarityThreshold).build();
         AiVendorClientWrapper aiVendorClientWrapper = AiVendorHelper.getChatClient(ragLib.getEmbedConfigId());
