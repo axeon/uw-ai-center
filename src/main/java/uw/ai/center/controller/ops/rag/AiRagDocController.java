@@ -162,7 +162,6 @@ public class AiRagDocController {
         AuthServiceHelper.logInfo(AiRagDoc.class,id,remark);
         return dao.update(new AiRagDoc().modifyDate(new Date()).state(CommonState.ENABLED.getValue()), new IdStateQueryParam(id, CommonState.DISABLED.getValue())).onSuccess(updatedEntity -> {
             AiRagService.rebuildDocument( id );
-
         });
     }
 

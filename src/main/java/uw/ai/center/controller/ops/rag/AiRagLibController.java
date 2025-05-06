@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 import uw.ai.center.dto.AiRagLibQueryParam;
 import uw.ai.center.entity.AiRagLib;
+import uw.ai.center.service.AiRagService;
 import uw.auth.service.AuthServiceHelper;
 import uw.auth.service.annotation.MscPermDeclare;
 import uw.auth.service.constant.ActionLog;
@@ -19,11 +20,13 @@ import uw.common.app.dto.SysDataHistoryQueryParam;
 import uw.common.app.entity.SysCritLog;
 import uw.common.app.entity.SysDataHistory;
 import uw.common.app.helper.SysDataHistoryHelper;
+import uw.common.app.vo.JsonConfigParam;
 import uw.common.dto.ResponseData;
 import uw.dao.DaoManager;
 import uw.dao.DataList;
 
 import java.util.Date;
+import java.util.List;
 
 
 /**
@@ -79,6 +82,34 @@ public class AiRagLibController {
         AuthServiceHelper.logRef(AiRagLib.class,id);
         return dao.queryForSingleObject(AiRagLib.class, new AuthIdQueryParam(id));
     }
+
+
+    /**
+     * 查询rag文档信息。
+     *
+     * @param query
+     * @throws
+     */
+    @GetMapping("/query")
+    @Operation(summary = "查询文档库", description = "查询文档库")
+    @MscPermDeclare(user = UserType.OPS, auth = AuthType.USER, log = ActionLog.REQUEST)
+    public ResponseData<String> queryLib(@RequestParam long id, @RequestParam String query) {
+        String data = AiRagService.query( id, query );
+        return ResponseData.success( data );
+    }
+
+    /**
+     * 加载配置参数。
+     *
+     * @return
+     */
+    @GetMapping("/loadConfigParam")
+    @Operation(summary = "加载配置参数", description = "加载配置参数")
+    @MscPermDeclare(user = UserType.OPS, auth = AuthType.USER, log = ActionLog.NONE)
+    public List<JsonConfigParam> loadConfigParam() {
+        return AiRagService.RAG_LIB_CONFIG_PARAMS;
+    }
+
 
     /**
      * 查询数据历史。
