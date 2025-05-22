@@ -18,6 +18,9 @@ import uw.dao.DataList;
 import uw.dao.TransactionException;
 
 
+/**
+ * RagUserController
+ */
 @RestController
 @Tag(name = "RagUser接口")
 @RequestMapping("/user/rag")

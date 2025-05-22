@@ -24,6 +24,9 @@ import uw.auth.service.constant.AuthType;
 import uw.common.dto.ResponseData;
 import uw.dao.DataList;
 
+/**
+ * ChatClient 接口
+ */
 @RestController
 @Tag(name = "ChatUser接口")
 @RequestMapping("/user/chat")

@@ -15,7 +15,9 @@ import uw.dao.DaoManager;
 import uw.dao.DataList;
 import uw.dao.TransactionException;
 
-
+/**
+ * ModelUserController.
+ */
 @RestController
 @Tag(name = "ModelUser接口")
 @RequestMapping("/user/model")
