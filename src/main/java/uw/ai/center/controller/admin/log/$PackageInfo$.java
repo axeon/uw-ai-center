@@ -1,4 +1,5 @@
-package uw.ai.center.controller.ops.model;
+//此处定义菜单项。
+package uw.ai.center.controller.admin.log;
 
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,11 +12,11 @@ import uw.auth.service.constant.UserType;
  */
 @RestController
 public class $PackageInfo$ {
-
-    @GetMapping("/ops/model")
-    @Operation(summary = "模型管理", description = "模型管理")
-    @MscPermDeclare(user = UserType.OPS)
+    @GetMapping("/admin/log")
+    @Operation(summary = "操作日志", description = "操作日志")
+    @MscPermDeclare(user = UserType.ADMIN)
     public void info() {
     }
+
 
 }
