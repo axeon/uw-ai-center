@@ -1,237 +1,138 @@
 package uw.ai.center.advisor;
 
-import org.springframework.ai.chat.client.advisor.api.*;
+import org.springframework.ai.chat.client.ChatClientRequest;
+import org.springframework.ai.chat.client.ChatClientResponse;
+import org.springframework.ai.chat.client.advisor.api.AdvisorChain;
+import org.springframework.ai.chat.client.advisor.api.BaseAdvisor;
+import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
+import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.ai.vectorstore.filter.Filter;
 import org.springframework.ai.vectorstore.filter.FilterExpressionTextParser;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-public class AiRagChatAdvisor implements CallAroundAdvisor, StreamAroundAdvisor {
-
+public class AiRagChatAdvisor implements BaseAdvisor {
     public static final String RETRIEVED_DOCUMENTS = "qa_retrieved_documents";
-
     public static final String FILTER_EXPRESSION = "qa_filter_expression";
-
-    private static final String DEFAULT_USER_TEXT_ADVISE = """
-            
-            Context information is below, surrounded by ---------------------
-            
-            ---------------------
-            {question_answer_context}
-            ---------------------
-            
-            Given the context and provided history information and not prior knowledge,
-            reply to the user comment. If the answer is not in the context, inform
-            the user that you can't answer the question.
-            """;
-
+    private static final PromptTemplate DEFAULT_PROMPT_TEMPLATE = new PromptTemplate( "{query}\n\nContext information is below, surrounded by " +
+            "---------------------\n\n---------------------\n{question_answer_context}\n---------------------\n\nGiven the context and provided history information and not prior" +
+            " knowledge,\nreply to the user comment. If the answer is not in the context, inform\nthe user that you can't answer the question.\n" );
     private static final int DEFAULT_ORDER = 0;
-
-    private final long[] ragLibIds;
-
-    private final String userTextAdvise;
-
+    private final VectorStore vectorStore;
+    private final PromptTemplate promptTemplate;
     private final SearchRequest searchRequest;
-
-    private final boolean protectFromBlocking;
-
+    private final Scheduler scheduler;
     private final int order;
 
-    /**
-     * The QuestionAnswerAdvisor retrieves context information from a Vector Store and
-     * combines it with the user's text.
-     */
-    public AiRagChatAdvisor(long[] ragLibIds) {
-        this(ragLibIds, SearchRequest.builder().build(), DEFAULT_USER_TEXT_ADVISE);
+    public AiRagChatAdvisor(VectorStore vectorStore) {
+        this( vectorStore, SearchRequest.builder().build(), DEFAULT_PROMPT_TEMPLATE, BaseAdvisor.DEFAULT_SCHEDULER, 0 );
     }
 
-    /**
-     * The QuestionAnswerAdvisor retrieves context information from a Vector Store and
-     * combines it with the user's text.
-     *
-     * @param ragLibIds     The vector store to use
-     * @param searchRequest The search request defined using the portable filter
-     *                      expression syntax
-     */
-    public AiRagChatAdvisor(long[] ragLibIds, SearchRequest searchRequest) {
-        this(ragLibIds, searchRequest, DEFAULT_USER_TEXT_ADVISE);
-    }
-
-    /**
-     * The QuestionAnswerAdvisor retrieves context information from a Vector Store and
-     * combines it with the user's text.
-     *
-     * @param ragLibIds      The vector store to use
-     * @param searchRequest  The search request defined using the portable filter
-     *                       expression syntax
-     * @param userTextAdvise The user text to append to the existing user prompt. The text
-     *                       should contain a placeholder named "question_answer_context".
-     */
-    public AiRagChatAdvisor(long[] ragLibIds, SearchRequest searchRequest, String userTextAdvise) {
-        this(ragLibIds, searchRequest, userTextAdvise, true);
-    }
-
-    /**
-     * The QuestionAnswerAdvisor retrieves context information from a Vector Store and
-     * combines it with the user's text.
-     *
-     * @param ragLibIds           The vector store to use
-     * @param searchRequest       The search request defined using the portable filter
-     *                            expression syntax
-     * @param userTextAdvise      The user text to append to the existing user prompt. The text
-     *                            should contain a placeholder named "question_answer_context".
-     * @param protectFromBlocking If true the advisor will protect the execution from
-     *                            blocking threads. If false the advisor will not protect the execution from blocking
-     *                            threads. This is useful when the advisor is used in a non-blocking environment. It
-     *                            is true by default.
-     */
-    public AiRagChatAdvisor(long[] ragLibIds, SearchRequest searchRequest, String userTextAdvise, boolean protectFromBlocking) {
-        this(ragLibIds, searchRequest, userTextAdvise, protectFromBlocking, DEFAULT_ORDER);
-    }
-
-    /**
-     * The QuestionAnswerAdvisor retrieves context information from a Vector Store and
-     * combines it with the user's text.
-     *
-     * @param ragLibIds           The vector store to use
-     * @param searchRequest       The search request defined using the portable filter
-     *                            expression syntax
-     * @param userTextAdvise      The user text to append to the existing user prompt. The text
-     *                            should contain a placeholder named "question_answer_context".
-     * @param protectFromBlocking If true the advisor will protect the execution from
-     *                            blocking threads. If false the advisor will not protect the execution from blocking
-     *                            threads. This is useful when the advisor is used in a non-blocking environment. It
-     *                            is true by default.
-     * @param order               The order of the advisor.
-     */
-    public AiRagChatAdvisor(long[] ragLibIds, SearchRequest searchRequest, String userTextAdvise, boolean protectFromBlocking, int order) {
-
-        Assert.notNull(ragLibIds, "The vectorStore must not be null!");
-        Assert.notNull(searchRequest, "The searchRequest must not be null!");
-        Assert.hasText(userTextAdvise, "The userTextAdvise must not be empty!");
-
-        this.ragLibIds = ragLibIds;
+    AiRagChatAdvisor(VectorStore vectorStore, SearchRequest searchRequest, @Nullable PromptTemplate promptTemplate, @Nullable Scheduler scheduler, int order) {
+        Assert.notNull( vectorStore, "vectorStore cannot be null" );
+        Assert.notNull( searchRequest, "searchRequest cannot be null" );
+        this.vectorStore = vectorStore;
         this.searchRequest = searchRequest;
-        this.userTextAdvise = userTextAdvise;
-        this.protectFromBlocking = protectFromBlocking;
+        this.promptTemplate = promptTemplate != null ? promptTemplate : DEFAULT_PROMPT_TEMPLATE;
+        this.scheduler = scheduler != null ? scheduler : BaseAdvisor.DEFAULT_SCHEDULER;
         this.order = order;
     }
 
-    /**
-     * Returns a predicate that checks whether the provided {@link AdvisedResponse}
-     * contains a {@link ChatResponse} with at least one result having a non-empty finish
-     * reason in its metadata.
-     *
-     * @return a {@link Predicate} that evaluates whether the finish reason exists within
-     * the response metadata.
-     */
-    public static Predicate<AdvisedResponse> onFinishReason() {
-        return advisedResponse -> {
-            ChatResponse chatResponse = advisedResponse.response();
-            return chatResponse != null && chatResponse.getResults() != null
-                    && chatResponse.getResults()
-                    .stream()
-                    .anyMatch(result -> result != null && result.getMetadata() != null
-                            && StringUtils.hasText(result.getMetadata().getFinishReason()));
-        };
+    public static Builder builder(VectorStore vectorStore) {
+        return new Builder( vectorStore );
     }
 
-    @Override
-    public String getName() {
-        return this.getClass().getSimpleName();
-    }
-
-    @Override
     public int getOrder() {
         return this.order;
     }
 
-    @Override
-    public AdvisedResponse aroundCall(AdvisedRequest advisedRequest, CallAroundAdvisorChain chain) {
-
-        AdvisedRequest advisedRequest2 = before(advisedRequest);
-
-        AdvisedResponse advisedResponse = chain.nextAroundCall(advisedRequest2);
-
-        return after(advisedResponse);
+    public ChatClientRequest before(ChatClientRequest chatClientRequest, AdvisorChain advisorChain) {
+        SearchRequest searchRequestToUse =
+                SearchRequest.from( this.searchRequest ).query( chatClientRequest.prompt().getUserMessage().getText() ).filterExpression( this.doGetFilterExpression( chatClientRequest.context() ) ).build();
+        List<Document> documents = this.vectorStore.similaritySearch( searchRequestToUse );
+        Map<String, Object> context = new HashMap( chatClientRequest.context() );
+        context.put( "qa_retrieved_documents", documents );
+        String documentContext = documents == null ? "" : (String) documents.stream().map( Document::getText ).collect( Collectors.joining( System.lineSeparator() ) );
+        UserMessage userMessage = chatClientRequest.prompt().getUserMessage();
+        String augmentedUserText = this.promptTemplate.render( Map.of( "query", userMessage.getText(), "question_answer_context", documentContext ) );
+        return chatClientRequest.mutate().prompt( chatClientRequest.prompt().augmentUserMessage( augmentedUserText ) ).context( context ).build();
     }
 
-    @Override
-    public Flux<AdvisedResponse> aroundStream(AdvisedRequest advisedRequest, StreamAroundAdvisorChain chain) {
-
-        // This can be executed by both blocking and non-blocking Threads
-        // E.g. a command line or Tomcat blocking Thread implementation
-        // or by a WebFlux dispatch in a non-blocking manner.
-        Flux<AdvisedResponse> advisedResponses = (this.protectFromBlocking) ?
-                // @formatter:off
-                Mono.just(advisedRequest)
-                        .publishOn(Schedulers.boundedElastic())
-                        .map(this::before)
-                        .flatMapMany(request -> chain.nextAroundStream(request))
-                : chain.nextAroundStream(before(advisedRequest));
-        // @formatter:on
-
-        return advisedResponses.map(ar -> {
-            if (onFinishReason().test(ar)) {
-                ar = after(ar);
-            }
-            return ar;
-        });
-    }
-
-    protected Filter.Expression doGetFilterExpression(Map<String, Object> context) {
-
-        if (!context.containsKey(FILTER_EXPRESSION) || !StringUtils.hasText(context.get(FILTER_EXPRESSION).toString())) {
-            return this.searchRequest.getFilterExpression();
+    public ChatClientResponse after(ChatClientResponse chatClientResponse, AdvisorChain advisorChain) {
+        ChatResponse.Builder chatResponseBuilder;
+        if (chatClientResponse.chatResponse() == null) {
+            chatResponseBuilder = ChatResponse.builder();
+        } else {
+            chatResponseBuilder = ChatResponse.builder().from( chatClientResponse.chatResponse() );
         }
-        return new FilterExpressionTextParser().parse(context.get(FILTER_EXPRESSION).toString());
 
+        chatResponseBuilder.metadata( "qa_retrieved_documents", chatClientResponse.context().get( "qa_retrieved_documents" ) );
+        return ChatClientResponse.builder().chatResponse( chatResponseBuilder.build() ).context( chatClientResponse.context() ).build();
     }
 
-    private AdvisedRequest before(AdvisedRequest request) {
-
-        var context = new HashMap<>(request.adviseContext());
-
-        // 1. Advise the system text.
-        String advisedUserText = request.userText() + System.lineSeparator() + this.userTextAdvise;
-
-        // 2. Search for similar documents in the vector store.
-        String query = new PromptTemplate(request.userText(), request.userParams()).render();
-        var searchRequestToUse = SearchRequest.from(this.searchRequest).query(query).filterExpression(doGetFilterExpression(context)).build();
-
-        List<Document> documents = null; //this.vectorStore.similaritySearch( searchRequestToUse );
-
-        // 3. Create the context from the documents.
-        context.put(RETRIEVED_DOCUMENTS, documents);
-
-        String documentContext = documents.stream().map(Document::getText).collect(Collectors.joining(System.lineSeparator()));
-
-        // 4. Advise the user parameters.
-        Map<String, Object> advisedUserParams = new HashMap<>(request.userParams());
-        advisedUserParams.put("question_answer_context", documentContext);
-
-        AdvisedRequest advisedRequest = AdvisedRequest.from(request).userText(advisedUserText).userParams(advisedUserParams).adviseContext(context).build();
-
-        return advisedRequest;
+    public Scheduler getScheduler() {
+        return this.scheduler;
     }
 
-    private AdvisedResponse after(AdvisedResponse advisedResponse) {
-        ChatResponse.Builder chatResponseBuilder = ChatResponse.builder().from(advisedResponse.response());
-        chatResponseBuilder.metadata(RETRIEVED_DOCUMENTS, advisedResponse.adviseContext().get(RETRIEVED_DOCUMENTS));
-        return new AdvisedResponse(chatResponseBuilder.build(), advisedResponse.adviseContext());
+    @Nullable
+    protected Filter.Expression doGetFilterExpression(Map<String, Object> context) {
+        return context.containsKey( "qa_filter_expression" ) && StringUtils.hasText( context.get( "qa_filter_expression" ).toString() ) ?
+                (new FilterExpressionTextParser()).parse( context.get( "qa_filter_expression" ).toString() ) : this.searchRequest.getFilterExpression();
     }
 
+    public static final class Builder {
+        private final VectorStore vectorStore;
+        private SearchRequest searchRequest = SearchRequest.builder().build();
+        private PromptTemplate promptTemplate;
+        private Scheduler scheduler;
+        private int order = 0;
+
+        private Builder(VectorStore vectorStore) {
+            Assert.notNull( vectorStore, "The vectorStore must not be null!" );
+            this.vectorStore = vectorStore;
+        }
+
+        public Builder promptTemplate(PromptTemplate promptTemplate) {
+            Assert.notNull( promptTemplate, "promptTemplate cannot be null" );
+            this.promptTemplate = promptTemplate;
+            return this;
+        }
+
+        public Builder searchRequest(SearchRequest searchRequest) {
+            Assert.notNull( searchRequest, "The searchRequest must not be null!" );
+            this.searchRequest = searchRequest;
+            return this;
+        }
+
+        public Builder protectFromBlocking(boolean protectFromBlocking) {
+            this.scheduler = protectFromBlocking ? BaseAdvisor.DEFAULT_SCHEDULER : Schedulers.immediate();
+            return this;
+        }
+
+        public Builder scheduler(Scheduler scheduler) {
+            this.scheduler = scheduler;
+            return this;
+        }
+
+        public Builder order(int order) {
+            this.order = order;
+            return this;
+        }
+
+        public AiRagChatAdvisor build() {
+            return new AiRagChatAdvisor( this.vectorStore, this.searchRequest, this.promptTemplate, this.scheduler, this.order );
+        }
+    }
 }

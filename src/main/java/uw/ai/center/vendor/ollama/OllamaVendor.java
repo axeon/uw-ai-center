@@ -11,7 +11,6 @@ import org.springframework.ai.ollama.api.OllamaOptions;
 import org.springframework.ai.ollama.management.ModelManagementOptions;
 import org.springframework.ai.ollama.management.PullModelStrategy;
 import org.springframework.stereotype.Service;
-import uw.ai.center.advisor.AiChatLoggerAdvisor;
 import uw.ai.center.advisor.AiMysqlChatMemory;
 import uw.ai.center.vendor.AiVendor;
 import uw.ai.center.vendor.AiVendorClientWrapper;
@@ -98,7 +97,8 @@ public class OllamaVendor implements AiVendor {
     public AiVendorClientWrapper buildClientWrapper(AiModelConfigData aiModelConfigData) {
         JsonConfigBox vendorParamBox = aiModelConfigData.getVendorParamBox();
         JsonConfigBox embedParamBox = aiModelConfigData.getEmbedParamBox();
-        OllamaApi ollamaApi = new OllamaApi( aiModelConfigData.getApiUrl() );
+        OllamaApi ollamaApi = OllamaApi.builder().baseUrl( aiModelConfigData.getApiUrl()  ).build();
+
         ChatModel chatModel = OllamaChatModel.builder().ollamaApi( ollamaApi ).modelManagementOptions( new ModelManagementOptions( PullModelStrategy.NEVER,
                         List.of( aiModelConfigData.getModelMain() ), Duration.ofSeconds( 0 ), 3 ) )
                 .defaultOptions( OllamaOptions.builder()
@@ -170,9 +170,7 @@ public class OllamaVendor implements AiVendor {
         ChatClient chatClient = ChatClient.builder( chatModel )
                 // 实现 Chat Memory 的 Advisor
                 // 在使用 Chat Memory 时，需要指定对话 ID，以便 Spring AI 处理上下文。
-                .defaultAdvisors( new MessageChatMemoryAdvisor( new AiMysqlChatMemory(), "0:0", 10 ) )
-                // 实现 Logger 的 Advisor
-                .defaultAdvisors( new AiChatLoggerAdvisor() )
+                .defaultAdvisors(MessageChatMemoryAdvisor.builder( new AiMysqlChatMemory()).build() )
                 .build();
         return new AiVendorClientWrapper( aiModelConfigData, chatClient, embeddingModel );
     }
@@ -184,7 +182,7 @@ public class OllamaVendor implements AiVendor {
      */
     @Override
     public List<String> listModel(String apiUrl, String apiKey) {
-        OllamaApi ollamaApi = new OllamaApi( apiUrl );
+        OllamaApi ollamaApi = OllamaApi.builder().baseUrl( apiUrl ).build();
         return ollamaApi.listModels().models().stream().map( model -> model.name() ).toList();
     }
 

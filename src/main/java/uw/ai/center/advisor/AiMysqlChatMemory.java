@@ -20,11 +20,12 @@ import java.util.List;
  */
 public class AiMysqlChatMemory implements ChatMemory {
 
-    private static final Logger logger = LoggerFactory.getLogger(AiMysqlChatMemory.class);
+    private static final Logger logger = LoggerFactory.getLogger( AiMysqlChatMemory.class );
     /**
      * dao。
      */
     private static final DaoManager dao = DaoManager.getInstance();
+
 
     /**
      * 不实现，手动前端发起请求保存用户的消息和大模型回复的消息。
@@ -34,32 +35,23 @@ public class AiMysqlChatMemory implements ChatMemory {
 
     }
 
-    /**
-     * 查询会话内的消息最新n条历史记录
-     *
-     * @param conversationId 会话id
-     * @param lastN          最近n条
-     * @return org.springframework.ai.chat.messages.Message格式的消息
-     */
     @Override
-    public List<Message> get(String conversationId, int lastN) {
-        if (lastN <= 0) {
-            return List.of();
-        }
-        SessionConversationData conversationData = new SessionConversationData(conversationId);
-        List<Message> messages = new ArrayList<>(lastN);
+    public List<Message> get(String conversationId) {
+        SessionConversationData conversationData = new SessionConversationData( conversationId );
         if (conversationData.getSessionId() > 0) {
-            dao.list(AiSessionMsg.class, "select * from ai_session_msg where session_id=? order by id desc",
-                    new Object[]{conversationData.getSessionId()}, 0, (int) Math.ceil(lastN / 2.0f)).onSuccess(msgList -> {
+            List<Message> messages = new ArrayList<>( 16 );
+            dao.list( AiSessionMsg.class, "select * from ai_session_msg where session_id=? order by id desc",
+                    new Object[]{conversationData.getSessionId()} ).onSuccess( msgList -> {
                 for (AiSessionMsg msg : msgList) {
-                    messages.add(new UserMessage(msg.getUserPrompt()));
-                    messages.add(new AssistantMessage(msg.getResponseInfo()));
+                    messages.add( new UserMessage( msg.getUserPrompt() ) );
+                    messages.add( new AssistantMessage( msg.getResponseInfo() ) );
                 }
-            });
+            } );
             return messages;
         }
         return List.of();
     }
+
 
     /**
      * 清除会话内的消息
@@ -68,8 +60,8 @@ public class AiMysqlChatMemory implements ChatMemory {
      */
     @Override
     public void clear(String conversationId) {
-        SessionConversationData conversationData = new SessionConversationData(conversationId);
-        dao.executeCommand("update ai_session_msg set state=? where session_id=? and state=?", new Object[]{CommonState.DELETED.getValue(), conversationData.getSessionId(),
-                CommonState.ENABLED.getValue()});
+        SessionConversationData conversationData = new SessionConversationData( conversationId );
+        dao.executeCommand( "update ai_session_msg set state=? where session_id=? and state=?", new Object[]{CommonState.DELETED.getValue(), conversationData.getSessionId(),
+                CommonState.ENABLED.getValue()} );
     }
 }

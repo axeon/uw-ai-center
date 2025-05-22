@@ -17,7 +17,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.ResponseErrorHandler;
-import uw.ai.center.advisor.AiChatLoggerAdvisor;
 import uw.ai.center.advisor.AiMysqlChatMemory;
 import uw.ai.center.vendor.AiVendor;
 import uw.ai.center.vendor.AiVendorClientWrapper;
@@ -76,7 +75,7 @@ public class OpenAiVendor implements AiVendor {
      */
     @Override
     public List<JsonConfigParam> vendorParam() {
-        return Arrays.asList(OpenAiParam.Vendor.values()); // 自动获取所有枚举项
+        return Arrays.asList( OpenAiParam.Vendor.values() ); // 自动获取所有枚举项
     }
 
     /**
@@ -92,7 +91,7 @@ public class OpenAiVendor implements AiVendor {
      */
     @Override
     public List<JsonConfigParam> embedParam() {
-        return Arrays.asList(OpenAiParam.Embed.values()); // 自动获取所有枚举项
+        return Arrays.asList( OpenAiParam.Embed.values() ); // 自动获取所有枚举项
     }
 
     /**
@@ -105,12 +104,8 @@ public class OpenAiVendor implements AiVendor {
     public AiVendorClientWrapper buildClientWrapper(AiModelConfigData aiModelConfigData) {
         JsonConfigBox vendorParamBox = aiModelConfigData.getVendorParamBox();
         JsonConfigBox embedParamBox = aiModelConfigData.getEmbedParamBox();
-        OpenAiApi openAiApi = OpenAiApi.builder()
-                .baseUrl( aiModelConfigData.getApiUrl() )
-                .apiKey( new SimpleApiKey( aiModelConfigData.getApiKey() ) )
-                .completionsPath( vendorParamBox.getParam( OpenAiParam.Vendor.API_PATH ) )
-                .embeddingsPath( embedParamBox.getParam( OpenAiParam.Embed.API_PATH ) )
-                .responseErrorHandler( new ResponseErrorHandler() {
+        OpenAiApi openAiApi =
+                OpenAiApi.builder().baseUrl( aiModelConfigData.getApiUrl() ).apiKey( new SimpleApiKey( aiModelConfigData.getApiKey() ) ).completionsPath( vendorParamBox.getParam( OpenAiParam.Vendor.API_PATH ) ).embeddingsPath( embedParamBox.getParam( OpenAiParam.Embed.API_PATH ) ).responseErrorHandler( new ResponseErrorHandler() {
                     @Override
                     public boolean hasError(ClientHttpResponse response) throws IOException {
                         if (response.getStatusCode() != HttpStatus.OK) {
@@ -125,41 +120,19 @@ public class OpenAiVendor implements AiVendor {
                         logger.error( "OpenAiApi ConfigId[{}] handleError! statusCode: {}, statusText: {}, Body: {}", aiModelConfigData.getId(), response.getStatusCode(),
                                 response.getStatusText(), response.getBody() );
                     }
-                } )
-                .build();
+                } ).build();
         // 初始化 ChatModel 和 EmbeddingModel
-        ChatModel chatModel = OpenAiChatModel.builder()
-                .openAiApi( openAiApi )
-                .defaultOptions( OpenAiChatOptions.builder()
-                        .model( aiModelConfigData.getModelMain() )
-                        .temperature( vendorParamBox.getDoubleParam( OpenAiParam.Vendor.TEMPERATURE ) )
-                        .frequencyPenalty( vendorParamBox.getDoubleParam( OpenAiParam.Vendor.FREQUENCY_PENALTY ) )
-                        .maxCompletionTokens( vendorParamBox.getIntParam( OpenAiParam.Vendor.MAX_COMPLETION_TOKENS ) )
-                        .N( vendorParamBox.getIntParam( OpenAiParam.Vendor.N ) )
-                        .store( vendorParamBox.getBooleanParam( OpenAiParam.Vendor.STORE ) )
-                        .presencePenalty( vendorParamBox.getDoubleParam( OpenAiParam.Vendor.PRESENCE_PENALTY ) )
-                        .seed( vendorParamBox.getIntParam( OpenAiParam.Vendor.SEED ) )
-                        .topP( vendorParamBox.getDoubleParam( OpenAiParam.Vendor.TOP_P ) )
-                        .parallelToolCalls( vendorParamBox.getBooleanParam( OpenAiParam.Vendor.PARALLEL_TOOL_CALLS ) )
-                        .build()
-                )
-                .build();
+        ChatModel chatModel =
+                OpenAiChatModel.builder().openAiApi( openAiApi ).defaultOptions( OpenAiChatOptions.builder().model( aiModelConfigData.getModelMain() ).temperature( vendorParamBox.getDoubleParam( OpenAiParam.Vendor.TEMPERATURE ) ).frequencyPenalty( vendorParamBox.getDoubleParam( OpenAiParam.Vendor.FREQUENCY_PENALTY ) ).maxCompletionTokens( vendorParamBox.getIntParam( OpenAiParam.Vendor.MAX_COMPLETION_TOKENS ) ).N( vendorParamBox.getIntParam( OpenAiParam.Vendor.N ) ).store( vendorParamBox.getBooleanParam( OpenAiParam.Vendor.STORE ) ).presencePenalty( vendorParamBox.getDoubleParam( OpenAiParam.Vendor.PRESENCE_PENALTY ) ).seed( vendorParamBox.getIntParam( OpenAiParam.Vendor.SEED ) ).topP( vendorParamBox.getDoubleParam( OpenAiParam.Vendor.TOP_P ) ).parallelToolCalls( vendorParamBox.getBooleanParam( OpenAiParam.Vendor.PARALLEL_TOOL_CALLS ) ).build() ).build();
 
         EmbeddingModel embeddingModel = new OpenAiEmbeddingModel( openAiApi, MetadataMode.EMBED,
-                OpenAiEmbeddingOptions.builder()
-                        .model( aiModelConfigData.getModelEmbed() )
-                        .build()
-        );
+                OpenAiEmbeddingOptions.builder().model( aiModelConfigData.getModelEmbed() ).build() );
 
         // 构建 ChatClient
-        ChatClient chatClient = ChatClient.builder( chatModel )
-                .defaultAdvisors( new MessageChatMemoryAdvisor( new AiMysqlChatMemory(), "0:0", 10 ) )
-                .defaultAdvisors( new AiChatLoggerAdvisor() )
-                .defaultOptions( OpenAiChatOptions.builder()
+        ChatClient chatClient =
+                ChatClient.builder( chatModel ).defaultAdvisors( MessageChatMemoryAdvisor.builder( new AiMysqlChatMemory() ).build() ).defaultOptions( OpenAiChatOptions.builder()
                         // 其他参数通过枚举获取
-                        .build()
-                )
-                .build();
+                        .build() ).build();
         return new AiVendorClientWrapper( aiModelConfigData, chatClient, embeddingModel );
     }
 
