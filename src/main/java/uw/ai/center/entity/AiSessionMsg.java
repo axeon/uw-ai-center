@@ -1,15 +1,15 @@
 package uw.ai.center.entity;
 
-import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
-
 import com.fasterxml.jackson.annotation.JsonRawValue;
 import io.swagger.v3.oas.annotations.media.Schema;
+import uw.common.util.JsonUtils;
 import uw.dao.DataEntity;
+import uw.dao.DataUpdateInfo;
 import uw.dao.annotation.ColumnMeta;
 import uw.dao.annotation.TableMeta;
+
+import java.io.Serializable;
+
 
 /**
  * AiSessionMsg实体类
@@ -135,21 +135,14 @@ public class AiSessionMsg implements DataEntity,Serializable{
     private int state;
 
     /**
-     * 轻量级状态下更新列表list.
+     * 数据更新信息.
      */
-    private transient Set<String> _UPDATED_COLUMN = null;
-
-    /**
-     * 更新的信息.
-     */
-    private transient StringBuilder _UPDATED_INFO = null;
-
+    private transient DataUpdateInfo _UPDATED_INFO = null;
 
     /**
      * 是否加载完成.
      */
     private transient boolean _IS_LOADED;
-
 
     /**
      * 获得实体的表名。
@@ -175,25 +168,12 @@ public class AiSessionMsg implements DataEntity,Serializable{
         return getId();
     }
 
-
     /**
-     * 获取更改的字段列表.
+     * 获取更新信息.
      */
     @Override
-    public Set<String> GET_UPDATED_COLUMN() {
-        return _UPDATED_COLUMN;
-    }
-
-    /**
-     * 获取文本更新信息.
-     */
-    @Override
-    public String GET_UPDATED_INFO() {
-        if (this._UPDATED_INFO == null) {
-            return null;
-        } else {
-            return this._UPDATED_INFO.toString();
-        }
+    public DataUpdateInfo GET_UPDATED_INFO() {
+        return this._UPDATED_INFO;
     }
 
     /**
@@ -201,17 +181,7 @@ public class AiSessionMsg implements DataEntity,Serializable{
      */
     @Override
     public void CLEAR_UPDATED_INFO() {
-        _UPDATED_COLUMN = null;
         _UPDATED_INFO = null;
-    }
-
-    /**
-     * 初始化set相关的信息.
-     */
-    private void _INIT_UPDATE_INFO() {
-        this._UPDATED_COLUMN = new HashSet<String>();
-        this._UPDATED_INFO = new StringBuilder("表ai_session_msg主键\"" + 
-        this.id+ "\"更新为:\r\n");
     }
 
 
@@ -332,14 +302,8 @@ public class AiSessionMsg implements DataEntity,Serializable{
      * 设置ID。
      */
     public void setId(long id){
-        if (!_IS_LOADED||!Objects.equals(this.id, id)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("id");
-            this._UPDATED_INFO.append("id:\"").append(this.id).append("\"=>\"").append(id).append("\"\n");
-            this.id = id;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "id", this.id, id, !_IS_LOADED );
+        this.id = id;
     }
 
     /**
@@ -348,20 +312,14 @@ public class AiSessionMsg implements DataEntity,Serializable{
     public AiSessionMsg id(long id){
         setId(id);
         return this;
-        }
+    }
 
     /**
      * 设置saasId。
      */
     public void setSaasId(long saasId){
-        if (!_IS_LOADED||!Objects.equals(this.saasId, saasId)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("saas_id");
-            this._UPDATED_INFO.append("saas_id:\"").append(this.saasId).append("\"=>\"").append(saasId).append("\"\n");
-            this.saasId = saasId;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "saasId", this.saasId, saasId, !_IS_LOADED );
+        this.saasId = saasId;
     }
 
     /**
@@ -370,20 +328,14 @@ public class AiSessionMsg implements DataEntity,Serializable{
     public AiSessionMsg saasId(long saasId){
         setSaasId(saasId);
         return this;
-        }
+    }
 
     /**
      * 设置sessionId。
      */
     public void setSessionId(long sessionId){
-        if (!_IS_LOADED||!Objects.equals(this.sessionId, sessionId)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("session_id");
-            this._UPDATED_INFO.append("session_id:\"").append(this.sessionId).append("\"=>\"").append(sessionId).append("\"\n");
-            this.sessionId = sessionId;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "sessionId", this.sessionId, sessionId, !_IS_LOADED );
+        this.sessionId = sessionId;
     }
 
     /**
@@ -392,20 +344,14 @@ public class AiSessionMsg implements DataEntity,Serializable{
     public AiSessionMsg sessionId(long sessionId){
         setSessionId(sessionId);
         return this;
-        }
+    }
 
     /**
      * 设置系统提问。
      */
     public void setSystemPrompt(String systemPrompt){
-        if (!_IS_LOADED||!Objects.equals(this.systemPrompt, systemPrompt)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("system_prompt");
-            this._UPDATED_INFO.append("system_prompt:\"").append(this.systemPrompt).append("\"=>\"").append(systemPrompt).append("\"\n");
-            this.systemPrompt = systemPrompt;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "systemPrompt", this.systemPrompt, systemPrompt, !_IS_LOADED );
+        this.systemPrompt = systemPrompt;
     }
 
     /**
@@ -414,20 +360,14 @@ public class AiSessionMsg implements DataEntity,Serializable{
     public AiSessionMsg systemPrompt(String systemPrompt){
         setSystemPrompt(systemPrompt);
         return this;
-        }
+    }
 
     /**
      * 设置用户提问。
      */
     public void setUserPrompt(String userPrompt){
-        if (!_IS_LOADED||!Objects.equals(this.userPrompt, userPrompt)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("user_prompt");
-            this._UPDATED_INFO.append("user_prompt:\"").append(this.userPrompt).append("\"=>\"").append(userPrompt).append("\"\n");
-            this.userPrompt = userPrompt;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "userPrompt", this.userPrompt, userPrompt, !_IS_LOADED );
+        this.userPrompt = userPrompt;
     }
 
     /**
@@ -436,20 +376,14 @@ public class AiSessionMsg implements DataEntity,Serializable{
     public AiSessionMsg userPrompt(String userPrompt){
         setUserPrompt(userPrompt);
         return this;
-        }
+    }
 
     /**
      * 设置上下文数据。
      */
     public void setContextData(String contextData){
-        if (!_IS_LOADED||!Objects.equals(this.contextData, contextData)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("context_data");
-            this._UPDATED_INFO.append("context_data:\"").append(this.contextData).append("\"=>\"").append(contextData).append("\"\n");
-            this.contextData = contextData;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "contextData", this.contextData, contextData, !_IS_LOADED );
+        this.contextData = contextData;
     }
 
     /**
@@ -458,20 +392,14 @@ public class AiSessionMsg implements DataEntity,Serializable{
     public AiSessionMsg contextData(String contextData){
         setContextData(contextData);
         return this;
-        }
+    }
 
     /**
      * 设置工具信息。
      */
     public void setToolConfig(String toolConfig){
-        if (!_IS_LOADED||!Objects.equals(this.toolConfig, toolConfig)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("tool_config");
-            this._UPDATED_INFO.append("tool_config:\"").append(this.toolConfig).append("\"=>\"").append(toolConfig).append("\"\n");
-            this.toolConfig = toolConfig;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "toolConfig", this.toolConfig, toolConfig, !_IS_LOADED );
+        this.toolConfig = toolConfig;
     }
 
     /**
@@ -480,20 +408,14 @@ public class AiSessionMsg implements DataEntity,Serializable{
     public AiSessionMsg toolConfig(String toolConfig){
         setToolConfig(toolConfig);
         return this;
-        }
+    }
 
     /**
      * 设置文件信息。
      */
     public void setFileConfig(String fileConfig){
-        if (!_IS_LOADED||!Objects.equals(this.fileConfig, fileConfig)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("file_config");
-            this._UPDATED_INFO.append("file_config:\"").append(this.fileConfig).append("\"=>\"").append(fileConfig).append("\"\n");
-            this.fileConfig = fileConfig;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "fileConfig", this.fileConfig, fileConfig, !_IS_LOADED );
+        this.fileConfig = fileConfig;
     }
 
     /**
@@ -502,20 +424,14 @@ public class AiSessionMsg implements DataEntity,Serializable{
     public AiSessionMsg fileConfig(String fileConfig){
         setFileConfig(fileConfig);
         return this;
-        }
+    }
 
     /**
      * 设置rag信息。
      */
     public void setRagConfig(String ragConfig){
-        if (!_IS_LOADED||!Objects.equals(this.ragConfig, ragConfig)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("rag_config");
-            this._UPDATED_INFO.append("rag_config:\"").append(this.ragConfig).append("\"=>\"").append(ragConfig).append("\"\n");
-            this.ragConfig = ragConfig;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "ragConfig", this.ragConfig, ragConfig, !_IS_LOADED );
+        this.ragConfig = ragConfig;
     }
 
     /**
@@ -524,20 +440,14 @@ public class AiSessionMsg implements DataEntity,Serializable{
     public AiSessionMsg ragConfig(String ragConfig){
         setRagConfig(ragConfig);
         return this;
-        }
+    }
 
     /**
      * 设置返回信息。
      */
     public void setResponseInfo(String responseInfo){
-        if (!_IS_LOADED||!Objects.equals(this.responseInfo, responseInfo)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("response_info");
-            this._UPDATED_INFO.append("response_info:\"").append(this.responseInfo).append("\"=>\"").append(responseInfo).append("\"\n");
-            this.responseInfo = responseInfo;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "responseInfo", this.responseInfo, responseInfo, !_IS_LOADED );
+        this.responseInfo = responseInfo;
     }
 
     /**
@@ -546,20 +456,14 @@ public class AiSessionMsg implements DataEntity,Serializable{
     public AiSessionMsg responseInfo(String responseInfo){
         setResponseInfo(responseInfo);
         return this;
-        }
+    }
 
     /**
      * 设置请求token数。
      */
     public void setRequestTokens(long requestTokens){
-        if (!_IS_LOADED||!Objects.equals(this.requestTokens, requestTokens)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("request_tokens");
-            this._UPDATED_INFO.append("request_tokens:\"").append(this.requestTokens).append("\"=>\"").append(requestTokens).append("\"\n");
-            this.requestTokens = requestTokens;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "requestTokens", this.requestTokens, requestTokens, !_IS_LOADED );
+        this.requestTokens = requestTokens;
     }
 
     /**
@@ -568,20 +472,14 @@ public class AiSessionMsg implements DataEntity,Serializable{
     public AiSessionMsg requestTokens(long requestTokens){
         setRequestTokens(requestTokens);
         return this;
-        }
+    }
 
     /**
      * 设置响应token数。
      */
     public void setResponseTokens(long responseTokens){
-        if (!_IS_LOADED||!Objects.equals(this.responseTokens, responseTokens)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("response_tokens");
-            this._UPDATED_INFO.append("response_tokens:\"").append(this.responseTokens).append("\"=>\"").append(responseTokens).append("\"\n");
-            this.responseTokens = responseTokens;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "responseTokens", this.responseTokens, responseTokens, !_IS_LOADED );
+        this.responseTokens = responseTokens;
     }
 
     /**
@@ -590,20 +488,14 @@ public class AiSessionMsg implements DataEntity,Serializable{
     public AiSessionMsg responseTokens(long responseTokens){
         setResponseTokens(responseTokens);
         return this;
-        }
+    }
 
     /**
      * 设置创建时间。
      */
     public void setRequestDate(java.util.Date requestDate){
-        if (!_IS_LOADED||!Objects.equals(this.requestDate, requestDate)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("request_date");
-            this._UPDATED_INFO.append("request_date:\"").append(this.requestDate).append("\"=>\"").append(requestDate).append("\"\n");
-            this.requestDate = requestDate;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "requestDate", this.requestDate, requestDate, !_IS_LOADED );
+        this.requestDate = requestDate;
     }
 
     /**
@@ -612,20 +504,14 @@ public class AiSessionMsg implements DataEntity,Serializable{
     public AiSessionMsg requestDate(java.util.Date requestDate){
         setRequestDate(requestDate);
         return this;
-        }
+    }
 
     /**
      * 设置回应开始时间。
      */
     public void setResponseStartDate(java.util.Date responseStartDate){
-        if (!_IS_LOADED||!Objects.equals(this.responseStartDate, responseStartDate)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("response_start_date");
-            this._UPDATED_INFO.append("response_start_date:\"").append(this.responseStartDate).append("\"=>\"").append(responseStartDate).append("\"\n");
-            this.responseStartDate = responseStartDate;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "responseStartDate", this.responseStartDate, responseStartDate, !_IS_LOADED );
+        this.responseStartDate = responseStartDate;
     }
 
     /**
@@ -634,20 +520,14 @@ public class AiSessionMsg implements DataEntity,Serializable{
     public AiSessionMsg responseStartDate(java.util.Date responseStartDate){
         setResponseStartDate(responseStartDate);
         return this;
-        }
+    }
 
     /**
      * 设置回应结束时间。
      */
     public void setResponseEndDate(java.util.Date responseEndDate){
-        if (!_IS_LOADED||!Objects.equals(this.responseEndDate, responseEndDate)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("response_end_date");
-            this._UPDATED_INFO.append("response_end_date:\"").append(this.responseEndDate).append("\"=>\"").append(responseEndDate).append("\"\n");
-            this.responseEndDate = responseEndDate;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "responseEndDate", this.responseEndDate, responseEndDate, !_IS_LOADED );
+        this.responseEndDate = responseEndDate;
     }
 
     /**
@@ -656,20 +536,14 @@ public class AiSessionMsg implements DataEntity,Serializable{
     public AiSessionMsg responseEndDate(java.util.Date responseEndDate){
         setResponseEndDate(responseEndDate);
         return this;
-        }
+    }
 
     /**
      * 设置状态。
      */
     public void setState(int state){
-        if (!_IS_LOADED||!Objects.equals(this.state, state)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("state");
-            this._UPDATED_INFO.append("state:\"").append(this.state).append("\"=>\"").append(state).append("\"\n");
-            this.state = state;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "state", this.state, state, !_IS_LOADED );
+        this.state = state;
     }
 
     /**
@@ -678,31 +552,14 @@ public class AiSessionMsg implements DataEntity,Serializable{
     public AiSessionMsg state(int state){
         setState(state);
         return this;
-        }
+    }
 
     /**
      * 重载toString方法.
      */
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("id:\"" + this.id + "\"\r\n");
-        sb.append("saas_id:\"" + this.saasId + "\"\r\n");
-        sb.append("session_id:\"" + this.sessionId + "\"\r\n");
-        sb.append("system_prompt:\"" + this.systemPrompt + "\"\r\n");
-        sb.append("user_prompt:\"" + this.userPrompt + "\"\r\n");
-        sb.append("context_data:\"" + this.contextData + "\"\r\n");
-        sb.append("tool_config:\"" + this.toolConfig + "\"\r\n");
-        sb.append("file_config:\"" + this.fileConfig + "\"\r\n");
-        sb.append("rag_config:\"" + this.ragConfig + "\"\r\n");
-        sb.append("response_info:\"" + this.responseInfo + "\"\r\n");
-        sb.append("request_tokens:\"" + this.requestTokens + "\"\r\n");
-        sb.append("response_tokens:\"" + this.responseTokens + "\"\r\n");
-        sb.append("request_date:\"" + this.requestDate + "\"\r\n");
-        sb.append("response_start_date:\"" + this.responseStartDate + "\"\r\n");
-        sb.append("response_end_date:\"" + this.responseEndDate + "\"\r\n");
-        sb.append("state:\"" + this.state + "\"\r\n");
-        return sb.toString();
+        return JsonUtils.toString(this);
     }
 
 }

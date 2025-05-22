@@ -1,15 +1,15 @@
 package uw.ai.center.entity;
 
-import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
-
 import com.fasterxml.jackson.annotation.JsonRawValue;
 import io.swagger.v3.oas.annotations.media.Schema;
+import uw.common.util.JsonUtils;
 import uw.dao.DataEntity;
+import uw.dao.DataUpdateInfo;
 import uw.dao.annotation.ColumnMeta;
 import uw.dao.annotation.TableMeta;
+
+import java.io.Serializable;
+
 
 /**
  * AiToolInfo实体类
@@ -102,21 +102,14 @@ public class AiToolInfo implements DataEntity,Serializable{
     private int state;
 
     /**
-     * 轻量级状态下更新列表list.
+     * 数据更新信息.
      */
-    private transient Set<String> _UPDATED_COLUMN = null;
-
-    /**
-     * 更新的信息.
-     */
-    private transient StringBuilder _UPDATED_INFO = null;
-
+    private transient DataUpdateInfo _UPDATED_INFO = null;
 
     /**
      * 是否加载完成.
      */
     private transient boolean _IS_LOADED;
-
 
     /**
      * 获得实体的表名。
@@ -142,25 +135,12 @@ public class AiToolInfo implements DataEntity,Serializable{
         return getId();
     }
 
-
     /**
-     * 获取更改的字段列表.
+     * 获取更新信息.
      */
     @Override
-    public Set<String> GET_UPDATED_COLUMN() {
-        return _UPDATED_COLUMN;
-    }
-
-    /**
-     * 获取文本更新信息.
-     */
-    @Override
-    public String GET_UPDATED_INFO() {
-        if (this._UPDATED_INFO == null) {
-            return null;
-        } else {
-            return this._UPDATED_INFO.toString();
-        }
+    public DataUpdateInfo GET_UPDATED_INFO() {
+        return this._UPDATED_INFO;
     }
 
     /**
@@ -168,17 +148,7 @@ public class AiToolInfo implements DataEntity,Serializable{
      */
     @Override
     public void CLEAR_UPDATED_INFO() {
-        _UPDATED_COLUMN = null;
         _UPDATED_INFO = null;
-    }
-
-    /**
-     * 初始化set相关的信息.
-     */
-    private void _INIT_UPDATE_INFO() {
-        this._UPDATED_COLUMN = new HashSet<String>();
-        this._UPDATED_INFO = new StringBuilder("表ai_tool_info主键\"" + 
-        this.id+ "\"更新为:\r\n");
     }
 
 
@@ -264,14 +234,8 @@ public class AiToolInfo implements DataEntity,Serializable{
      * 设置ID。
      */
     public void setId(long id){
-        if (!_IS_LOADED||!Objects.equals(this.id, id)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("id");
-            this._UPDATED_INFO.append("id:\"").append(this.id).append("\"=>\"").append(id).append("\"\n");
-            this.id = id;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "id", this.id, id, !_IS_LOADED );
+        this.id = id;
     }
 
     /**
@@ -280,20 +244,14 @@ public class AiToolInfo implements DataEntity,Serializable{
     public AiToolInfo id(long id){
         setId(id);
         return this;
-        }
+    }
 
     /**
      * 设置应用名。
      */
     public void setAppName(String appName){
-        if (!_IS_LOADED||!Objects.equals(this.appName, appName)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("app_name");
-            this._UPDATED_INFO.append("app_name:\"").append(this.appName).append("\"=>\"").append(appName).append("\"\n");
-            this.appName = appName;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "appName", this.appName, appName, !_IS_LOADED );
+        this.appName = appName;
     }
 
     /**
@@ -302,20 +260,14 @@ public class AiToolInfo implements DataEntity,Serializable{
     public AiToolInfo appName(String appName){
         setAppName(appName);
         return this;
-        }
+    }
 
     /**
      * 设置工具类。
      */
     public void setToolClass(String toolClass){
-        if (!_IS_LOADED||!Objects.equals(this.toolClass, toolClass)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("tool_class");
-            this._UPDATED_INFO.append("tool_class:\"").append(this.toolClass).append("\"=>\"").append(toolClass).append("\"\n");
-            this.toolClass = toolClass;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "toolClass", this.toolClass, toolClass, !_IS_LOADED );
+        this.toolClass = toolClass;
     }
 
     /**
@@ -324,20 +276,14 @@ public class AiToolInfo implements DataEntity,Serializable{
     public AiToolInfo toolClass(String toolClass){
         setToolClass(toolClass);
         return this;
-        }
+    }
 
     /**
      * 设置工具版本。
      */
     public void setToolVersion(String toolVersion){
-        if (!_IS_LOADED||!Objects.equals(this.toolVersion, toolVersion)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("tool_version");
-            this._UPDATED_INFO.append("tool_version:\"").append(this.toolVersion).append("\"=>\"").append(toolVersion).append("\"\n");
-            this.toolVersion = toolVersion;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "toolVersion", this.toolVersion, toolVersion, !_IS_LOADED );
+        this.toolVersion = toolVersion;
     }
 
     /**
@@ -346,20 +292,14 @@ public class AiToolInfo implements DataEntity,Serializable{
     public AiToolInfo toolVersion(String toolVersion){
         setToolVersion(toolVersion);
         return this;
-        }
+    }
 
     /**
      * 设置工具名称。
      */
     public void setToolName(String toolName){
-        if (!_IS_LOADED||!Objects.equals(this.toolName, toolName)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("tool_name");
-            this._UPDATED_INFO.append("tool_name:\"").append(this.toolName).append("\"=>\"").append(toolName).append("\"\n");
-            this.toolName = toolName;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "toolName", this.toolName, toolName, !_IS_LOADED );
+        this.toolName = toolName;
     }
 
     /**
@@ -368,20 +308,14 @@ public class AiToolInfo implements DataEntity,Serializable{
     public AiToolInfo toolName(String toolName){
         setToolName(toolName);
         return this;
-        }
+    }
 
     /**
      * 设置工具描述。
      */
     public void setToolDesc(String toolDesc){
-        if (!_IS_LOADED||!Objects.equals(this.toolDesc, toolDesc)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("tool_desc");
-            this._UPDATED_INFO.append("tool_desc:\"").append(this.toolDesc).append("\"=>\"").append(toolDesc).append("\"\n");
-            this.toolDesc = toolDesc;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "toolDesc", this.toolDesc, toolDesc, !_IS_LOADED );
+        this.toolDesc = toolDesc;
     }
 
     /**
@@ -390,20 +324,14 @@ public class AiToolInfo implements DataEntity,Serializable{
     public AiToolInfo toolDesc(String toolDesc){
         setToolDesc(toolDesc);
         return this;
-        }
+    }
 
     /**
      * 设置工具参数配置。
      */
     public void setToolInput(String toolInput){
-        if (!_IS_LOADED||!Objects.equals(this.toolInput, toolInput)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("tool_input");
-            this._UPDATED_INFO.append("tool_input:\"").append(this.toolInput).append("\"=>\"").append(toolInput).append("\"\n");
-            this.toolInput = toolInput;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "toolInput", this.toolInput, toolInput, !_IS_LOADED );
+        this.toolInput = toolInput;
     }
 
     /**
@@ -412,20 +340,14 @@ public class AiToolInfo implements DataEntity,Serializable{
     public AiToolInfo toolInput(String toolInput){
         setToolInput(toolInput);
         return this;
-        }
+    }
 
     /**
      * 设置工具返回配置。
      */
     public void setToolOutput(String toolOutput){
-        if (!_IS_LOADED||!Objects.equals(this.toolOutput, toolOutput)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("tool_output");
-            this._UPDATED_INFO.append("tool_output:\"").append(this.toolOutput).append("\"=>\"").append(toolOutput).append("\"\n");
-            this.toolOutput = toolOutput;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "toolOutput", this.toolOutput, toolOutput, !_IS_LOADED );
+        this.toolOutput = toolOutput;
     }
 
     /**
@@ -434,20 +356,14 @@ public class AiToolInfo implements DataEntity,Serializable{
     public AiToolInfo toolOutput(String toolOutput){
         setToolOutput(toolOutput);
         return this;
-        }
+    }
 
     /**
      * 设置创建时间。
      */
     public void setCreateDate(java.util.Date createDate){
-        if (!_IS_LOADED||!Objects.equals(this.createDate, createDate)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("create_date");
-            this._UPDATED_INFO.append("create_date:\"").append(this.createDate).append("\"=>\"").append(createDate).append("\"\n");
-            this.createDate = createDate;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "createDate", this.createDate, createDate, !_IS_LOADED );
+        this.createDate = createDate;
     }
 
     /**
@@ -456,20 +372,14 @@ public class AiToolInfo implements DataEntity,Serializable{
     public AiToolInfo createDate(java.util.Date createDate){
         setCreateDate(createDate);
         return this;
-        }
+    }
 
     /**
      * 设置修改时间。
      */
     public void setModifyDate(java.util.Date modifyDate){
-        if (!_IS_LOADED||!Objects.equals(this.modifyDate, modifyDate)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("modify_date");
-            this._UPDATED_INFO.append("modify_date:\"").append(this.modifyDate).append("\"=>\"").append(modifyDate).append("\"\n");
-            this.modifyDate = modifyDate;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "modifyDate", this.modifyDate, modifyDate, !_IS_LOADED );
+        this.modifyDate = modifyDate;
     }
 
     /**
@@ -478,20 +388,14 @@ public class AiToolInfo implements DataEntity,Serializable{
     public AiToolInfo modifyDate(java.util.Date modifyDate){
         setModifyDate(modifyDate);
         return this;
-        }
+    }
 
     /**
      * 设置状态。
      */
     public void setState(int state){
-        if (!_IS_LOADED||!Objects.equals(this.state, state)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("state");
-            this._UPDATED_INFO.append("state:\"").append(this.state).append("\"=>\"").append(state).append("\"\n");
-            this.state = state;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "state", this.state, state, !_IS_LOADED );
+        this.state = state;
     }
 
     /**
@@ -500,26 +404,14 @@ public class AiToolInfo implements DataEntity,Serializable{
     public AiToolInfo state(int state){
         setState(state);
         return this;
-        }
+    }
 
     /**
      * 重载toString方法.
      */
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("id:\"" + this.id + "\"\r\n");
-        sb.append("app_name:\"" + this.appName + "\"\r\n");
-        sb.append("tool_class:\"" + this.toolClass + "\"\r\n");
-        sb.append("tool_version:\"" + this.toolVersion + "\"\r\n");
-        sb.append("tool_name:\"" + this.toolName + "\"\r\n");
-        sb.append("tool_desc:\"" + this.toolDesc + "\"\r\n");
-        sb.append("tool_input:\"" + this.toolInput + "\"\r\n");
-        sb.append("tool_output:\"" + this.toolOutput + "\"\r\n");
-        sb.append("create_date:\"" + this.createDate + "\"\r\n");
-        sb.append("modify_date:\"" + this.modifyDate + "\"\r\n");
-        sb.append("state:\"" + this.state + "\"\r\n");
-        return sb.toString();
+        return JsonUtils.toString(this);
     }
 
 }

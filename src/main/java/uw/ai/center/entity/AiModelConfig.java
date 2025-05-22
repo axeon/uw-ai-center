@@ -1,15 +1,15 @@
 package uw.ai.center.entity;
 
-import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
-
 import com.fasterxml.jackson.annotation.JsonRawValue;
 import io.swagger.v3.oas.annotations.media.Schema;
+import uw.common.util.JsonUtils;
 import uw.dao.DataEntity;
+import uw.dao.DataUpdateInfo;
 import uw.dao.annotation.ColumnMeta;
 import uw.dao.annotation.TableMeta;
+
+import java.io.Serializable;
+
 
 /**
  * AiModelConfig实体类
@@ -145,21 +145,14 @@ public class AiModelConfig implements DataEntity,Serializable{
     private int state;
 
     /**
-     * 轻量级状态下更新列表list.
+     * 数据更新信息.
      */
-    private transient Set<String> _UPDATED_COLUMN = null;
-
-    /**
-     * 更新的信息.
-     */
-    private transient StringBuilder _UPDATED_INFO = null;
-
+    private transient DataUpdateInfo _UPDATED_INFO = null;
 
     /**
      * 是否加载完成.
      */
     private transient boolean _IS_LOADED;
-
 
     /**
      * 获得实体的表名。
@@ -185,25 +178,12 @@ public class AiModelConfig implements DataEntity,Serializable{
         return getId();
     }
 
-
     /**
-     * 获取更改的字段列表.
+     * 获取更新信息.
      */
     @Override
-    public Set<String> GET_UPDATED_COLUMN() {
-        return _UPDATED_COLUMN;
-    }
-
-    /**
-     * 获取文本更新信息.
-     */
-    @Override
-    public String GET_UPDATED_INFO() {
-        if (this._UPDATED_INFO == null) {
-            return null;
-        } else {
-            return this._UPDATED_INFO.toString();
-        }
+    public DataUpdateInfo GET_UPDATED_INFO() {
+        return this._UPDATED_INFO;
     }
 
     /**
@@ -211,17 +191,7 @@ public class AiModelConfig implements DataEntity,Serializable{
      */
     @Override
     public void CLEAR_UPDATED_INFO() {
-        _UPDATED_COLUMN = null;
         _UPDATED_INFO = null;
-    }
-
-    /**
-     * 初始化set相关的信息.
-     */
-    private void _INIT_UPDATE_INFO() {
-        this._UPDATED_COLUMN = new HashSet<String>();
-        this._UPDATED_INFO = new StringBuilder("表ai_model_config主键\"" + 
-        this.id+ "\"更新为:\r\n");
     }
 
 
@@ -349,14 +319,8 @@ public class AiModelConfig implements DataEntity,Serializable{
      * 设置ID。
      */
     public void setId(long id){
-        if (!_IS_LOADED||!Objects.equals(this.id, id)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("id");
-            this._UPDATED_INFO.append("id:\"").append(this.id).append("\"=>\"").append(id).append("\"\n");
-            this.id = id;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "id", this.id, id, !_IS_LOADED );
+        this.id = id;
     }
 
     /**
@@ -365,20 +329,14 @@ public class AiModelConfig implements DataEntity,Serializable{
     public AiModelConfig id(long id){
         setId(id);
         return this;
-        }
+    }
 
     /**
      * 设置SAAS ID。
      */
     public void setSaasId(long saasId){
-        if (!_IS_LOADED||!Objects.equals(this.saasId, saasId)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("saas_id");
-            this._UPDATED_INFO.append("saas_id:\"").append(this.saasId).append("\"=>\"").append(saasId).append("\"\n");
-            this.saasId = saasId;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "saasId", this.saasId, saasId, !_IS_LOADED );
+        this.saasId = saasId;
     }
 
     /**
@@ -387,20 +345,14 @@ public class AiModelConfig implements DataEntity,Serializable{
     public AiModelConfig saasId(long saasId){
         setSaasId(saasId);
         return this;
-        }
+    }
 
     /**
      * 设置商户ID。
      */
     public void setMchId(long mchId){
-        if (!_IS_LOADED||!Objects.equals(this.mchId, mchId)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("mch_id");
-            this._UPDATED_INFO.append("mch_id:\"").append(this.mchId).append("\"=>\"").append(mchId).append("\"\n");
-            this.mchId = mchId;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "mchId", this.mchId, mchId, !_IS_LOADED );
+        this.mchId = mchId;
     }
 
     /**
@@ -409,20 +361,14 @@ public class AiModelConfig implements DataEntity,Serializable{
     public AiModelConfig mchId(long mchId){
         setMchId(mchId);
         return this;
-        }
+    }
 
     /**
      * 设置服务商类。
      */
     public void setVendorClass(String vendorClass){
-        if (!_IS_LOADED||!Objects.equals(this.vendorClass, vendorClass)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("vendor_class");
-            this._UPDATED_INFO.append("vendor_class:\"").append(this.vendorClass).append("\"=>\"").append(vendorClass).append("\"\n");
-            this.vendorClass = vendorClass;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "vendorClass", this.vendorClass, vendorClass, !_IS_LOADED );
+        this.vendorClass = vendorClass;
     }
 
     /**
@@ -431,20 +377,14 @@ public class AiModelConfig implements DataEntity,Serializable{
     public AiModelConfig vendorClass(String vendorClass){
         setVendorClass(vendorClass);
         return this;
-        }
+    }
 
     /**
      * 设置服务商代码。
      */
     public void setConfigCode(String configCode){
-        if (!_IS_LOADED||!Objects.equals(this.configCode, configCode)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("config_code");
-            this._UPDATED_INFO.append("config_code:\"").append(this.configCode).append("\"=>\"").append(configCode).append("\"\n");
-            this.configCode = configCode;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "configCode", this.configCode, configCode, !_IS_LOADED );
+        this.configCode = configCode;
     }
 
     /**
@@ -453,20 +393,14 @@ public class AiModelConfig implements DataEntity,Serializable{
     public AiModelConfig configCode(String configCode){
         setConfigCode(configCode);
         return this;
-        }
+    }
 
     /**
      * 设置服务商名称。
      */
     public void setConfigName(String configName){
-        if (!_IS_LOADED||!Objects.equals(this.configName, configName)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("config_name");
-            this._UPDATED_INFO.append("config_name:\"").append(this.configName).append("\"=>\"").append(configName).append("\"\n");
-            this.configName = configName;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "configName", this.configName, configName, !_IS_LOADED );
+        this.configName = configName;
     }
 
     /**
@@ -475,20 +409,14 @@ public class AiModelConfig implements DataEntity,Serializable{
     public AiModelConfig configName(String configName){
         setConfigName(configName);
         return this;
-        }
+    }
 
     /**
      * 设置服务商描述。
      */
     public void setConfigDesc(String configDesc){
-        if (!_IS_LOADED||!Objects.equals(this.configDesc, configDesc)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("config_desc");
-            this._UPDATED_INFO.append("config_desc:\"").append(this.configDesc).append("\"=>\"").append(configDesc).append("\"\n");
-            this.configDesc = configDesc;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "configDesc", this.configDesc, configDesc, !_IS_LOADED );
+        this.configDesc = configDesc;
     }
 
     /**
@@ -497,20 +425,14 @@ public class AiModelConfig implements DataEntity,Serializable{
     public AiModelConfig configDesc(String configDesc){
         setConfigDesc(configDesc);
         return this;
-        }
+    }
 
     /**
      * 设置api地址。
      */
     public void setApiUrl(String apiUrl){
-        if (!_IS_LOADED||!Objects.equals(this.apiUrl, apiUrl)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("api_url");
-            this._UPDATED_INFO.append("api_url:\"").append(this.apiUrl).append("\"=>\"").append(apiUrl).append("\"\n");
-            this.apiUrl = apiUrl;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "apiUrl", this.apiUrl, apiUrl, !_IS_LOADED );
+        this.apiUrl = apiUrl;
     }
 
     /**
@@ -519,20 +441,14 @@ public class AiModelConfig implements DataEntity,Serializable{
     public AiModelConfig apiUrl(String apiUrl){
         setApiUrl(apiUrl);
         return this;
-        }
+    }
 
     /**
      * 设置api key。
      */
     public void setApiKey(String apiKey){
-        if (!_IS_LOADED||!Objects.equals(this.apiKey, apiKey)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("api_key");
-            this._UPDATED_INFO.append("api_key:\"").append(this.apiKey).append("\"=>\"").append(apiKey).append("\"\n");
-            this.apiKey = apiKey;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "apiKey", this.apiKey, apiKey, !_IS_LOADED );
+        this.apiKey = apiKey;
     }
 
     /**
@@ -541,20 +457,14 @@ public class AiModelConfig implements DataEntity,Serializable{
     public AiModelConfig apiKey(String apiKey){
         setApiKey(apiKey);
         return this;
-        }
+    }
 
     /**
      * 设置主模型。
      */
     public void setModelMain(String modelMain){
-        if (!_IS_LOADED||!Objects.equals(this.modelMain, modelMain)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("model_main");
-            this._UPDATED_INFO.append("model_main:\"").append(this.modelMain).append("\"=>\"").append(modelMain).append("\"\n");
-            this.modelMain = modelMain;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "modelMain", this.modelMain, modelMain, !_IS_LOADED );
+        this.modelMain = modelMain;
     }
 
     /**
@@ -563,20 +473,14 @@ public class AiModelConfig implements DataEntity,Serializable{
     public AiModelConfig modelMain(String modelMain){
         setModelMain(modelMain);
         return this;
-        }
+    }
 
     /**
      * 设置嵌入模型。
      */
     public void setModelEmbed(String modelEmbed){
-        if (!_IS_LOADED||!Objects.equals(this.modelEmbed, modelEmbed)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("model_embed");
-            this._UPDATED_INFO.append("model_embed:\"").append(this.modelEmbed).append("\"=>\"").append(modelEmbed).append("\"\n");
-            this.modelEmbed = modelEmbed;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "modelEmbed", this.modelEmbed, modelEmbed, !_IS_LOADED );
+        this.modelEmbed = modelEmbed;
     }
 
     /**
@@ -585,20 +489,14 @@ public class AiModelConfig implements DataEntity,Serializable{
     public AiModelConfig modelEmbed(String modelEmbed){
         setModelEmbed(modelEmbed);
         return this;
-        }
+    }
 
     /**
      * 设置服务商配置。
      */
     public void setVendorData(String vendorData){
-        if (!_IS_LOADED||!Objects.equals(this.vendorData, vendorData)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("vendor_data");
-            this._UPDATED_INFO.append("vendor_data:\"").append(this.vendorData).append("\"=>\"").append(vendorData).append("\"\n");
-            this.vendorData = vendorData;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "vendorData", this.vendorData, vendorData, !_IS_LOADED );
+        this.vendorData = vendorData;
     }
 
     /**
@@ -607,20 +505,14 @@ public class AiModelConfig implements DataEntity,Serializable{
     public AiModelConfig vendorData(String vendorData){
         setVendorData(vendorData);
         return this;
-        }
+    }
 
     /**
      * 设置模型配置。
      */
     public void setModelData(String modelData){
-        if (!_IS_LOADED||!Objects.equals(this.modelData, modelData)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("model_data");
-            this._UPDATED_INFO.append("model_data:\"").append(this.modelData).append("\"=>\"").append(modelData).append("\"\n");
-            this.modelData = modelData;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "modelData", this.modelData, modelData, !_IS_LOADED );
+        this.modelData = modelData;
     }
 
     /**
@@ -629,20 +521,14 @@ public class AiModelConfig implements DataEntity,Serializable{
     public AiModelConfig modelData(String modelData){
         setModelData(modelData);
         return this;
-        }
+    }
 
     /**
      * 设置嵌入配置。
      */
     public void setEmbedData(String embedData){
-        if (!_IS_LOADED||!Objects.equals(this.embedData, embedData)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("embed_data");
-            this._UPDATED_INFO.append("embed_data:\"").append(this.embedData).append("\"=>\"").append(embedData).append("\"\n");
-            this.embedData = embedData;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "embedData", this.embedData, embedData, !_IS_LOADED );
+        this.embedData = embedData;
     }
 
     /**
@@ -651,20 +537,14 @@ public class AiModelConfig implements DataEntity,Serializable{
     public AiModelConfig embedData(String embedData){
         setEmbedData(embedData);
         return this;
-        }
+    }
 
     /**
      * 设置创建时间。
      */
     public void setCreateDate(java.util.Date createDate){
-        if (!_IS_LOADED||!Objects.equals(this.createDate, createDate)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("create_date");
-            this._UPDATED_INFO.append("create_date:\"").append(this.createDate).append("\"=>\"").append(createDate).append("\"\n");
-            this.createDate = createDate;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "createDate", this.createDate, createDate, !_IS_LOADED );
+        this.createDate = createDate;
     }
 
     /**
@@ -673,20 +553,14 @@ public class AiModelConfig implements DataEntity,Serializable{
     public AiModelConfig createDate(java.util.Date createDate){
         setCreateDate(createDate);
         return this;
-        }
+    }
 
     /**
      * 设置修改时间。
      */
     public void setModifyDate(java.util.Date modifyDate){
-        if (!_IS_LOADED||!Objects.equals(this.modifyDate, modifyDate)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("modify_date");
-            this._UPDATED_INFO.append("modify_date:\"").append(this.modifyDate).append("\"=>\"").append(modifyDate).append("\"\n");
-            this.modifyDate = modifyDate;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "modifyDate", this.modifyDate, modifyDate, !_IS_LOADED );
+        this.modifyDate = modifyDate;
     }
 
     /**
@@ -695,20 +569,14 @@ public class AiModelConfig implements DataEntity,Serializable{
     public AiModelConfig modifyDate(java.util.Date modifyDate){
         setModifyDate(modifyDate);
         return this;
-        }
+    }
 
     /**
      * 设置状态。
      */
     public void setState(int state){
-        if (!_IS_LOADED||!Objects.equals(this.state, state)){
-            if (this._UPDATED_COLUMN == null) {
-                _INIT_UPDATE_INFO();
-            }
-            this._UPDATED_COLUMN.add("state");
-            this._UPDATED_INFO.append("state:\"").append(this.state).append("\"=>\"").append(state).append("\"\n");
-            this.state = state;
-        }
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "state", this.state, state, !_IS_LOADED );
+        this.state = state;
     }
 
     /**
@@ -717,32 +585,14 @@ public class AiModelConfig implements DataEntity,Serializable{
     public AiModelConfig state(int state){
         setState(state);
         return this;
-        }
+    }
 
     /**
      * 重载toString方法.
      */
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("id:\"" + this.id + "\"\r\n");
-        sb.append("saas_id:\"" + this.saasId + "\"\r\n");
-        sb.append("mch_id:\"" + this.mchId + "\"\r\n");
-        sb.append("vendor_class:\"" + this.vendorClass + "\"\r\n");
-        sb.append("config_code:\"" + this.configCode + "\"\r\n");
-        sb.append("config_name:\"" + this.configName + "\"\r\n");
-        sb.append("config_desc:\"" + this.configDesc + "\"\r\n");
-        sb.append("api_url:\"" + this.apiUrl + "\"\r\n");
-        sb.append("api_key:\"" + this.apiKey + "\"\r\n");
-        sb.append("model_main:\"" + this.modelMain + "\"\r\n");
-        sb.append("model_embed:\"" + this.modelEmbed + "\"\r\n");
-        sb.append("vendor_data:\"" + this.vendorData + "\"\r\n");
-        sb.append("model_data:\"" + this.modelData + "\"\r\n");
-        sb.append("embed_data:\"" + this.embedData + "\"\r\n");
-        sb.append("create_date:\"" + this.createDate + "\"\r\n");
-        sb.append("modify_date:\"" + this.modifyDate + "\"\r\n");
-        sb.append("state:\"" + this.state + "\"\r\n");
-        return sb.toString();
+        return JsonUtils.toString(this);
     }
 
 }
