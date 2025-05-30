@@ -15,6 +15,10 @@ class UwAiCenterApplication {
             if (beanClassName.contains( "uw.ai" )) {
                 return beanClassName;
             }
+            //临时解决兼容性问题。
+            if (beanClassName.endsWith( "ClientHttpConnectorAutoConfiguration" )) {
+                return beanClassName;
+            }
 
             if (beanClassName.endsWith( "LoadBalancerAutoConfiguration" )) {
                 return beanClassName;
