@@ -24,10 +24,10 @@ import uw.common.app.entity.SysDataHistory;
 import uw.common.app.helper.SysDataHistoryHelper;
 import uw.common.dto.ResponseData;
 import uw.common.util.JsonUtils;
+import uw.common.util.SystemClock;
 import uw.dao.DaoManager;
 import uw.dao.DataList;
 
-import java.util.Date;
 import java.util.Map;
 
 
@@ -138,7 +138,7 @@ public class AiRagDocController {
         Map<String,String> fileContentMap = AiRagService.buildDocument( libId, docFile );
         aiRagDoc.setDocContent( JsonUtils.toString( fileContentMap) );
         aiRagDoc.setDocContentSize( aiRagDoc.getDocContent().length() );
-        aiRagDoc.setCreateDate( new Date() );
+        aiRagDoc.setCreateDate( SystemClock.nowDate() );
         aiRagDoc.setModifyDate( null );
         aiRagDoc.setState( CommonState.ENABLED.getValue() );
         //保存历史记录
@@ -160,7 +160,7 @@ public class AiRagDocController {
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData enable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiRagDoc.class,id,remark);
-        return dao.update(new AiRagDoc().modifyDate(new Date()).state(CommonState.ENABLED.getValue()), new IdStateQueryParam(id, CommonState.DISABLED.getValue())).onSuccess(updatedEntity -> {
+        return dao.update(new AiRagDoc().modifyDate(SystemClock.nowDate()).state(CommonState.ENABLED.getValue()), new IdStateQueryParam(id, CommonState.DISABLED.getValue())).onSuccess(updatedEntity -> {
             AiRagService.rebuildDocument( id );
         });
     }
@@ -176,7 +176,7 @@ public class AiRagDocController {
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData disable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiRagDoc.class,id,remark);
-        return dao.update(new AiRagDoc().modifyDate(new Date()).state(CommonState.DISABLED.getValue()), new IdStateQueryParam(id, CommonState.ENABLED.getValue())).onSuccess(updatedEntity -> {
+        return dao.update(new AiRagDoc().modifyDate(SystemClock.nowDate()).state(CommonState.DISABLED.getValue()), new IdStateQueryParam(id, CommonState.ENABLED.getValue())).onSuccess(updatedEntity -> {
             AiRagService.deleteDocument( id );
         });
     }
@@ -192,7 +192,7 @@ public class AiRagDocController {
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData delete(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiRagDoc.class,id,remark);
-        return dao.update(new AiRagDoc().modifyDate(new Date()).state(CommonState.DELETED.getValue()), new IdStateQueryParam(id, CommonState.DISABLED.getValue()));
+        return dao.update(new AiRagDoc().modifyDate(SystemClock.nowDate()).state(CommonState.DELETED.getValue()), new IdStateQueryParam(id, CommonState.DISABLED.getValue()));
     }
 
 }

@@ -12,15 +12,17 @@ import uw.auth.service.constant.ActionLog;
 import uw.auth.service.constant.AuthType;
 import uw.auth.service.constant.UserType;
 import uw.common.app.constant.CommonState;
-import uw.common.app.dto.*;
+import uw.common.app.dto.AuthIdQueryParam;
+import uw.common.app.dto.AuthIdStateQueryParam;
+import uw.common.app.dto.SysCritLogQueryParam;
+import uw.common.app.dto.SysDataHistoryQueryParam;
 import uw.common.app.entity.SysCritLog;
 import uw.common.app.entity.SysDataHistory;
 import uw.common.app.helper.SysDataHistoryHelper;
 import uw.common.dto.ResponseData;
+import uw.common.util.SystemClock;
 import uw.dao.DaoManager;
 import uw.dao.DataList;
-
-import java.util.Date;
 
 
 /**
@@ -122,7 +124,7 @@ public class AiRagLibController {
         AuthServiceHelper.logRef(AiRagLib.class,id);
         aiRagLib.setId(id);
         aiRagLib.setSaasId(AuthServiceHelper.getSaasId());
-        aiRagLib.setCreateDate(new Date());
+        aiRagLib.setCreateDate(SystemClock.nowDate());
         aiRagLib.setModifyDate(null);
         aiRagLib.setState(CommonState.ENABLED.getValue());
         //保存历史记录
@@ -151,7 +153,7 @@ public class AiRagLibController {
             aiRagLibDb.setEmbedConfigId(aiRagLib.getEmbedConfigId());
             aiRagLibDb.setEmbedModelName(aiRagLib.getEmbedModelName());
             aiRagLibDb.setLibConfig(aiRagLib.getLibConfig());
-            aiRagLibDb.setModifyDate(new Date());
+            aiRagLibDb.setModifyDate(SystemClock.nowDate());
             return dao.update( aiRagLibDb ).onSuccess(updatedEntity -> {
                 SysDataHistoryHelper.saveHistory( aiRagLibDb,remark );
             } );
@@ -169,7 +171,7 @@ public class AiRagLibController {
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData enable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiRagLib.class,id,remark);
-        return dao.update(new AiRagLib().modifyDate(new Date()).state(CommonState.ENABLED.getValue()), new AuthIdStateQueryParam(id, CommonState.DISABLED.getValue()));
+        return dao.update(new AiRagLib().modifyDate(SystemClock.nowDate()).state(CommonState.ENABLED.getValue()), new AuthIdStateQueryParam(id, CommonState.DISABLED.getValue()));
     }
 
     /**
@@ -183,7 +185,7 @@ public class AiRagLibController {
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData disable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiRagLib.class,id,remark);
-        return dao.update(new AiRagLib().modifyDate(new Date()).state(CommonState.DISABLED.getValue()), new AuthIdStateQueryParam(id, CommonState.ENABLED.getValue()));
+        return dao.update(new AiRagLib().modifyDate(SystemClock.nowDate()).state(CommonState.DISABLED.getValue()), new AuthIdStateQueryParam(id, CommonState.ENABLED.getValue()));
     }
 
     /**
@@ -197,7 +199,7 @@ public class AiRagLibController {
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData delete(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiRagLib.class,id,remark);
-        return dao.update(new AiRagLib().modifyDate(new Date()).state(CommonState.DELETED.getValue()), new AuthIdStateQueryParam(id, CommonState.DISABLED.getValue()));
+        return dao.update(new AiRagLib().modifyDate(SystemClock.nowDate()).state(CommonState.DELETED.getValue()), new AuthIdStateQueryParam(id, CommonState.DISABLED.getValue()));
     }
 
 }

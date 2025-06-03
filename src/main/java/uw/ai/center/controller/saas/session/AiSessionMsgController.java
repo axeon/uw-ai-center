@@ -13,7 +13,6 @@ import uw.auth.service.constant.AuthType;
 import uw.auth.service.constant.UserType;
 import uw.common.app.constant.CommonState;
 import uw.common.app.dto.AuthIdStateQueryParam;
-import uw.common.app.dto.IdStateQueryParam;
 import uw.common.dto.ResponseData;
 import uw.dao.DaoManager;
 import uw.dao.DataList;

@@ -25,12 +25,16 @@ import uw.ai.vo.AiToolCallInfo;
 import uw.common.app.constant.CommonState;
 import uw.common.dto.ResponseData;
 import uw.common.util.JsonUtils;
+import uw.common.util.SystemClock;
 import uw.dao.DaoManager;
 import uw.dao.DataList;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.springframework.ai.chat.memory.ChatMemory.CONVERSATION_ID;
@@ -100,7 +104,7 @@ public class AiChatService {
         // 初始化会话消息
         AiSessionMsg sessionMsg = initSessionMsg( sessionInfo.getId(), systemPrompt, userPrompt, toolList, fileInfo, ragLibIds, contextData );
         // 设置请求开始时间
-        sessionMsg.setResponseStartDate( new Date() );
+        sessionMsg.setResponseStartDate( SystemClock.nowDate() );
         ChatClient.ChatClientRequestSpec chatClientRequestSpec = chatClientWrapper.getChatClient().prompt();
         if (StringUtils.isNotBlank( systemPrompt )) {
             chatClientRequestSpec.system( systemPrompt );
@@ -127,7 +131,7 @@ public class AiChatService {
         Usage tokenUsage = chatResponse.getMetadata().getUsage();
         sessionMsg.setRequestTokens( tokenUsage.getPromptTokens() );
         sessionMsg.setResponseTokens( tokenUsage.getCompletionTokens() );
-        sessionMsg.setResponseEndDate( new Date() );
+        sessionMsg.setResponseEndDate( SystemClock.nowDate() );
         sessionMsg.setResponseInfo( responseData );
         // 保存会话信息
         saveSessionMsg( sessionMsg );
@@ -189,7 +193,7 @@ public class AiChatService {
         sessionInfo.setRagConfig( JsonUtils.toString( ragLibIds ) );
         sessionInfo.setRequestTokens( 0 );
         sessionInfo.setResponseTokens( 0 );
-        sessionInfo.setCreateDate( new Date() );
+        sessionInfo.setCreateDate( SystemClock.nowDate() );
         sessionInfo.setLastUpdate( null );
         sessionInfo.setState( CommonState.ENABLED.getValue() );
         return dao.save( sessionInfo );
@@ -283,7 +287,7 @@ public class AiChatService {
         sessionMsg.setRagConfig( JsonUtils.toString( ragIds ) );
         sessionMsg.setContextData( contextInfo );
         sessionMsg.setState( CommonState.ENABLED.getValue() );
-        sessionMsg.setRequestDate( new Date() );
+        sessionMsg.setRequestDate( SystemClock.nowDate() );
         return sessionMsg;
     }
 
@@ -298,7 +302,7 @@ public class AiChatService {
         return dao.save( sessionMsg ).onSuccess( savedEntity -> {
             // 更新session会话
             String sql = "update ai_session_info set last_update=?, msg_num=msg_num+1,request_tokens=request_tokens+?,response_tokens=response_tokens+? where id=?";
-            dao.executeCommand( sql, new Object[]{new Date(), sessionMsg.getRequestTokens(), sessionMsg.getResponseTokens(), sessionMsg.getSessionId()} );
+            dao.executeCommand( sql, new Object[]{SystemClock.nowDate(), sessionMsg.getRequestTokens(), sessionMsg.getResponseTokens(), sessionMsg.getSessionId()} );
         } );
     }
 
@@ -404,13 +408,13 @@ public class AiChatService {
         }
         Flux<String> chatResponse =
                 chatClientRequestSpec.advisors( spec -> spec.param( CONVERSATION_ID, conversationData.toString() )).stream().chatResponse().doFirst( () -> {
-            sessionMsg.setResponseStartDate( new Date() );
+            sessionMsg.setResponseStartDate( SystemClock.nowDate() );
         } ).doOnComplete( () -> {
             ChatResponse lastResponse = lastResponseRef.get();
             Usage tokenUsage = lastResponse.getMetadata().getUsage();
             sessionMsg.setRequestTokens( tokenUsage.getPromptTokens() );
             sessionMsg.setResponseTokens( tokenUsage.getCompletionTokens() );
-            sessionMsg.setResponseEndDate( new Date() );
+            sessionMsg.setResponseEndDate( SystemClock.nowDate() );
             sessionMsg.setResponseInfo( responseData.toString() );
             // 保存会话信息
             saveSessionMsg( sessionMsg );

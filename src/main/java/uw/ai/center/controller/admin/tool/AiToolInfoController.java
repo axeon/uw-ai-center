@@ -20,10 +20,9 @@ import uw.common.app.entity.SysCritLog;
 import uw.common.app.entity.SysDataHistory;
 import uw.common.app.helper.SysDataHistoryHelper;
 import uw.common.dto.ResponseData;
+import uw.common.util.SystemClock;
 import uw.dao.DaoManager;
 import uw.dao.DataList;
-
-import java.util.Date;
 
 
 /**
@@ -129,7 +128,7 @@ public class AiToolInfoController {
             aiToolInfoDb.setToolDesc(aiToolInfo.getToolDesc());
             aiToolInfoDb.setToolInput(aiToolInfo.getToolInput());
             aiToolInfoDb.setToolOutput(aiToolInfo.getToolOutput());
-            aiToolInfoDb.setModifyDate(new Date());
+            aiToolInfoDb.setModifyDate(SystemClock.nowDate());
             return dao.update( aiToolInfoDb ).onSuccess(updatedEntity -> {
                 AiToolHelper.invalidateToolCache();
                 SysDataHistoryHelper.saveHistory( aiToolInfoDb,remark );
@@ -149,7 +148,7 @@ public class AiToolInfoController {
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData enable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiToolInfo.class,id,remark);
-        return dao.update(new AiToolInfo().modifyDate(new Date()).state(CommonState.ENABLED.getValue()), new IdStateQueryParam(id, CommonState.DISABLED.getValue())).onSuccess(updatedEntity -> {
+        return dao.update(new AiToolInfo().modifyDate(SystemClock.nowDate()).state(CommonState.ENABLED.getValue()), new IdStateQueryParam(id, CommonState.DISABLED.getValue())).onSuccess(updatedEntity -> {
             AiToolHelper.invalidateToolCache();
         });
     }
@@ -165,7 +164,7 @@ public class AiToolInfoController {
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData disable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiToolInfo.class,id,remark);
-        return dao.update(new AiToolInfo().modifyDate(new Date()).state(CommonState.DISABLED.getValue()), new IdStateQueryParam(id, CommonState.ENABLED.getValue())).onSuccess(updatedEntity -> {
+        return dao.update(new AiToolInfo().modifyDate(SystemClock.nowDate()).state(CommonState.DISABLED.getValue()), new IdStateQueryParam(id, CommonState.ENABLED.getValue())).onSuccess(updatedEntity -> {
             AiToolHelper.invalidateToolCache();
         });
     }
@@ -181,6 +180,6 @@ public class AiToolInfoController {
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData delete(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiToolInfo.class,id,remark);
-        return dao.update(new AiToolInfo().modifyDate(new Date()).state(CommonState.DELETED.getValue()), new IdStateQueryParam(id, CommonState.DISABLED.getValue()));
+        return dao.update(new AiToolInfo().modifyDate(SystemClock.nowDate()).state(CommonState.DELETED.getValue()), new IdStateQueryParam(id, CommonState.DISABLED.getValue()));
     }
 }
