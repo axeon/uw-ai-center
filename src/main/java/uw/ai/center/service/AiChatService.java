@@ -328,7 +328,7 @@ public class AiChatService {
     /**
      * ChatClient 流式调用
      */
-    public static Flux<ResponseData<String>> chat(long saasId, long userId, int userType, String userInfo, long sessionId, String systemPrompt, String userPrompt,
+    public static Flux<String> chat(long saasId, long userId, int userType, String userInfo, long sessionId, String systemPrompt, String userPrompt,
                                                   List<AiToolCallInfo> toolList, Map<String, Object> toolContext, MultipartFile[] fileList, long[] ragLibIds) {
         // 初始化会话信息
         AiSessionInfo sessionInfo;
@@ -338,7 +338,7 @@ public class AiChatService {
             sessionInfo = null;
         }
         if (sessionInfo == null) {
-            return Flux.just(ResponseData.errorMsg("Session会话不存在！"));
+            return Flux.just(ResponseData.errorMsg("Session会话不存在！").toString());
         }
 
         // 如何没有系统提示语，则使用会话的
@@ -351,7 +351,7 @@ public class AiChatService {
         if (fileList != null) {
             ResponseData<String[]> readFileData = readFileData(fileList);
             if (readFileData.isNotSuccess()) {
-                return Flux.just(readFileData.raw());
+                return Flux.just(readFileData.toString());
             } else {
                 String[] fileData = readFileData.getData();
                 fileInfo = fileData[0];
@@ -377,7 +377,7 @@ public class AiChatService {
         // 获取ChatClient
         AiVendorClientWrapper chatClientWrapper = AiVendorHelper.getChatClient(sessionInfo.getConfigId());
         if (chatClientWrapper == null) {
-            return Flux.just(ResponseData.errorMsg("ChatClient获取失败！"));
+            return Flux.just(ResponseData.errorMsg("ChatClient获取失败！").toString());
         }
         // 会话消息的会话ID和消息ID
         SessionConversationData conversationData = new SessionConversationData(sessionMsg.getSessionId(), sessionMsg.getId());
@@ -422,7 +422,7 @@ public class AiChatService {
             String content = x.getResult().getOutput().getText();
             responseData.append(content);
             lastResponseRef.set(x);
-            return ResponseData.of(0, content, ResponseData.STATE_SUCCESS, null, null);
+            return ResponseData.of(0, content, ResponseData.STATE_SUCCESS, null, null).toString();
         });
     }
 

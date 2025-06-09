@@ -52,8 +52,7 @@ public class AiChatRpcController implements AiChatRpc {
     @MscPermDeclare(user = UserType.RPC)
     public Flux<ServerSentEvent<String>> chat(HttpServletResponse response, @ModelAttribute AiChatMsgParam param) {
         response.setCharacterEncoding( "UTF-8" );
-        return AiChatService.chat( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(),
-                param.getSessionId(), param.getUserPrompt(), param.getUserPrompt(), param.getToolList(), param.getToolContext(), param.getFileList(), param.getRagLibIds() ).map( data -> ServerSentEvent.builder( data.toString() ).build() );
+        return AiChatService.chat(AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(), param.getSessionId(), param.getSystemPrompt(), param.getUserPrompt(), param.getToolList(), param.getToolContext(), param.getFileList(), param.getRagLibIds()).map(s -> ServerSentEvent.builder(s == null ? "" : s).build());
     }
 
     /**
