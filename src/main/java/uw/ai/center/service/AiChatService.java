@@ -19,6 +19,7 @@ import uw.ai.center.entity.AiSessionMsg;
 import uw.ai.center.tool.AiToolHelper;
 import uw.ai.center.vendor.AiVendorClientWrapper;
 import uw.ai.center.vendor.AiVendorHelper;
+import uw.ai.center.vo.AiChatSentEvent;
 import uw.ai.center.vo.AiModelConfigData;
 import uw.ai.center.vo.SessionConversationData;
 import uw.ai.vo.AiToolCallInfo;
@@ -329,7 +330,7 @@ public class AiChatService {
      * ChatClient 流式调用
      */
     public static Flux<String> chat(long saasId, long userId, int userType, String userInfo, long sessionId, String systemPrompt, String userPrompt,
-                                                  List<AiToolCallInfo> toolList, Map<String, Object> toolContext, MultipartFile[] fileList, long[] ragLibIds) {
+                                    List<AiToolCallInfo> toolList, Map<String, Object> toolContext, MultipartFile[] fileList, long[] ragLibIds) {
         // 初始化会话信息
         AiSessionInfo sessionInfo;
         if (sessionId > 0) {
@@ -422,7 +423,7 @@ public class AiChatService {
             String content = x.getResult().getOutput().getText();
             responseData.append(content);
             lastResponseRef.set(x);
-            return ResponseData.of(0, content, ResponseData.STATE_SUCCESS, null, null).toString();
+            return new AiChatSentEvent<>(content).toString();
         });
     }
 
