@@ -50,10 +50,10 @@ public class AiChatUserController {
     @PostMapping(value = "/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     @Operation(summary = "聊天", description = "聊天")
     @MscPermDeclare(auth = AuthType.NONE, log = ActionLog.BASE)
-    public Flux<ServerSentEvent<ResponseData<String>>> chat(HttpServletResponse response, @ModelAttribute AiChatMsgParam param) {
+    public Flux<ServerSentEvent<String>> chat(HttpServletResponse response, @ModelAttribute AiChatMsgParam param) {
         response.setCharacterEncoding( "UTF-8" );
         return AiChatService.chat( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(),
-                param.getSessionId(), param.getSystemPrompt(), param.getUserPrompt(), param.getToolList(), param.getToolContext(),param.getFileList(), param.getRagLibIds() ).map( data -> ServerSentEvent.builder(data).build() );
+                param.getSessionId(), param.getSystemPrompt(), param.getUserPrompt(), param.getToolList(), param.getToolContext(),param.getFileList(), param.getRagLibIds() ).map( data -> ServerSentEvent.builder(data.toString()).build() );
 
     }
 
