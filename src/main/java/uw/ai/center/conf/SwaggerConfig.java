@@ -15,7 +15,7 @@ import org.springframework.context.annotation.Profile;
  * uw-auth-center Swagger自动配置类
  */
 @Configuration
-@Profile({"dev"})
+@Profile({"debug","dev"})
 public class SwaggerConfig {
 
     /**
