@@ -231,18 +231,18 @@ public class AiRagService {
     @JsonFormat(shape = JsonFormat.Shape.OBJECT)
     @Schema(title = "文档库参数", description = "文档库参数")
     public enum RagLibConfigParam implements JsonConfigParam {
-        CHUNK_SIZE(JsonConfigParam.ParamType.INT, "800", "文本块大小", "文本块大小", null),
-        CHUNK_MIN_CHAR_SIZE(JsonConfigParam.ParamType.INT, "350", "文本块最小字符数", "文本块最小字符数", null),
-        CHUNK_MIN_EMBED_SIZE(JsonConfigParam.ParamType.INT, "5", "文本块embed最小长度", "文本块embed最小长度，低于这个长度将会不会embed。", null),
-        CHUNK_MAX_NUM(JsonConfigParam.ParamType.INT, "10000", "文本块最大数量", "文本块最大数量", null),
-        SEARCH_SIMILARITY_THRESHOLD(JsonConfigParam.ParamType.DOUBLE, "0.0", "搜索匹配下限", "搜索匹配下限，低于此下限值的将不会被使用", null),
-        SEARCH_TOP_K(JsonConfigParam.ParamType.INT, "4", "搜索topK", "搜索topK", null),
+        CHUNK_SIZE(JsonConfigParam.ParamType.INT, "800", "文本块大小", null),
+        CHUNK_MIN_CHAR_SIZE(JsonConfigParam.ParamType.INT, "350", "文本块最小字符数", null),
+        CHUNK_MIN_EMBED_SIZE(JsonConfigParam.ParamType.INT, "5", "文本块embed最小长度，低于这个长度将会不会embed。", null),
+        CHUNK_MAX_NUM(JsonConfigParam.ParamType.INT, "10000", "文本块最大数量", null),
+        SEARCH_SIMILARITY_THRESHOLD(JsonConfigParam.ParamType.DOUBLE, "0.0", "搜索匹配下限，低于此下限值的将不会被使用", null),
+        SEARCH_TOP_K(JsonConfigParam.ParamType.INT, "4", "搜索topK", null),
         ;
 
         private final ParamData paramData;
 
-        RagLibConfigParam(ParamType type, String value, String name, String desc, String regex) {
-            this.paramData = new ParamData(EnumUtils.enumNameToDotCase(name()), type, value, name, desc, regex);
+        RagLibConfigParam(ParamType type, String value, String desc, String regex) {
+            this.paramData = new ParamData(EnumUtils.enumNameToDotCase(name()), type, value, desc, regex);
         }
 
         /**
