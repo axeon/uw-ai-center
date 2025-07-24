@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
 /**
- * uw-auth-center Swagger自动配置类
+ * uw-ai-center Swagger自动配置类
  */
 @Configuration
 @Profile({"debug","dev"})

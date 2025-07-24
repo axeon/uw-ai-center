@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
- * uw-auth-center 自动配置类
+ * uw-ai-center 自动配置类
  */
 @EnableConfigurationProperties({AiCenterProperties.class})
 @Configuration
