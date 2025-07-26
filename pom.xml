@@ -63,10 +63,6 @@
         </dependency>
         <dependency>
             <groupId>com.umtone</groupId>
-            <artifactId>uw-mfa</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.umtone</groupId>
             <artifactId>uw-log-es</artifactId>
         </dependency>
         <dependency>
