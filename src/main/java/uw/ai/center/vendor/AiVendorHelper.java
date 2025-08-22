@@ -69,6 +69,15 @@ public class AiVendorHelper {
     }
 
     /**
+     * 刷新配置。
+     *
+     * @param configId
+     */
+    public static void invalidateConfig(long configId){
+        FusionCache.invalidate( AiModelConfigData.class, configId );
+    }
+
+    /**
      * 获取所有AI供应商列表。
      *
      * @return

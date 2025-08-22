@@ -192,6 +192,7 @@ public class AiModelConfigController {
             aiModelConfigDb.setEmbedData(aiModelConfig.getEmbedData());
             aiModelConfigDb.setModifyDate(SystemClock.nowDate());
             return dao.update( aiModelConfigDb ).onSuccess(updatedEntity -> {
+                AiVendorHelper.invalidateConfig(aiModelConfigDb.getId());
                 SysDataHistoryHelper.saveHistory( aiModelConfigDb,remark );
             } );
         } );
@@ -224,7 +225,7 @@ public class AiModelConfigController {
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData disable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiModelConfig.class,id,remark);
-        return dao.update(new AiModelConfig().modifyDate(SystemClock.nowDate()).state(CommonState.DISABLED.getValue()), new IdStateQueryParam(id, CommonState.ENABLED.getValue()));
+        return dao.update(new AiModelConfig().modifyDate(SystemClock.nowDate()).state(CommonState.DISABLED.getValue()), new IdStateQueryParam(id, CommonState.ENABLED.getValue())).onSuccess(() -> AiVendorHelper.invalidateConfig(id));
     }
 
     /**

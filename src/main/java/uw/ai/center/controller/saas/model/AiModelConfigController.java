@@ -47,12 +47,11 @@ public class AiModelConfigController {
      *
      * @param queryParam
      * @return
-     *
      */
     @GetMapping("/list")
     @Operation(summary = "列表AI服务模型", description = "列表AI服务模型")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.REQUEST)
-    public ResponseData<DataList<AiModelConfig>> list(AiModelConfigQueryParam queryParam){
+    public ResponseData<DataList<AiModelConfig>> list(AiModelConfigQueryParam queryParam) {
         AuthServiceHelper.logRef(AiModelConfig.class);
         return dao.list(AiModelConfig.class, queryParam);
     }
@@ -79,10 +78,8 @@ public class AiModelConfigController {
     @GetMapping("/listModel")
     @Operation(summary = "列表模型列表", description = "列表模型列表")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.USER, log = ActionLog.NONE)
-    public List<String> listModel(@Parameter(description = "vendorClass", required = true) @RequestParam String vendorClass,
-                                     @Parameter(description = "apiUrl", required = true) @RequestParam String apiUrl,
-                                     @Parameter(description = "apiKey", required = true) @RequestParam String apiKey) {
-        return AiVendorHelper.listModel( vendorClass, apiUrl, apiKey );
+    public List<String> listModel(@Parameter(description = "vendorClass", required = true) @RequestParam String vendorClass, @Parameter(description = "apiUrl", required = true) @RequestParam String apiUrl, @Parameter(description = "apiKey", required = true) @RequestParam String apiKey) {
+        return AiVendorHelper.listModel(vendorClass, apiUrl, apiKey);
     }
 
 
@@ -94,8 +91,8 @@ public class AiModelConfigController {
     @GetMapping("/liteList")
     @Operation(summary = "轻量级列表AI服务模型", description = "轻量级列表AI服务模型，一般用于select控件。")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.USER, log = ActionLog.NONE)
-    public ResponseData<DataList<AiModelConfig>> liteList(AiModelConfigQueryParam queryParam){
-        queryParam.SELECT_SQL( "SELECT id,saas_id,mch_id,vendor_class,config_code,config_name,api_url,api_key,model_main,model_embed,create_date,modify_date,state from ai_model_config " );
+    public ResponseData<DataList<AiModelConfig>> liteList(AiModelConfigQueryParam queryParam) {
+        queryParam.SELECT_SQL("SELECT id,saas_id,mch_id,vendor_class,config_code,config_name,api_url,api_key,model_main,model_embed,create_date,modify_date,state from ai_model_config ");
         return dao.list(AiModelConfig.class, queryParam);
     }
 
@@ -103,13 +100,12 @@ public class AiModelConfigController {
      * 加载AI服务模型。
      *
      * @param id
-     *
      */
     @GetMapping("/load")
     @Operation(summary = "加载AI服务模型", description = "加载AI服务模型")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.REQUEST)
-    public ResponseData<AiModelConfig> load(@Parameter(description = "主键ID", required = true) @RequestParam long id)  {
-        AuthServiceHelper.logRef(AiModelConfig.class,id);
+    public ResponseData<AiModelConfig> load(@Parameter(description = "主键ID", required = true) @RequestParam long id) {
+        AuthServiceHelper.logRef(AiModelConfig.class, id);
         return dao.queryForSingleObject(AiModelConfig.class, new AuthIdQueryParam(id));
     }
 
@@ -122,7 +118,7 @@ public class AiModelConfigController {
     @GetMapping("/listDataHistory")
     @Operation(summary = "查询数据历史", description = "查询数据历史")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.REQUEST)
-    public ResponseData<DataList<SysDataHistory>> listDataHistory(SysDataHistoryQueryParam queryParam){
+    public ResponseData<DataList<SysDataHistory>> listDataHistory(SysDataHistoryQueryParam queryParam) {
         AuthServiceHelper.logRef(AiModelConfig.class, queryParam.getEntityId());
         queryParam.setEntityClass(AiModelConfig.class);
         return dao.list(SysDataHistory.class, queryParam);
@@ -137,7 +133,7 @@ public class AiModelConfigController {
     @GetMapping("/listCritLog")
     @Operation(summary = "查询操作日志", description = "查询操作日志")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.REQUEST)
-    public ResponseData<DataList<SysCritLog>> listCritLog(SysCritLogQueryParam queryParam)  {
+    public ResponseData<DataList<SysCritLog>> listCritLog(SysCritLogQueryParam queryParam) {
         AuthServiceHelper.logRef(AiModelConfig.class, queryParam.getBizId());
         queryParam.setBizTypeClass(AiModelConfig.class);
         return dao.list(SysCritLog.class, queryParam);
@@ -148,14 +144,13 @@ public class AiModelConfigController {
      *
      * @param aiModelConfig
      * @return
-     *
      */
     @PutMapping("/update")
     @Operation(summary = "修改AI服务模型", description = "修改AI服务模型")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
-    public ResponseData<AiModelConfig> update(@RequestBody AiModelConfig aiModelConfig, @Parameter(description = "备注") @RequestParam String remark){
-        AuthServiceHelper.logInfo(AiModelConfig.class,aiModelConfig.getId(),remark);
-        return  dao.load( AiModelConfig.class, aiModelConfig.getId() ).onSuccess(aiModelConfigDb-> {
+    public ResponseData<AiModelConfig> update(@RequestBody AiModelConfig aiModelConfig, @Parameter(description = "备注") @RequestParam String remark) {
+        AuthServiceHelper.logInfo(AiModelConfig.class, aiModelConfig.getId(), remark);
+        return dao.load(AiModelConfig.class, aiModelConfig.getId()).onSuccess(aiModelConfigDb -> {
             aiModelConfigDb.setMchId(aiModelConfig.getMchId());
             aiModelConfigDb.setVendorClass(aiModelConfig.getVendorClass());
             aiModelConfigDb.setConfigCode(aiModelConfig.getConfigCode());
@@ -169,23 +164,23 @@ public class AiModelConfigController {
             aiModelConfigDb.setModelData(aiModelConfig.getModelData());
             aiModelConfigDb.setEmbedData(aiModelConfig.getEmbedData());
             aiModelConfigDb.setModifyDate(SystemClock.nowDate());
-            return dao.update( aiModelConfigDb ).onSuccess(updatedEntity -> {
-                SysDataHistoryHelper.saveHistory( aiModelConfigDb,remark );
-            } );
-        } );
+            return dao.update(aiModelConfigDb).onSuccess(updatedEntity -> {
+                AiVendorHelper.invalidateConfig(aiModelConfigDb.getId());
+                SysDataHistoryHelper.saveHistory(aiModelConfigDb, remark);
+            });
+        });
     }
 
     /**
      * 启用AI服务模型。
      *
      * @param id
-     *
      */
     @PutMapping("/enable")
     @Operation(summary = "启用AI服务模型", description = "启用AI服务模型")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
-    public ResponseData enable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
-        AuthServiceHelper.logInfo(AiModelConfig.class,id,remark);
+    public ResponseData enable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark) {
+        AuthServiceHelper.logInfo(AiModelConfig.class, id, remark);
         return dao.update(new AiModelConfig().modifyDate(SystemClock.nowDate()).state(CommonState.ENABLED.getValue()), new AuthIdStateQueryParam(id, CommonState.DISABLED.getValue()));
     }
 
@@ -193,27 +188,25 @@ public class AiModelConfigController {
      * 禁用AI服务模型。
      *
      * @param id
-     *
      */
     @PutMapping("/disable")
     @Operation(summary = "禁用AI服务模型", description = "禁用AI服务模型")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
-    public ResponseData disable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
-        AuthServiceHelper.logInfo(AiModelConfig.class,id,remark);
-        return dao.update(new AiModelConfig().modifyDate(SystemClock.nowDate()).state(CommonState.DISABLED.getValue()), new AuthIdStateQueryParam(id, CommonState.ENABLED.getValue()));
+    public ResponseData disable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark) {
+        AuthServiceHelper.logInfo(AiModelConfig.class, id, remark);
+        return dao.update(new AiModelConfig().modifyDate(SystemClock.nowDate()).state(CommonState.DISABLED.getValue()), new AuthIdStateQueryParam(id, CommonState.ENABLED.getValue())).onSuccess(() -> AiVendorHelper.invalidateConfig(id));
     }
 
     /**
      * 删除AI服务模型。
      *
      * @param id
-     *
      */
     @DeleteMapping("/delete")
     @Operation(summary = "删除AI服务模型", description = "删除AI服务模型")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
-    public ResponseData delete(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
-        AuthServiceHelper.logInfo(AiModelConfig.class,id,remark);
+    public ResponseData delete(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark) {
+        AuthServiceHelper.logInfo(AiModelConfig.class, id, remark);
         return dao.update(new AiModelConfig().modifyDate(SystemClock.nowDate()).state(CommonState.DELETED.getValue()), new AuthIdStateQueryParam(id, CommonState.DISABLED.getValue()));
     }
 }
