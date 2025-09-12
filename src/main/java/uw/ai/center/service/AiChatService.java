@@ -140,6 +140,109 @@ public class AiChatService {
     }
 
     /**
+     * ChatClient 流式调用
+     */
+    public static Flux<String> chatGenerate(long saasId, long userId, int userType, String userInfo, long configId, String systemPrompt, String userPrompt,
+                                        List<AiToolCallInfo> toolList, Map<String, Object> toolContext, MultipartFile[] fileList, long[] ragLibIds) {
+        // 获取ChatClient
+        AiVendorClientWrapper chatClientWrapper = AiVendorHelper.getChatClient(configId);
+        if (chatClientWrapper == null) {
+            return Flux.just(ResponseData.errorMsg("ChatClient获取失败！").toString());
+        }
+        //获取基础信息。
+        AiModelConfigData configData = chatClientWrapper.getConfigData();
+        if (StringUtils.isBlank(systemPrompt)) {
+            systemPrompt = configData.getModelParamBox().getParam("systemPrompt", "");
+        }
+        // 初始化会话信息
+        AiSessionInfo sessionInfo = loadSession(saasId, userId, SessionType.COMMON.getValue(), null).getData();
+        if (sessionInfo == null) {
+            ResponseData<AiSessionInfo> responseData = initSession(saasId, userId, userType, userInfo, configId, SessionType.COMMON.getValue(), userPrompt, null, systemPrompt,
+                    toolList, ragLibIds);
+            if (responseData.isNotSuccess()) {
+                return Flux.just(responseData.toString());
+            } else {
+                sessionInfo = responseData.getData();
+            }
+        }
+        // 构建附件信息
+        String fileInfo = null;
+        String fileContent = null;
+        if (fileList != null) {
+            ResponseData<String[]> readFileData = readFileData(fileList);
+            if (readFileData.isNotSuccess()) {
+                return Flux.just(readFileData.toString());
+            } else {
+                String[] fileData = readFileData.getData();
+                fileInfo = fileData[0];
+                fileContent = fileData[1];
+            }
+        }
+        //检查rag信息。
+        String ragContent = null;
+        if (ragLibIds == null || ragLibIds.length == 0) {
+            if (StringUtils.isNotBlank(sessionInfo.getRagConfig())) {
+                ragLibIds = JsonUtils.parse(sessionInfo.getRagConfig(), long[].class);
+            }
+        }
+        if (ragLibIds != null && ragLibIds.length > 0) {
+            ragContent = queryRagInfo(ragLibIds, userPrompt).getData();
+        }
+        String contextData = null;
+        if (StringUtils.isNotBlank(ragContent) || StringUtils.isNotBlank(fileContent)) {
+            contextData = buildContextInfo(ragContent, fileContent);
+        }
+        // 初始化会话消息
+        AiSessionMsg sessionMsg = initSessionMsg(sessionInfo.getId(), systemPrompt, userPrompt, toolList, fileInfo, ragLibIds, contextData);
+        // 会话消息的会话ID和消息ID
+        SessionConversationData conversationData = new SessionConversationData(sessionMsg.getSessionId(), sessionMsg.getId());
+        // 返回信息
+        StringBuilder responseData = new StringBuilder();
+        // 最后一个ChatResponse信息
+        AtomicReference<ChatResponse> lastResponseRef = new AtomicReference<>();
+        ChatClient.ChatClientRequestSpec chatClientRequestSpec = chatClientWrapper.getChatClient().prompt();
+        if (StringUtils.isNotBlank(systemPrompt)) {
+            chatClientRequestSpec.system(systemPrompt);
+        }
+        if (StringUtils.isNotBlank(contextData)) {
+            userPrompt = userPrompt + contextData;
+        }
+        chatClientRequestSpec.user(userPrompt);
+        // 设置工具
+        if (toolList != null && !toolList.isEmpty()) {
+            chatClientRequestSpec.toolCallbacks(AiToolHelper.getToolCallbacks(toolList));
+            Map<String, Object> paramMap = new HashMap<>();
+            if (toolContext != null) {
+                paramMap.putAll(toolContext);
+            }
+            paramMap.put("saasId", saasId);
+            paramMap.put("userId", userId);
+            paramMap.put("userType", userType);
+            paramMap.put("userInfo", userInfo);
+            chatClientRequestSpec.toolContext(paramMap);
+        }
+        // 保存会话信息
+        return chatClientRequestSpec.advisors(spec -> spec.param(CONVERSATION_ID, conversationData.toString())).stream().chatResponse().doFirst(() -> {
+            sessionMsg.setResponseStartDate(SystemClock.nowDate());
+        }).doOnComplete(() -> {
+            ChatResponse lastResponse = lastResponseRef.get();
+            Usage tokenUsage = lastResponse.getMetadata().getUsage();
+            sessionMsg.setRequestTokens(tokenUsage.getPromptTokens());
+            sessionMsg.setResponseTokens(tokenUsage.getCompletionTokens());
+            sessionMsg.setResponseEndDate(SystemClock.nowDate());
+            sessionMsg.setResponseInfo(responseData.toString());
+            // 保存会话信息
+            saveSessionMsg(sessionMsg);
+        }).filter(x -> x != null && x.getResult() != null && x.getResult().getOutput() != null && x.getResult().getOutput().getText() != null).map(x -> {
+            String content = x.getResult().getOutput().getText();
+            responseData.append(content);
+            lastResponseRef.set(x);
+            return new AiChatSentEvent<>(content).toString();
+        });
+    }
+
+
+    /**
      * 根据saasId、userId、sessionId获取session.
      *
      * @param saasId

@@ -40,8 +40,19 @@ public class AiChatRpcController implements AiChatRpc {
     @Operation(summary = "生成数据", description = "生成数据")
     @MscPermDeclare(user = UserType.RPC)
     public ResponseData<String> generate(@ModelAttribute AiChatGenerateParam param) {
-        return AiChatService.generate( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(),
-                param.getConfigId(), param.getSystemPrompt(), param.getUserPrompt(), param.getToolList(), param.getToolContext(), param.getFileList(), param.getRagLibIds() );
+        return AiChatService.generate(AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(), param.getConfigId(), param.getSystemPrompt(), param.getUserPrompt(), param.getToolList(), param.getToolContext(), param.getFileList(), param.getRagLibIds());
+    }
+
+
+    /**
+     * ChatClient 简单调用
+     */
+    @Override
+    @PostMapping("/chatGenerate")
+    @Operation(summary = "生成数据", description = "生成数据")
+    @MscPermDeclare(user = UserType.RPC)
+    public Flux<String> chatGenerate(@ModelAttribute AiChatGenerateParam param) {
+        return AiChatService.chatGenerate(AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(), param.getConfigId(), param.getSystemPrompt(), param.getUserPrompt(), param.getToolList(), param.getToolContext(), param.getFileList(), param.getRagLibIds());
     }
 
     /**
@@ -51,7 +62,7 @@ public class AiChatRpcController implements AiChatRpc {
     @Operation(summary = "聊天", description = "聊天")
     @MscPermDeclare(user = UserType.RPC)
     public Flux<ServerSentEvent<String>> chat(HttpServletResponse response, @ModelAttribute AiChatMsgParam param) {
-        response.setCharacterEncoding( "UTF-8" );
+        response.setCharacterEncoding("UTF-8");
         return AiChatService.chat(AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(), param.getSessionId(), param.getSystemPrompt(), param.getUserPrompt(), param.getToolList(), param.getToolContext(), param.getFileList(), param.getRagLibIds()).map(s -> ServerSentEvent.builder(s == null ? "" : s).build());
     }
 
@@ -64,8 +75,7 @@ public class AiChatRpcController implements AiChatRpc {
     @Operation(summary = "初始化会话", description = "初始化会话")
     @MscPermDeclare(user = UserType.RPC)
     public ResponseData<AiSessionInfo> initSession(@ModelAttribute AiChatSessionParam param) {
-        return AiChatService.initSession( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(),
-                param.getConfigId(), SessionType.CHAT.getValue(), param.getUserPrompt(), 0, param.getSystemPrompt(), param.getToolList(), param.getRagLibIds() );
+        return AiChatService.initSession(AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(), param.getConfigId(), SessionType.CHAT.getValue(), param.getUserPrompt(), 0, param.getSystemPrompt(), param.getToolList(), param.getRagLibIds());
     }
 
     /**
@@ -78,7 +88,7 @@ public class AiChatRpcController implements AiChatRpc {
     @Operation(summary = "列出会话信息", description = "列出会话信息")
     @MscPermDeclare(user = UserType.RPC)
     public ResponseData<DataList<AiSessionInfo>> listSessionInfo(AiSessionInfoQueryParam queryParam) {
-        return AiChatService.listSessionInfo( queryParam );
+        return AiChatService.listSessionInfo(queryParam);
     }
 
     /**
@@ -91,7 +101,7 @@ public class AiChatRpcController implements AiChatRpc {
     @Operation(summary = "列出会话消息", description = "列出会话消息")
     @MscPermDeclare(user = UserType.RPC)
     public ResponseData<DataList<AiSessionMsg>> listSessionMsg(AiSessionMsgQueryParam queryParam) {
-        return AiChatService.listSessionMsg( queryParam );
+        return AiChatService.listSessionMsg(queryParam);
     }
 
 }
