@@ -12,11 +12,11 @@ class UwAiCenterApplication {
     public static void main(String[] args) {
         new SpringApplicationBuilder( UwAiCenterApplication.class ).beanNameGenerator( (beanDefinition, beanDefinitionRegistry) -> {
             String beanClassName = beanDefinition.getBeanClassName();
-            if (beanClassName.contains( "uw.ai" )) {
+            if (beanClassName.startsWith( "uw.ai" )) {
                 return beanClassName;
             }
             //临时解决兼容性问题。
-            if (beanClassName.endsWith( "ClientHttpConnectorAutoConfiguration" )) {
+            if (beanClassName.contains( "ClientHttpConnectorAutoConfiguration" )) {
                 return beanClassName;
             }
 
