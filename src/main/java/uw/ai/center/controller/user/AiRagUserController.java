@@ -28,14 +28,14 @@ public class AiRagUserController {
     private final DaoManager dao = DaoManager.getInstance();
 
     /**
-     * 列表AI服务模型。
+     * 列表RAG库。
      *
      * @param queryParam
      * @return
      * @throws TransactionException
      */
     @GetMapping("/list")
-    @Operation(summary = "列表AI服务模型", description = "列表AI服务模型")
+    @Operation(summary = "列表RAG库", description = "列表RAG库")
     @MscPermDeclare(auth = AuthType.NONE, log = ActionLog.BASE)
     public ResponseData<DataList<AiRagLib>> list(UserRagLibQueryParam queryParam) {
         AuthServiceHelper.logRef( AiModelConfig.class );

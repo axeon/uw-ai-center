@@ -27,7 +27,7 @@ import uw.common.dto.ResponseData;
 @Tag(name = "Ai翻译接口")
 @ResponseAdviceIgnore
 public class AiTranslateUserController {
-    private static final Logger logger = LoggerFactory.getLogger( AiTranslateUserController.class );
+    private static final Logger log = LoggerFactory.getLogger( AiTranslateUserController.class );
 
     /**
      * 翻译列表。

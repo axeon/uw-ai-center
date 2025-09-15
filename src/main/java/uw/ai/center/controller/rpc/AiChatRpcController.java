@@ -3,6 +3,8 @@ package uw.ai.center.controller.rpc;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
@@ -32,6 +34,8 @@ import uw.dao.DataList;
 @ResponseAdviceIgnore
 public class AiChatRpcController implements AiChatRpc {
 
+    private static final Logger log = LoggerFactory.getLogger(AiChatRpcController.class);
+
     /**
      * ChatClient 简单调用
      */
@@ -43,12 +47,11 @@ public class AiChatRpcController implements AiChatRpc {
         return AiChatService.generate(AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(), param.getConfigId(), param.getSystemPrompt(), param.getUserPrompt(), param.getToolList(), param.getToolContext(), param.getFileList(), param.getRagLibIds());
     }
 
-
     /**
      * ChatClient 简单调用
      */
     @Override
-    @PostMapping("/chatGenerate")
+    @PostMapping(value = "/chatGenerate", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     @Operation(summary = "生成数据", description = "生成数据")
     @MscPermDeclare(user = UserType.RPC)
     public Flux<String> chatGenerate(@ModelAttribute AiChatGenerateParam param) {
