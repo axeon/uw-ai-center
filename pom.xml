@@ -10,13 +10,13 @@
     <parent>
         <groupId>com.umtone</groupId>
         <artifactId>uw-base</artifactId>
-        <version>2025.0901.0001</version>
+        <version>2025.0901.0005</version>
         <relativePath/>
     </parent>
 
     <properties>
         <java.version>21</java.version>
-        <spring-ai.version>1.0.1</spring-ai.version>
+        <spring-ai.version>1.0.2</spring-ai.version>
     </properties>
 
     <dependencies>
