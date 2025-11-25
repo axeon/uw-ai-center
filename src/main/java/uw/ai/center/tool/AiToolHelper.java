@@ -45,7 +45,7 @@ public class AiToolHelper {
     static {
 
         // AI模型配置数据缓存。
-        FusionCache.config( FusionCache.Config.builder().cacheName( TOOL_CACHE_NAME ).localCacheMaxNum( 3 ).globalCacheExpireMillis( 86400_000L ).nullProtectMillis( 10_000L ).build(), new CacheDataLoader<String, Map<String, AiToolInfo>>() {
+        FusionCache.config( FusionCache.Config.builder().cacheName( TOOL_CACHE_NAME ).localCacheMaxNum( 3 ).cacheExpireMillis( 86400_000L ).nullProtectMillis( 10_000L ).build(), new CacheDataLoader<String, Map<String, AiToolInfo>>() {
             @Override
             public Map<String, AiToolInfo> load(String toolCode) throws Exception {
                 DataList<AiToolInfo> dataList = dao.list( AiToolInfo.class, "select * from ai_tool_info where state=?", new Object[]{CommonState.ENABLED.getValue()} ).getData();

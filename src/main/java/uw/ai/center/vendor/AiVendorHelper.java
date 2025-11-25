@@ -51,7 +51,7 @@ public class AiVendorHelper {
 
     static {
         // AI模型配置数据缓存。
-        FusionCache.config( FusionCache.Config.builder().entityClass( AiModelConfigData.class ).localCacheMaxNum( 10000 ).globalCacheExpireMillis( 86400_000L ).nullProtectMillis( 86400_000L ).build(), new CacheDataLoader<Long, AiModelConfigData>() {
+        FusionCache.config( FusionCache.Config.builder().entityClass( AiModelConfigData.class ).localCacheMaxNum( 10000 ).cacheExpireMillis( 86400_000L ).nullProtectMillis( 86400_000L ).build(), new CacheDataLoader<Long, AiModelConfigData>() {
             @Override
             public AiModelConfigData load(Long configId) throws Exception {
                 AiModelConfig aiModelConfig = dao.load( AiModelConfig.class, configId ).getData();
