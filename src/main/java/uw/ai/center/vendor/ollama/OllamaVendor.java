@@ -7,7 +7,8 @@ import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.ai.ollama.OllamaEmbeddingModel;
 import org.springframework.ai.ollama.api.OllamaApi;
-import org.springframework.ai.ollama.api.OllamaOptions;
+import org.springframework.ai.ollama.api.OllamaChatOptions;
+import org.springframework.ai.ollama.api.OllamaEmbeddingOptions;
 import org.springframework.ai.ollama.management.ModelManagementOptions;
 import org.springframework.ai.ollama.management.PullModelStrategy;
 import org.springframework.stereotype.Service;
@@ -101,7 +102,7 @@ public class OllamaVendor implements AiVendor {
 
         ChatModel chatModel = OllamaChatModel.builder().ollamaApi( ollamaApi ).modelManagementOptions( new ModelManagementOptions( PullModelStrategy.NEVER,
                         List.of( aiModelConfigData.getModelMain() ), Duration.ofSeconds( 0 ), 3 ) )
-                .defaultOptions( OllamaOptions.builder()
+                .defaultOptions( OllamaChatOptions.builder()
                         .useNUMA( vendorParamBox.getBooleanParam( OllamaParam.Vendor.NUMA ) )
                         .numCtx( vendorParamBox.getIntParam( OllamaParam.Vendor.NUM_CTX ) )
                         .numBatch( vendorParamBox.getIntParam( OllamaParam.Vendor.NUM_BATCH ) )
@@ -135,35 +136,16 @@ public class OllamaVendor implements AiVendor {
                 ).build();
         EmbeddingModel embeddingModel = OllamaEmbeddingModel.builder().ollamaApi( ollamaApi ).modelManagementOptions( new ModelManagementOptions( PullModelStrategy.NEVER,
                         List.of( aiModelConfigData.getModelEmbed() ), Duration.ofSeconds( 0 ), 3 ) )
-                .defaultOptions( OllamaOptions.builder()
+                .defaultOptions(OllamaEmbeddingOptions.builder()
                         .useNUMA( vendorParamBox.getBooleanParam( OllamaParam.Vendor.NUMA ) )
-                        .numCtx( vendorParamBox.getIntParam( OllamaParam.Vendor.NUM_CTX ) )
                         .numBatch( vendorParamBox.getIntParam( OllamaParam.Vendor.NUM_BATCH ) )
                         .numGPU( vendorParamBox.getIntParam( OllamaParam.Vendor.NUM_GPU ) )
                         .mainGPU( vendorParamBox.getIntParam( OllamaParam.Vendor.MAIN_GPU ) )
                         .lowVRAM( vendorParamBox.getBooleanParam( OllamaParam.Vendor.LOW_VRAM ) )
-                        .f16KV( vendorParamBox.getBooleanParam( OllamaParam.Vendor.F16_KV ) )
-                        .logitsAll( vendorParamBox.getBooleanParam( OllamaParam.Vendor.LOGITS_ALL ) )
                         .vocabOnly( vendorParamBox.getBooleanParam( OllamaParam.Vendor.VOCAB_ONLY ) )
                         .useMMap( vendorParamBox.getBooleanParam( OllamaParam.Vendor.USE_MMAP ) )
                         .useMLock( vendorParamBox.getBooleanParam( OllamaParam.Vendor.USE_MLOCK ) )
                         .numThread( vendorParamBox.getIntParam( OllamaParam.Vendor.NUM_THREAD ) )
-                        .numKeep( vendorParamBox.getIntParam( OllamaParam.Vendor.NUM_KEEP ) )
-                        .seed( vendorParamBox.getIntParam( OllamaParam.Vendor.SEED ) )
-                        .numPredict( vendorParamBox.getIntParam( OllamaParam.Vendor.NUM_PREDICT ) )
-                        .topK( vendorParamBox.getIntParam( OllamaParam.Vendor.TOP_K ) )
-                        .topP( vendorParamBox.getDoubleParam( OllamaParam.Vendor.TOP_P ) )
-                        .tfsZ( vendorParamBox.getFloatParam( OllamaParam.Vendor.TFS_Z ) )
-                        .typicalP( vendorParamBox.getFloatParam( OllamaParam.Vendor.TYPICAL_P ) )
-                        .repeatLastN( vendorParamBox.getIntParam( OllamaParam.Vendor.REPEAT_LAST_N ) )
-                        .repeatPenalty( vendorParamBox.getDoubleParam( OllamaParam.Vendor.REPEAT_PENALTY ) )
-                        .presencePenalty( vendorParamBox.getDoubleParam( OllamaParam.Vendor.PRESENCE_PENALTY ) )
-                        .frequencyPenalty( vendorParamBox.getDoubleParam( OllamaParam.Vendor.FREQUENCY_PENALTY ) )
-                        .temperature( vendorParamBox.getDoubleParam( OllamaParam.Vendor.TEMPERATURE ) )
-                        .mirostat( vendorParamBox.getIntParam( OllamaParam.Vendor.MIROSTAT ) )
-                        .mirostatEta( vendorParamBox.getFloatParam( OllamaParam.Vendor.MIROSTAT_ETA ) )
-                        .mirostatTau( vendorParamBox.getFloatParam( OllamaParam.Vendor.MIROSTAT_TAU ) )
-                        .penalizeNewline( vendorParamBox.getBooleanParam( OllamaParam.Vendor.PENALIZE_NEWLINE ) )
                         .model( aiModelConfigData.getEmbedData() )
                         .build()
                 ).build();
