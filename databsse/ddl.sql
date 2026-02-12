@@ -91,6 +91,10 @@ CREATE TABLE `ai_session_info` (
 CREATE TABLE `ai_session_msg` (
                                   `id` bigint NOT NULL COMMENT 'ID',
                                   `saas_id` bigint NOT NULL COMMENT 'saasId',
+                                  `user_id` bigint NOT NULL COMMENT '用户id',
+                                  `user_type` int DEFAULT NULL COMMENT '用户类型',
+                                  `user_info` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '用户名',
+                                  `config_id` bigint DEFAULT NULL COMMENT '配置ID',
                                   `session_id` bigint NOT NULL COMMENT 'sessionId',
                                   `system_prompt` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci COMMENT '系统提问',
                                   `user_prompt` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci COMMENT '用户提问',

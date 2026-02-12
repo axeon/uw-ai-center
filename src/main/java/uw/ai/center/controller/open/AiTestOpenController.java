@@ -30,7 +30,7 @@ public class AiTestOpenController {
      */
     @PostMapping("/generate")
     public ResponseData<String> generate(@ModelAttribute AiChatGenerateParam param) {
-        return AiChatService.generate(AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), "anonymous",
+        return AiChatService.generate(AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(),
                 param.getConfigId(), param.getSystemPrompt(), param.getUserPrompt(), param.getToolList(), param.getToolContext(), param.getFileList(), param.getRagLibIds());
     }
 
@@ -38,36 +38,36 @@ public class AiTestOpenController {
      * ChatClient 简单调用
      */
     @GetMapping("/who")
-    public ResponseData<String> who() {
-        return AiChatService.generate(AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), "anonymous",
-                2, null, "你是谁？", null, null, null, null);
+    public ResponseData<String> who(int configId, String query) {
+        return AiChatService.generate(AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(),
+                configId, null, query, null, null, null, null);
     }
 
     /**
      * ChatClient 简单调用
      */
     @GetMapping("/who1")
-    public ResponseData<String> who1() {
-        return AiClientHelper.generate(AiChatGenerateParam.builder().configId(2).userPrompt("你是谁？").build());
+    public ResponseData<String> who1(int configId, String query) {
+        return AiClientHelper.generate(AiChatGenerateParam.builder().bindAuthInfo().configId(configId).userPrompt(query).build());
     }
 
     /**
      * ChatClient 简单调用
      */
     @GetMapping("/who2")
-    public Flux<String> who2(HttpServletResponse response) {
+    public Flux<String> who2(HttpServletResponse response, int configId, String query) {
         response.setCharacterEncoding("UTF-8");
-        return AiChatService.chatGenerate(AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), "anonymous",
-                2, null, "你是谁？", null, null, null, null);
+        return AiChatService.chatGenerate(AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(),
+                configId, null, query, null, null, null, null);
     }
 
     /**
      * ChatClient 简单调用
      */
     @GetMapping("/who3")
-    public Flux<String> who3(HttpServletResponse response) {
+    public Flux<String> who3(HttpServletResponse response, int configId, String query) {
         response.setCharacterEncoding("UTF-8");
-        return AiClientHelper.chatGenerate(AiChatGenerateParam.builder().configId(2).userPrompt("你是谁？").build());
+        return AiClientHelper.chatGenerate(AiChatGenerateParam.builder().bindAuthInfo().configId(configId).userPrompt(query).build());
     }
 
 }

@@ -52,8 +52,7 @@ public class AiChatService {
     /**
      * ChatClient 简单调用。
      */
-    public static ResponseData<String> generate(long saasId, long userId, int userType, String userInfo, long configId, String systemPrompt, String userPrompt,
-                                                List<AiToolCallInfo> toolList, Map<String, Object> toolContext, MultipartFile[] fileList, long[] ragLibIds) {
+    public static ResponseData<String> generate(long saasId, long userId, int userType, String userInfo, long configId, String systemPrompt, String userPrompt, List<AiToolCallInfo> toolList, Map<String, Object> toolContext, MultipartFile[] fileList, long[] ragLibIds) {
         // 获取ChatClient
         AiVendorClientWrapper chatClientWrapper = AiVendorHelper.getChatClient(configId);
         if (chatClientWrapper == null) {
@@ -67,8 +66,7 @@ public class AiChatService {
         // 初始化会话信息
         AiSessionInfo sessionInfo = loadSession(saasId, userId, SessionType.COMMON.getValue(), null).getData();
         if (sessionInfo == null) {
-            ResponseData<AiSessionInfo> responseData = initSession(saasId, userId, userType, userInfo, configId, SessionType.COMMON.getValue(), userPrompt, null, systemPrompt,
-                    toolList, ragLibIds);
+            ResponseData<AiSessionInfo> responseData = initSession(saasId, userId, userType, userInfo, configId, SessionType.COMMON.getValue(), userPrompt, null, systemPrompt, toolList, ragLibIds);
             if (responseData.isNotSuccess()) {
                 return responseData.raw();
             } else {
@@ -103,7 +101,7 @@ public class AiChatService {
             contextData = buildContextInfo(ragContent, fileContent);
         }
         // 初始化会话消息
-        AiSessionMsg sessionMsg = initSessionMsg(sessionInfo.getId(), systemPrompt, userPrompt, toolList, fileInfo, ragLibIds, contextData);
+        AiSessionMsg sessionMsg = initSessionMsg(saasId, userId, userType, userInfo, configId, sessionInfo.getId(), systemPrompt, userPrompt, toolList, fileInfo, ragLibIds, contextData);
         // 设置请求开始时间
         sessionMsg.setResponseStartDate(SystemClock.nowDate());
         ChatClient.ChatClientRequestSpec chatClientRequestSpec = chatClientWrapper.getChatClient().prompt();
@@ -142,8 +140,7 @@ public class AiChatService {
     /**
      * ChatClient 流式调用
      */
-    public static Flux<String> chatGenerate(long saasId, long userId, int userType, String userInfo, long configId, String systemPrompt, String userPrompt,
-                                        List<AiToolCallInfo> toolList, Map<String, Object> toolContext, MultipartFile[] fileList, long[] ragLibIds) {
+    public static Flux<String> chatGenerate(long saasId, long userId, int userType, String userInfo, long configId, String systemPrompt, String userPrompt, List<AiToolCallInfo> toolList, Map<String, Object> toolContext, MultipartFile[] fileList, long[] ragLibIds) {
         // 获取ChatClient
         AiVendorClientWrapper chatClientWrapper = AiVendorHelper.getChatClient(configId);
         if (chatClientWrapper == null) {
@@ -157,8 +154,7 @@ public class AiChatService {
         // 初始化会话信息
         AiSessionInfo sessionInfo = loadSession(saasId, userId, SessionType.COMMON.getValue(), null).getData();
         if (sessionInfo == null) {
-            ResponseData<AiSessionInfo> responseData = initSession(saasId, userId, userType, userInfo, configId, SessionType.COMMON.getValue(), userPrompt, null, systemPrompt,
-                    toolList, ragLibIds);
+            ResponseData<AiSessionInfo> responseData = initSession(saasId, userId, userType, userInfo, configId, SessionType.COMMON.getValue(), userPrompt, null, systemPrompt, toolList, ragLibIds);
             if (responseData.isNotSuccess()) {
                 return Flux.just(responseData.toString());
             } else {
@@ -193,7 +189,7 @@ public class AiChatService {
             contextData = buildContextInfo(ragContent, fileContent);
         }
         // 初始化会话消息
-        AiSessionMsg sessionMsg = initSessionMsg(sessionInfo.getId(), systemPrompt, userPrompt, toolList, fileInfo, ragLibIds, contextData);
+        AiSessionMsg sessionMsg = initSessionMsg(saasId, userId, userType, userInfo, configId, sessionInfo.getId(), systemPrompt, userPrompt, toolList, fileInfo, ragLibIds, contextData);
         // 会话消息的会话ID和消息ID
         SessionConversationData conversationData = new SessionConversationData(sessionMsg.getSessionId(), sessionMsg.getId());
         // 返回信息
@@ -266,8 +262,7 @@ public class AiChatService {
      * @param windowSize
      * @return
      */
-    public static ResponseData<AiSessionInfo> initSession(long saasId, long userId, int userType, String userInfo, long configId, int sessionType, String sessionName,
-                                                          Integer windowSize, String systemPrompt, List<AiToolCallInfo> toolList, long[] ragLibIds) {
+    public static ResponseData<AiSessionInfo> initSession(long saasId, long userId, int userType, String userInfo, long configId, int sessionType, String sessionName, Integer windowSize, String systemPrompt, List<AiToolCallInfo> toolList, long[] ragLibIds) {
         // 获取ChatClient
         AiVendorClientWrapper chatClientWrapper = AiVendorHelper.getChatClient(configId);
         if (chatClientWrapper == null) {
@@ -378,17 +373,25 @@ public class AiChatService {
      * @param userPrompt
      * @return
      */
-    public static AiSessionMsg initSessionMsg(long sessionId, String systemPrompt, String userPrompt, List<AiToolCallInfo> toolList, String fileInfo, long[] ragIds,
-                                              String contextInfo) {
+    public static AiSessionMsg initSessionMsg(long saasId, long userId, int userType, String userInfo, long configId, long sessionId, String systemPrompt, String userPrompt, List<AiToolCallInfo> toolList, String fileInfo, long[] ragIds, String contextInfo) {
         long msgId = dao.getSequenceId(AiSessionMsg.class);
         AiSessionMsg sessionMsg = new AiSessionMsg();
         sessionMsg.setId(msgId);
+        sessionMsg.setSaasId(saasId);
+        sessionMsg.setUserId(userId);
+        sessionMsg.setUserType(userType);
+        sessionMsg.setUserInfo(userInfo);
+        sessionMsg.setConfigId(configId);
         sessionMsg.setSessionId(sessionId);
         sessionMsg.setSystemPrompt(systemPrompt);
         sessionMsg.setUserPrompt(userPrompt);
-        sessionMsg.setToolConfig(JsonUtils.toString(toolList));
+        if (toolList != null) {
+            sessionMsg.setToolConfig(JsonUtils.toString(toolList));
+        }
+        if (ragIds != null) {
+            sessionMsg.setRagConfig(JsonUtils.toString(ragIds));
+        }
         sessionMsg.setFileConfig(fileInfo);
-        sessionMsg.setRagConfig(JsonUtils.toString(ragIds));
         sessionMsg.setContextData(contextInfo);
         sessionMsg.setState(CommonState.ENABLED.getValue());
         sessionMsg.setRequestDate(SystemClock.nowDate());
@@ -405,8 +408,8 @@ public class AiChatService {
         // 更新sessionMsg
         return dao.save(sessionMsg).onSuccess(savedEntity -> {
             // 更新session会话
-            String sql = "update ai_session_info set last_update=?, msg_num=msg_num+1,request_tokens=request_tokens+?,response_tokens=response_tokens+? where id=?";
-            dao.executeCommand(sql, new Object[]{SystemClock.nowDate(), sessionMsg.getRequestTokens(), sessionMsg.getResponseTokens(), sessionMsg.getSessionId()});
+            String sql = "update ai_session_info set last_update=?, msg_num=msg_num+1,request_tokens=request_tokens+?,response_tokens=response_tokens+? where saas_id=? and id=?";
+            dao.executeCommand(sql, new Object[]{SystemClock.nowDate(), sessionMsg.getRequestTokens(), sessionMsg.getResponseTokens(), sessionMsg.getSaasId(), sessionMsg.getSessionId()});
         });
     }
 
@@ -432,8 +435,7 @@ public class AiChatService {
     /**
      * ChatClient 流式调用
      */
-    public static Flux<String> chat(long saasId, long userId, int userType, String userInfo, long sessionId, String systemPrompt, String userPrompt,
-                                    List<AiToolCallInfo> toolList, Map<String, Object> toolContext, MultipartFile[] fileList, long[] ragLibIds) {
+    public static Flux<String> chat(long saasId, long userId, int userType, String userInfo, long configId, long sessionId, String systemPrompt, String userPrompt, List<AiToolCallInfo> toolList, Map<String, Object> toolContext, MultipartFile[] fileList, long[] ragLibIds) {
         // 初始化会话信息
         AiSessionInfo sessionInfo;
         if (sessionId > 0) {
@@ -444,7 +446,10 @@ public class AiChatService {
         if (sessionInfo == null) {
             return Flux.just(ResponseData.errorMsg("Session会话不存在！").toString());
         }
-
+        // 检查configId，如果不存在则使用会话的
+        if(configId <= 0){
+            configId = sessionInfo.getConfigId();
+        }
         // 如何没有系统提示语，则使用会话的
         if (StringUtils.isBlank(systemPrompt)) {
             systemPrompt = sessionInfo.getSystemPrompt();
@@ -477,7 +482,7 @@ public class AiChatService {
             contextData = buildContextInfo(ragContent, fileContent);
         }
         // 初始化会话消息
-        AiSessionMsg sessionMsg = initSessionMsg(sessionInfo.getId(), systemPrompt, userPrompt, toolList, fileInfo, ragLibIds, contextData);
+        AiSessionMsg sessionMsg = initSessionMsg(saasId, userId, userType, userInfo, configId, sessionInfo.getId(), systemPrompt, userPrompt, toolList, fileInfo, ragLibIds, contextData);
         // 获取ChatClient
         AiVendorClientWrapper chatClientWrapper = AiVendorHelper.getChatClient(sessionInfo.getConfigId());
         if (chatClientWrapper == null) {

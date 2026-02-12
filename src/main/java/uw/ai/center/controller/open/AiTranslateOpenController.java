@@ -32,7 +32,7 @@ public class AiTranslateOpenController {
     @PostMapping("/translateList")
     public ResponseData<AiTranslateResultData[]> translateList(@RequestBody AiTranslateListParam param) {
         return AiTranslateService.translateListEntity( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(),
-                "anonymous", param );
+                AuthServiceHelper.getUserName(), param );
     }
 
     /**
@@ -41,7 +41,7 @@ public class AiTranslateOpenController {
     @PostMapping("/translateMap")
     public ResponseData<AiTranslateResultData[]> translateMap(@RequestBody AiTranslateMapParam param) {
         return AiTranslateService.translateMapEntity( AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(),
-                "anonymous", param );
+                AuthServiceHelper.getUserName(), param );
     }
 
 }

@@ -17,4 +17,4 @@ spring:
         namespace: ${spring.cloud.nacos.config.namespace}
         service: ${spring.application.name}
         ip: ${APP_HOST:}
-        register-enabled: false
+#        register-enabled: false

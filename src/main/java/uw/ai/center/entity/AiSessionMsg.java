@@ -16,121 +16,149 @@ import java.io.Serializable;
  *
  * @author axeon
  */
-@TableMeta(tableName="ai_session_msg",tableType="table")
+@TableMeta(tableName = "ai_session_msg", tableType = "table")
 @Schema(title = "session消息", description = "session消息")
-public class AiSessionMsg implements DataEntity,Serializable{
+public class AiSessionMsg implements DataEntity, Serializable {
 
 
     /**
      * ID
      */
-    @ColumnMeta(columnName="id", dataType="long", dataSize=19, nullable=false, primaryKey=true)
-    @Schema(title = "ID", description = "ID", maxLength=19, nullable=false )
+    @ColumnMeta(columnName = "id", dataType = "long", dataSize = 19, nullable = false, primaryKey = true)
+    @Schema(title = "ID", description = "ID", maxLength = 19, nullable = false)
     private long id;
 
     /**
      * saasId
      */
-    @ColumnMeta(columnName="saas_id", dataType="long", dataSize=19, nullable=false, primaryKey=true)
-    @Schema(title = "saasId", description = "saasId", maxLength=19, nullable=false )
+    @ColumnMeta(columnName = "saas_id", dataType = "long", dataSize = 19, nullable = false, primaryKey = true)
+    @Schema(title = "saasId", description = "saasId", maxLength = 19, nullable = false)
     private long saasId;
+
+    /**
+     * 用户id
+     */
+    @ColumnMeta(columnName = "user_id", dataType = "long", dataSize = 19, nullable = false)
+    @Schema(title = "用户id", description = "用户id", maxLength = 19, nullable = false)
+    private long userId;
+
+    /**
+     * 用户类型
+     */
+    @ColumnMeta(columnName = "user_type", dataType = "int", dataSize = 10, nullable = true)
+    @Schema(title = "用户类型", description = "用户类型", maxLength = 10, nullable = true)
+    private int userType;
+
+    /**
+     * 用户名
+     */
+    @ColumnMeta(columnName = "user_info", dataType = "String", dataSize = 200, nullable = true)
+    @Schema(title = "用户名", description = "用户名", maxLength = 200, nullable = true)
+    private String userInfo;
+
+    /**
+     * 配置ID
+     */
+    @ColumnMeta(columnName = "config_id", dataType = "long", dataSize = 19, nullable = true)
+    @Schema(title = "配置ID", description = "配置ID", maxLength = 19, nullable = true)
+    private long configId;
 
     /**
      * sessionId
      */
-    @ColumnMeta(columnName="session_id", dataType="long", dataSize=19, nullable=false)
-    @Schema(title = "sessionId", description = "sessionId", maxLength=19, nullable=false )
+    @ColumnMeta(columnName = "session_id", dataType = "long", dataSize = 19, nullable = false)
+    @Schema(title = "sessionId", description = "sessionId", maxLength = 19, nullable = false)
     private long sessionId;
 
     /**
      * 系统提问
      */
-    @ColumnMeta(columnName="system_prompt", dataType="String", dataSize=2147483646, nullable=true)
-    @Schema(title = "系统提问", description = "系统提问", maxLength=2147483646, nullable=true )
+    @ColumnMeta(columnName = "system_prompt", dataType = "String", dataSize = 2147483646, nullable = true)
+    @Schema(title = "系统提问", description = "系统提问", maxLength = 2147483646, nullable = true)
     private String systemPrompt;
 
     /**
      * 用户提问
      */
-    @ColumnMeta(columnName="user_prompt", dataType="String", dataSize=2147483646, nullable=true)
-    @Schema(title = "用户提问", description = "用户提问", maxLength=2147483646, nullable=true )
+    @ColumnMeta(columnName = "user_prompt", dataType = "String", dataSize = 2147483646, nullable = true)
+    @Schema(title = "用户提问", description = "用户提问", maxLength = 2147483646, nullable = true)
     private String userPrompt;
 
     /**
      * 上下文数据
      */
-    @ColumnMeta(columnName="context_data", dataType="String", dataSize=2147483646, nullable=true)
-    @Schema(title = "上下文数据", description = "上下文数据", maxLength=2147483646, nullable=true )
+    @ColumnMeta(columnName = "context_data", dataType = "String", dataSize = 2147483646, nullable = true)
+    @Schema(title = "上下文数据", description = "上下文数据", maxLength = 2147483646, nullable = true)
     private String contextData;
 
     /**
      * 工具信息
      */
-    @ColumnMeta(columnName="tool_config", dataType="String", dataSize=65535, nullable=true)
-    @Schema(title = "工具信息", description = "工具信息", maxLength=65535, nullable=true )
+    @ColumnMeta(columnName = "tool_config", dataType = "String", dataSize = 65535, nullable = true)
+    @Schema(title = "工具信息", description = "工具信息", maxLength = 65535, nullable = true)
     private String toolConfig;
 
     /**
      * 文件信息
      */
-    @ColumnMeta(columnName="file_config", dataType="String", dataSize=65535, nullable=true)
-    @Schema(title = "文件信息", description = "文件信息", maxLength=65535, nullable=true )
+    @ColumnMeta(columnName = "file_config", dataType = "String", dataSize = 65535, nullable = true)
+    @Schema(title = "文件信息", description = "文件信息", maxLength = 65535, nullable = true)
     private String fileConfig;
 
     /**
      * rag信息
      */
-    @ColumnMeta(columnName="rag_config", dataType="String", dataSize=65535, nullable=true)
-    @Schema(title = "rag信息", description = "rag信息", maxLength=65535, nullable=true )
+    @ColumnMeta(columnName = "rag_config", dataType = "String", dataSize = 65535, nullable = true)
+    @Schema(title = "rag信息", description = "rag信息", maxLength = 65535, nullable = true)
     private String ragConfig;
 
     /**
      * 返回信息
      */
-    @ColumnMeta(columnName="response_info", dataType="String", dataSize=2147483646, nullable=true)
-    @Schema(title = "返回信息", description = "返回信息", maxLength=2147483646, nullable=true )
+    @ColumnMeta(columnName = "response_info", dataType = "String", dataSize = 2147483646, nullable = true)
+    @Schema(title = "返回信息", description = "返回信息", maxLength = 2147483646, nullable = true)
     private String responseInfo;
 
     /**
      * 请求token数
      */
-    @ColumnMeta(columnName="request_tokens", dataType="long", dataSize=19, nullable=true)
-    @Schema(title = "请求token数", description = "请求token数", maxLength=19, nullable=true )
+    @ColumnMeta(columnName = "request_tokens", dataType = "long", dataSize = 19, nullable = true)
+    @Schema(title = "请求token数", description = "请求token数", maxLength = 19, nullable = true)
     private long requestTokens;
 
     /**
      * 响应token数
      */
-    @ColumnMeta(columnName="response_tokens", dataType="long", dataSize=19, nullable=true)
-    @Schema(title = "响应token数", description = "响应token数", maxLength=19, nullable=true )
+    @ColumnMeta(columnName = "response_tokens", dataType = "long", dataSize = 19, nullable = true)
+    @Schema(title = "响应token数", description = "响应token数", maxLength = 19, nullable = true)
     private long responseTokens;
 
     /**
      * 创建时间
      */
-    @ColumnMeta(columnName="request_date", dataType="java.util.Date", dataSize=23, nullable=true)
-    @Schema(title = "创建时间", description = "创建时间", maxLength=23, nullable=true )
+    @ColumnMeta(columnName = "request_date", dataType = "java.util.Date", dataSize = 23, nullable = true)
+    @Schema(title = "创建时间", description = "创建时间", maxLength = 23, nullable = true)
     private java.util.Date requestDate;
 
     /**
      * 回应开始时间
      */
-    @ColumnMeta(columnName="response_start_date", dataType="java.util.Date", dataSize=23, nullable=true)
-    @Schema(title = "回应开始时间", description = "回应开始时间", maxLength=23, nullable=true )
+    @ColumnMeta(columnName = "response_start_date", dataType = "java.util.Date", dataSize = 23, nullable = true)
+    @Schema(title = "回应开始时间", description = "回应开始时间", maxLength = 23, nullable = true)
     private java.util.Date responseStartDate;
 
     /**
      * 回应结束时间
      */
-    @ColumnMeta(columnName="response_end_date", dataType="java.util.Date", dataSize=23, nullable=true)
-    @Schema(title = "回应结束时间", description = "回应结束时间", maxLength=23, nullable=true )
+    @ColumnMeta(columnName = "response_end_date", dataType = "java.util.Date", dataSize = 23, nullable = true)
+    @Schema(title = "回应结束时间", description = "回应结束时间", maxLength = 23, nullable = true)
     private java.util.Date responseEndDate;
 
     /**
      * 状态
      */
-    @ColumnMeta(columnName="state", dataType="int", dataSize=10, nullable=true)
-    @Schema(title = "状态", description = "状态", maxLength=10, nullable=true )
+    @ColumnMeta(columnName = "state", dataType = "int", dataSize = 10, nullable = true)
+    @Schema(title = "状态", description = "状态", maxLength = 10, nullable = true)
     private int state;
 
     /**
@@ -147,7 +175,7 @@ public class AiSessionMsg implements DataEntity,Serializable{
      * 获得实体的表名。
      */
     @Override
-    public String ENTITY_TABLE(){
+    public String ENTITY_TABLE() {
         return "ai_session_msg";
     }
 
@@ -155,7 +183,7 @@ public class AiSessionMsg implements DataEntity,Serializable{
      * 获得实体的表注释。
      */
     @Override
-    public String ENTITY_NAME(){
+    public String ENTITY_NAME() {
         return "session消息";
     }
 
@@ -163,7 +191,7 @@ public class AiSessionMsg implements DataEntity,Serializable{
      * 获得主键
      */
     @Override
-    public Serializable ENTITY_ID(){
+    public Serializable ENTITY_ID() {
         return getId();
     }
 
@@ -187,112 +215,140 @@ public class AiSessionMsg implements DataEntity,Serializable{
     /**
      * 获取ID。
      */
-    public long getId(){
+    public long getId() {
         return this.id;
     }
 
     /**
      * 获取saasId。
      */
-    public long getSaasId(){
+    public long getSaasId() {
         return this.saasId;
+    }
+
+    /**
+     * 获取用户id。
+     */
+    public long getUserId() {
+        return this.userId;
+    }
+
+    /**
+     * 获取用户类型。
+     */
+    public int getUserType() {
+        return this.userType;
+    }
+
+    /**
+     * 获取用户名。
+     */
+    public String getUserInfo() {
+        return this.userInfo;
+    }
+
+    /**
+     * 获取配置ID。
+     */
+    public long getConfigId() {
+        return this.configId;
     }
 
     /**
      * 获取sessionId。
      */
-    public long getSessionId(){
+    public long getSessionId() {
         return this.sessionId;
     }
 
     /**
      * 获取系统提问。
      */
-    public String getSystemPrompt(){
+    public String getSystemPrompt() {
         return this.systemPrompt;
     }
 
     /**
      * 获取用户提问。
      */
-    public String getUserPrompt(){
+    public String getUserPrompt() {
         return this.userPrompt;
     }
 
     /**
      * 获取上下文数据。
      */
-    public String getContextData(){
+    public String getContextData() {
         return this.contextData;
     }
 
     /**
      * 获取工具信息。
      */
-    public String getToolConfig(){
+    public String getToolConfig() {
         return this.toolConfig;
     }
 
     /**
      * 获取文件信息。
      */
-    public String getFileConfig(){
+    public String getFileConfig() {
         return this.fileConfig;
     }
 
     /**
      * 获取rag信息。
      */
-    public String getRagConfig(){
+    public String getRagConfig() {
         return this.ragConfig;
     }
 
     /**
      * 获取返回信息。
      */
-    public String getResponseInfo(){
+    public String getResponseInfo() {
         return this.responseInfo;
     }
 
     /**
      * 获取请求token数。
      */
-    public long getRequestTokens(){
+    public long getRequestTokens() {
         return this.requestTokens;
     }
 
     /**
      * 获取响应token数。
      */
-    public long getResponseTokens(){
+    public long getResponseTokens() {
         return this.responseTokens;
     }
 
     /**
      * 获取创建时间。
      */
-    public java.util.Date getRequestDate(){
+    public java.util.Date getRequestDate() {
         return this.requestDate;
     }
 
     /**
      * 获取回应开始时间。
      */
-    public java.util.Date getResponseStartDate(){
+    public java.util.Date getResponseStartDate() {
         return this.responseStartDate;
     }
 
     /**
      * 获取回应结束时间。
      */
-    public java.util.Date getResponseEndDate(){
+    public java.util.Date getResponseEndDate() {
         return this.responseEndDate;
     }
 
     /**
      * 获取状态。
      */
-    public int getState(){
+    public int getState() {
         return this.state;
     }
 
@@ -300,15 +356,15 @@ public class AiSessionMsg implements DataEntity,Serializable{
     /**
      * 设置ID。
      */
-    public void setId(long id){
-        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "id", this.id, id, !_IS_LOADED );
+    public void setId(long id) {
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "id", this.id, id, !_IS_LOADED);
         this.id = id;
     }
 
     /**
-     *  设置ID链式调用。
+     * 设置ID链式调用。
      */
-    public AiSessionMsg id(long id){
+    public AiSessionMsg id(long id) {
         setId(id);
         return this;
     }
@@ -316,31 +372,95 @@ public class AiSessionMsg implements DataEntity,Serializable{
     /**
      * 设置saasId。
      */
-    public void setSaasId(long saasId){
-        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "saasId", this.saasId, saasId, !_IS_LOADED );
+    public void setSaasId(long saasId) {
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "saasId", this.saasId, saasId, !_IS_LOADED);
         this.saasId = saasId;
     }
 
     /**
-     *  设置saasId链式调用。
+     * 设置saasId链式调用。
      */
-    public AiSessionMsg saasId(long saasId){
+    public AiSessionMsg saasId(long saasId) {
         setSaasId(saasId);
+        return this;
+    }
+
+    /**
+     * 设置用户id。
+     */
+    public void setUserId(long userId) {
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "userId", this.userId, userId, !_IS_LOADED);
+        this.userId = userId;
+    }
+
+    /**
+     * 设置用户id链式调用。
+     */
+    public AiSessionMsg userId(long userId) {
+        setUserId(userId);
+        return this;
+    }
+
+    /**
+     * 设置用户类型。
+     */
+    public void setUserType(int userType) {
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "userType", this.userType, userType, !_IS_LOADED);
+        this.userType = userType;
+    }
+
+    /**
+     * 设置用户类型链式调用。
+     */
+    public AiSessionMsg userType(int userType) {
+        setUserType(userType);
+        return this;
+    }
+
+    /**
+     * 设置用户名。
+     */
+    public void setUserInfo(String userInfo) {
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "userInfo", this.userInfo, userInfo, !_IS_LOADED);
+        this.userInfo = userInfo;
+    }
+
+    /**
+     * 设置用户名链式调用。
+     */
+    public AiSessionMsg userInfo(String userInfo) {
+        setUserInfo(userInfo);
+        return this;
+    }
+
+    /**
+     * 设置配置ID。
+     */
+    public void setConfigId(long configId) {
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "configId", this.configId, configId, !_IS_LOADED);
+        this.configId = configId;
+    }
+
+    /**
+     * 设置配置ID链式调用。
+     */
+    public AiSessionMsg configId(long configId) {
+        setConfigId(configId);
         return this;
     }
 
     /**
      * 设置sessionId。
      */
-    public void setSessionId(long sessionId){
-        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "sessionId", this.sessionId, sessionId, !_IS_LOADED );
+    public void setSessionId(long sessionId) {
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "sessionId", this.sessionId, sessionId, !_IS_LOADED);
         this.sessionId = sessionId;
     }
 
     /**
-     *  设置sessionId链式调用。
+     * 设置sessionId链式调用。
      */
-    public AiSessionMsg sessionId(long sessionId){
+    public AiSessionMsg sessionId(long sessionId) {
         setSessionId(sessionId);
         return this;
     }
@@ -348,15 +468,15 @@ public class AiSessionMsg implements DataEntity,Serializable{
     /**
      * 设置系统提问。
      */
-    public void setSystemPrompt(String systemPrompt){
-        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "systemPrompt", this.systemPrompt, systemPrompt, !_IS_LOADED );
+    public void setSystemPrompt(String systemPrompt) {
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "systemPrompt", this.systemPrompt, systemPrompt, !_IS_LOADED);
         this.systemPrompt = systemPrompt;
     }
 
     /**
-     *  设置系统提问链式调用。
+     * 设置系统提问链式调用。
      */
-    public AiSessionMsg systemPrompt(String systemPrompt){
+    public AiSessionMsg systemPrompt(String systemPrompt) {
         setSystemPrompt(systemPrompt);
         return this;
     }
@@ -364,15 +484,15 @@ public class AiSessionMsg implements DataEntity,Serializable{
     /**
      * 设置用户提问。
      */
-    public void setUserPrompt(String userPrompt){
-        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "userPrompt", this.userPrompt, userPrompt, !_IS_LOADED );
+    public void setUserPrompt(String userPrompt) {
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "userPrompt", this.userPrompt, userPrompt, !_IS_LOADED);
         this.userPrompt = userPrompt;
     }
 
     /**
-     *  设置用户提问链式调用。
+     * 设置用户提问链式调用。
      */
-    public AiSessionMsg userPrompt(String userPrompt){
+    public AiSessionMsg userPrompt(String userPrompt) {
         setUserPrompt(userPrompt);
         return this;
     }
@@ -380,15 +500,15 @@ public class AiSessionMsg implements DataEntity,Serializable{
     /**
      * 设置上下文数据。
      */
-    public void setContextData(String contextData){
-        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "contextData", this.contextData, contextData, !_IS_LOADED );
+    public void setContextData(String contextData) {
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "contextData", this.contextData, contextData, !_IS_LOADED);
         this.contextData = contextData;
     }
 
     /**
-     *  设置上下文数据链式调用。
+     * 设置上下文数据链式调用。
      */
-    public AiSessionMsg contextData(String contextData){
+    public AiSessionMsg contextData(String contextData) {
         setContextData(contextData);
         return this;
     }
@@ -396,15 +516,15 @@ public class AiSessionMsg implements DataEntity,Serializable{
     /**
      * 设置工具信息。
      */
-    public void setToolConfig(String toolConfig){
-        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "toolConfig", this.toolConfig, toolConfig, !_IS_LOADED );
+    public void setToolConfig(String toolConfig) {
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "toolConfig", this.toolConfig, toolConfig, !_IS_LOADED);
         this.toolConfig = toolConfig;
     }
 
     /**
-     *  设置工具信息链式调用。
+     * 设置工具信息链式调用。
      */
-    public AiSessionMsg toolConfig(String toolConfig){
+    public AiSessionMsg toolConfig(String toolConfig) {
         setToolConfig(toolConfig);
         return this;
     }
@@ -412,15 +532,15 @@ public class AiSessionMsg implements DataEntity,Serializable{
     /**
      * 设置文件信息。
      */
-    public void setFileConfig(String fileConfig){
-        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "fileConfig", this.fileConfig, fileConfig, !_IS_LOADED );
+    public void setFileConfig(String fileConfig) {
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "fileConfig", this.fileConfig, fileConfig, !_IS_LOADED);
         this.fileConfig = fileConfig;
     }
 
     /**
-     *  设置文件信息链式调用。
+     * 设置文件信息链式调用。
      */
-    public AiSessionMsg fileConfig(String fileConfig){
+    public AiSessionMsg fileConfig(String fileConfig) {
         setFileConfig(fileConfig);
         return this;
     }
@@ -428,15 +548,15 @@ public class AiSessionMsg implements DataEntity,Serializable{
     /**
      * 设置rag信息。
      */
-    public void setRagConfig(String ragConfig){
-        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "ragConfig", this.ragConfig, ragConfig, !_IS_LOADED );
+    public void setRagConfig(String ragConfig) {
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "ragConfig", this.ragConfig, ragConfig, !_IS_LOADED);
         this.ragConfig = ragConfig;
     }
 
     /**
-     *  设置rag信息链式调用。
+     * 设置rag信息链式调用。
      */
-    public AiSessionMsg ragConfig(String ragConfig){
+    public AiSessionMsg ragConfig(String ragConfig) {
         setRagConfig(ragConfig);
         return this;
     }
@@ -444,15 +564,15 @@ public class AiSessionMsg implements DataEntity,Serializable{
     /**
      * 设置返回信息。
      */
-    public void setResponseInfo(String responseInfo){
-        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "responseInfo", this.responseInfo, responseInfo, !_IS_LOADED );
+    public void setResponseInfo(String responseInfo) {
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "responseInfo", this.responseInfo, responseInfo, !_IS_LOADED);
         this.responseInfo = responseInfo;
     }
 
     /**
-     *  设置返回信息链式调用。
+     * 设置返回信息链式调用。
      */
-    public AiSessionMsg responseInfo(String responseInfo){
+    public AiSessionMsg responseInfo(String responseInfo) {
         setResponseInfo(responseInfo);
         return this;
     }
@@ -460,15 +580,15 @@ public class AiSessionMsg implements DataEntity,Serializable{
     /**
      * 设置请求token数。
      */
-    public void setRequestTokens(long requestTokens){
-        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "requestTokens", this.requestTokens, requestTokens, !_IS_LOADED );
+    public void setRequestTokens(long requestTokens) {
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "requestTokens", this.requestTokens, requestTokens, !_IS_LOADED);
         this.requestTokens = requestTokens;
     }
 
     /**
-     *  设置请求token数链式调用。
+     * 设置请求token数链式调用。
      */
-    public AiSessionMsg requestTokens(long requestTokens){
+    public AiSessionMsg requestTokens(long requestTokens) {
         setRequestTokens(requestTokens);
         return this;
     }
@@ -476,15 +596,15 @@ public class AiSessionMsg implements DataEntity,Serializable{
     /**
      * 设置响应token数。
      */
-    public void setResponseTokens(long responseTokens){
-        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "responseTokens", this.responseTokens, responseTokens, !_IS_LOADED );
+    public void setResponseTokens(long responseTokens) {
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "responseTokens", this.responseTokens, responseTokens, !_IS_LOADED);
         this.responseTokens = responseTokens;
     }
 
     /**
-     *  设置响应token数链式调用。
+     * 设置响应token数链式调用。
      */
-    public AiSessionMsg responseTokens(long responseTokens){
+    public AiSessionMsg responseTokens(long responseTokens) {
         setResponseTokens(responseTokens);
         return this;
     }
@@ -492,15 +612,15 @@ public class AiSessionMsg implements DataEntity,Serializable{
     /**
      * 设置创建时间。
      */
-    public void setRequestDate(java.util.Date requestDate){
-        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "requestDate", this.requestDate, requestDate, !_IS_LOADED );
+    public void setRequestDate(java.util.Date requestDate) {
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "requestDate", this.requestDate, requestDate, !_IS_LOADED);
         this.requestDate = requestDate;
     }
 
     /**
-     *  设置创建时间链式调用。
+     * 设置创建时间链式调用。
      */
-    public AiSessionMsg requestDate(java.util.Date requestDate){
+    public AiSessionMsg requestDate(java.util.Date requestDate) {
         setRequestDate(requestDate);
         return this;
     }
@@ -508,15 +628,15 @@ public class AiSessionMsg implements DataEntity,Serializable{
     /**
      * 设置回应开始时间。
      */
-    public void setResponseStartDate(java.util.Date responseStartDate){
-        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "responseStartDate", this.responseStartDate, responseStartDate, !_IS_LOADED );
+    public void setResponseStartDate(java.util.Date responseStartDate) {
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "responseStartDate", this.responseStartDate, responseStartDate, !_IS_LOADED);
         this.responseStartDate = responseStartDate;
     }
 
     /**
-     *  设置回应开始时间链式调用。
+     * 设置回应开始时间链式调用。
      */
-    public AiSessionMsg responseStartDate(java.util.Date responseStartDate){
+    public AiSessionMsg responseStartDate(java.util.Date responseStartDate) {
         setResponseStartDate(responseStartDate);
         return this;
     }
@@ -524,15 +644,15 @@ public class AiSessionMsg implements DataEntity,Serializable{
     /**
      * 设置回应结束时间。
      */
-    public void setResponseEndDate(java.util.Date responseEndDate){
-        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "responseEndDate", this.responseEndDate, responseEndDate, !_IS_LOADED );
+    public void setResponseEndDate(java.util.Date responseEndDate) {
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "responseEndDate", this.responseEndDate, responseEndDate, !_IS_LOADED);
         this.responseEndDate = responseEndDate;
     }
 
     /**
-     *  设置回应结束时间链式调用。
+     * 设置回应结束时间链式调用。
      */
-    public AiSessionMsg responseEndDate(java.util.Date responseEndDate){
+    public AiSessionMsg responseEndDate(java.util.Date responseEndDate) {
         setResponseEndDate(responseEndDate);
         return this;
     }
@@ -540,15 +660,15 @@ public class AiSessionMsg implements DataEntity,Serializable{
     /**
      * 设置状态。
      */
-    public void setState(int state){
-        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "state", this.state, state, !_IS_LOADED );
+    public void setState(int state) {
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "state", this.state, state, !_IS_LOADED);
         this.state = state;
     }
 
     /**
-     *  设置状态链式调用。
+     * 设置状态链式调用。
      */
-    public AiSessionMsg state(int state){
+    public AiSessionMsg state(int state) {
         setState(state);
         return this;
     }

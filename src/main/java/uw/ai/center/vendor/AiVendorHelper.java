@@ -11,6 +11,7 @@ import uw.ai.center.vo.AiModelConfigData;
 import uw.cache.CacheChangeNotifyListener;
 import uw.cache.CacheDataLoader;
 import uw.cache.FusionCache;
+import uw.common.app.dto.IdStateQueryParam;
 import uw.dao.DaoManager;
 
 import java.util.LinkedHashMap;
@@ -54,7 +55,7 @@ public class AiVendorHelper {
         FusionCache.config( FusionCache.Config.builder().entityClass( AiModelConfigData.class ).localCacheMaxNum( 10000 ).cacheExpireMillis( 86400_000L ).nullProtectMillis( 86400_000L ).build(), new CacheDataLoader<Long, AiModelConfigData>() {
             @Override
             public AiModelConfigData load(Long configId) throws Exception {
-                AiModelConfig aiModelConfig = dao.load( AiModelConfig.class, configId ).getData();
+                AiModelConfig aiModelConfig = dao.queryForSingleObject( AiModelConfig.class, new IdStateQueryParam( configId, 1)).getData();
                 if (aiModelConfig == null) {
                     return null;
                 }

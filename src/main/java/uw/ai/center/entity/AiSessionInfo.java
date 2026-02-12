@@ -213,26 +213,10 @@ public class AiSessionInfo implements DataEntity, Serializable {
     }
 
     /**
-     * 设置ID。
-     */
-    public void setId(long id) {
-        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "id", this.id, id, !_IS_LOADED);
-        this.id = id;
-    }
-
-    /**
      * 获取saasId。
      */
     public long getSaasId() {
         return this.saasId;
-    }
-
-    /**
-     * 设置saasId。
-     */
-    public void setSaasId(long saasId) {
-        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "saasId", this.saasId, saasId, !_IS_LOADED);
-        this.saasId = saasId;
     }
 
     /**
@@ -243,26 +227,10 @@ public class AiSessionInfo implements DataEntity, Serializable {
     }
 
     /**
-     * 设置用户id。
-     */
-    public void setUserId(long userId) {
-        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "userId", this.userId, userId, !_IS_LOADED);
-        this.userId = userId;
-    }
-
-    /**
      * 获取用户类型。
      */
     public int getUserType() {
         return this.userType;
-    }
-
-    /**
-     * 设置用户类型。
-     */
-    public void setUserType(int userType) {
-        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "userType", this.userType, userType, !_IS_LOADED);
-        this.userType = userType;
     }
 
     /**
@@ -273,26 +241,10 @@ public class AiSessionInfo implements DataEntity, Serializable {
     }
 
     /**
-     * 设置用户名。
-     */
-    public void setUserInfo(String userInfo) {
-        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "userInfo", this.userInfo, userInfo, !_IS_LOADED);
-        this.userInfo = userInfo;
-    }
-
-    /**
      * 获取配置ID。
      */
     public long getConfigId() {
         return this.configId;
-    }
-
-    /**
-     * 设置配置ID。
-     */
-    public void setConfigId(long configId) {
-        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "configId", this.configId, configId, !_IS_LOADED);
-        this.configId = configId;
     }
 
     /**
@@ -303,26 +255,10 @@ public class AiSessionInfo implements DataEntity, Serializable {
     }
 
     /**
-     * 设置session类型。
-     */
-    public void setSessionType(int sessionType) {
-        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "sessionType", this.sessionType, sessionType, !_IS_LOADED);
-        this.sessionType = sessionType;
-    }
-
-    /**
      * 获取session名称。
      */
     public String getSessionName() {
         return this.sessionName;
-    }
-
-    /**
-     * 设置session名称。
-     */
-    public void setSessionName(String sessionName) {
-        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "sessionName", this.sessionName, sessionName, !_IS_LOADED);
-        this.sessionName = sessionName;
     }
 
     /**
@@ -333,26 +269,10 @@ public class AiSessionInfo implements DataEntity, Serializable {
     }
 
     /**
-     * 设置session大小。
-     */
-    public void setMsgNum(int msgNum) {
-        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "msgNum", this.msgNum, msgNum, !_IS_LOADED);
-        this.msgNum = msgNum;
-    }
-
-    /**
      * 获取历史长度。
      */
     public int getWindowSize() {
         return this.windowSize;
-    }
-
-    /**
-     * 设置历史长度。
-     */
-    public void setWindowSize(int windowSize) {
-        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "windowSize", this.windowSize, windowSize, !_IS_LOADED);
-        this.windowSize = windowSize;
     }
 
     /**
@@ -363,26 +283,10 @@ public class AiSessionInfo implements DataEntity, Serializable {
     }
 
     /**
-     * 设置请求token数。
-     */
-    public void setRequestTokens(long requestTokens) {
-        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "requestTokens", this.requestTokens, requestTokens, !_IS_LOADED);
-        this.requestTokens = requestTokens;
-    }
-
-    /**
      * 获取响应token数。
      */
     public long getResponseTokens() {
         return this.responseTokens;
-    }
-
-    /**
-     * 设置响应token数。
-     */
-    public void setResponseTokens(long responseTokens) {
-        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "responseTokens", this.responseTokens, responseTokens, !_IS_LOADED);
-        this.responseTokens = responseTokens;
     }
 
     /**
@@ -393,26 +297,10 @@ public class AiSessionInfo implements DataEntity, Serializable {
     }
 
     /**
-     * 设置系统信息。
-     */
-    public void setSystemPrompt(String systemPrompt) {
-        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "systemPrompt", this.systemPrompt, systemPrompt, !_IS_LOADED);
-        this.systemPrompt = systemPrompt;
-    }
-
-    /**
      * 获取工具信息。
      */
     public String getToolConfig() {
         return this.toolConfig;
-    }
-
-    /**
-     * 设置工具信息。
-     */
-    public void setToolConfig(String toolConfig) {
-        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "toolConfig", this.toolConfig, toolConfig, !_IS_LOADED);
-        this.toolConfig = toolConfig;
     }
 
     /**
@@ -423,26 +311,10 @@ public class AiSessionInfo implements DataEntity, Serializable {
     }
 
     /**
-     * 设置rag信息。
-     */
-    public void setRagConfig(String ragConfig) {
-        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "ragConfig", this.ragConfig, ragConfig, !_IS_LOADED);
-        this.ragConfig = ragConfig;
-    }
-
-    /**
      * 获取创建时间。
      */
     public java.util.Date getCreateDate() {
         return this.createDate;
-    }
-
-    /**
-     * 设置创建时间。
-     */
-    public void setCreateDate(java.util.Date createDate) {
-        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "createDate", this.createDate, createDate, !_IS_LOADED);
-        this.createDate = createDate;
     }
 
     /**
@@ -453,26 +325,10 @@ public class AiSessionInfo implements DataEntity, Serializable {
     }
 
     /**
-     * 设置修改时间。
-     */
-    public void setModifyDate(java.util.Date modifyDate) {
-        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "modifyDate", this.modifyDate, modifyDate, !_IS_LOADED);
-        this.modifyDate = modifyDate;
-    }
-
-    /**
      * 获取最后更新时间。
      */
     public java.util.Date getLastUpdate() {
         return this.lastUpdate;
-    }
-
-    /**
-     * 设置最后更新时间。
-     */
-    public void setLastUpdate(java.util.Date lastUpdate) {
-        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "lastUpdate", this.lastUpdate, lastUpdate, !_IS_LOADED);
-        this.lastUpdate = lastUpdate;
     }
 
     /**
@@ -482,12 +338,13 @@ public class AiSessionInfo implements DataEntity, Serializable {
         return this.state;
     }
 
+
     /**
-     * 设置状态。
+     * 设置ID。
      */
-    public void setState(int state) {
-        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "state", this.state, state, !_IS_LOADED);
-        this.state = state;
+    public void setId(long id) {
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "id", this.id, id, !_IS_LOADED);
+        this.id = id;
     }
 
     /**
@@ -499,11 +356,27 @@ public class AiSessionInfo implements DataEntity, Serializable {
     }
 
     /**
+     * 设置saasId。
+     */
+    public void setSaasId(long saasId) {
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "saasId", this.saasId, saasId, !_IS_LOADED);
+        this.saasId = saasId;
+    }
+
+    /**
      * 设置saasId链式调用。
      */
     public AiSessionInfo saasId(long saasId) {
         setSaasId(saasId);
         return this;
+    }
+
+    /**
+     * 设置用户id。
+     */
+    public void setUserId(long userId) {
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "userId", this.userId, userId, !_IS_LOADED);
+        this.userId = userId;
     }
 
     /**
@@ -515,11 +388,27 @@ public class AiSessionInfo implements DataEntity, Serializable {
     }
 
     /**
+     * 设置用户类型。
+     */
+    public void setUserType(int userType) {
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "userType", this.userType, userType, !_IS_LOADED);
+        this.userType = userType;
+    }
+
+    /**
      * 设置用户类型链式调用。
      */
     public AiSessionInfo userType(int userType) {
         setUserType(userType);
         return this;
+    }
+
+    /**
+     * 设置用户名。
+     */
+    public void setUserInfo(String userInfo) {
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "userInfo", this.userInfo, userInfo, !_IS_LOADED);
+        this.userInfo = userInfo;
     }
 
     /**
@@ -531,11 +420,27 @@ public class AiSessionInfo implements DataEntity, Serializable {
     }
 
     /**
+     * 设置配置ID。
+     */
+    public void setConfigId(long configId) {
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "configId", this.configId, configId, !_IS_LOADED);
+        this.configId = configId;
+    }
+
+    /**
      * 设置配置ID链式调用。
      */
     public AiSessionInfo configId(long configId) {
         setConfigId(configId);
         return this;
+    }
+
+    /**
+     * 设置session类型。
+     */
+    public void setSessionType(int sessionType) {
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "sessionType", this.sessionType, sessionType, !_IS_LOADED);
+        this.sessionType = sessionType;
     }
 
     /**
@@ -547,11 +452,27 @@ public class AiSessionInfo implements DataEntity, Serializable {
     }
 
     /**
+     * 设置session名称。
+     */
+    public void setSessionName(String sessionName) {
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "sessionName", this.sessionName, sessionName, !_IS_LOADED);
+        this.sessionName = sessionName;
+    }
+
+    /**
      * 设置session名称链式调用。
      */
     public AiSessionInfo sessionName(String sessionName) {
         setSessionName(sessionName);
         return this;
+    }
+
+    /**
+     * 设置session大小。
+     */
+    public void setMsgNum(int msgNum) {
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "msgNum", this.msgNum, msgNum, !_IS_LOADED);
+        this.msgNum = msgNum;
     }
 
     /**
@@ -563,11 +484,27 @@ public class AiSessionInfo implements DataEntity, Serializable {
     }
 
     /**
+     * 设置历史长度。
+     */
+    public void setWindowSize(int windowSize) {
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "windowSize", this.windowSize, windowSize, !_IS_LOADED);
+        this.windowSize = windowSize;
+    }
+
+    /**
      * 设置历史长度链式调用。
      */
     public AiSessionInfo windowSize(int windowSize) {
         setWindowSize(windowSize);
         return this;
+    }
+
+    /**
+     * 设置请求token数。
+     */
+    public void setRequestTokens(long requestTokens) {
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "requestTokens", this.requestTokens, requestTokens, !_IS_LOADED);
+        this.requestTokens = requestTokens;
     }
 
     /**
@@ -579,11 +516,27 @@ public class AiSessionInfo implements DataEntity, Serializable {
     }
 
     /**
+     * 设置响应token数。
+     */
+    public void setResponseTokens(long responseTokens) {
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "responseTokens", this.responseTokens, responseTokens, !_IS_LOADED);
+        this.responseTokens = responseTokens;
+    }
+
+    /**
      * 设置响应token数链式调用。
      */
     public AiSessionInfo responseTokens(long responseTokens) {
         setResponseTokens(responseTokens);
         return this;
+    }
+
+    /**
+     * 设置系统信息。
+     */
+    public void setSystemPrompt(String systemPrompt) {
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "systemPrompt", this.systemPrompt, systemPrompt, !_IS_LOADED);
+        this.systemPrompt = systemPrompt;
     }
 
     /**
@@ -595,11 +548,27 @@ public class AiSessionInfo implements DataEntity, Serializable {
     }
 
     /**
+     * 设置工具信息。
+     */
+    public void setToolConfig(String toolConfig) {
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "toolConfig", this.toolConfig, toolConfig, !_IS_LOADED);
+        this.toolConfig = toolConfig;
+    }
+
+    /**
      * 设置工具信息链式调用。
      */
     public AiSessionInfo toolConfig(String toolConfig) {
         setToolConfig(toolConfig);
         return this;
+    }
+
+    /**
+     * 设置rag信息。
+     */
+    public void setRagConfig(String ragConfig) {
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "ragConfig", this.ragConfig, ragConfig, !_IS_LOADED);
+        this.ragConfig = ragConfig;
     }
 
     /**
@@ -611,11 +580,27 @@ public class AiSessionInfo implements DataEntity, Serializable {
     }
 
     /**
+     * 设置创建时间。
+     */
+    public void setCreateDate(java.util.Date createDate) {
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "createDate", this.createDate, createDate, !_IS_LOADED);
+        this.createDate = createDate;
+    }
+
+    /**
      * 设置创建时间链式调用。
      */
     public AiSessionInfo createDate(java.util.Date createDate) {
         setCreateDate(createDate);
         return this;
+    }
+
+    /**
+     * 设置修改时间。
+     */
+    public void setModifyDate(java.util.Date modifyDate) {
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "modifyDate", this.modifyDate, modifyDate, !_IS_LOADED);
+        this.modifyDate = modifyDate;
     }
 
     /**
@@ -627,11 +612,27 @@ public class AiSessionInfo implements DataEntity, Serializable {
     }
 
     /**
+     * 设置最后更新时间。
+     */
+    public void setLastUpdate(java.util.Date lastUpdate) {
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "lastUpdate", this.lastUpdate, lastUpdate, !_IS_LOADED);
+        this.lastUpdate = lastUpdate;
+    }
+
+    /**
      * 设置最后更新时间链式调用。
      */
     public AiSessionInfo lastUpdate(java.util.Date lastUpdate) {
         setLastUpdate(lastUpdate);
         return this;
+    }
+
+    /**
+     * 设置状态。
+     */
+    public void setState(int state) {
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "state", this.state, state, !_IS_LOADED);
+        this.state = state;
     }
 
     /**

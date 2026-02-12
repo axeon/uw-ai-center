@@ -20,7 +20,6 @@ import uw.ai.rpc.AiChatRpc;
 import uw.ai.vo.AiChatGenerateParam;
 import uw.ai.vo.AiChatMsgParam;
 import uw.ai.vo.AiChatSessionParam;
-import uw.auth.service.AuthServiceHelper;
 import uw.auth.service.annotation.MscPermDeclare;
 import uw.auth.service.annotation.ResponseAdviceIgnore;
 import uw.auth.service.constant.UserType;
@@ -44,18 +43,18 @@ public class AiChatRpcController implements AiChatRpc {
     @Operation(summary = "生成数据", description = "生成数据")
     @MscPermDeclare(user = UserType.RPC)
     public ResponseData<String> generate(@ModelAttribute AiChatGenerateParam param) {
-        return AiChatService.generate(AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(), param.getConfigId(), param.getSystemPrompt(), param.getUserPrompt(), param.getToolList(), param.getToolContext(), param.getFileList(), param.getRagLibIds());
+        return AiChatService.generate(param.getSaasId(), param.getUserId(), param.getUserType(), param.getUserInfo(), param.getConfigId(), param.getSystemPrompt(), param.getUserPrompt(), param.getToolList(), param.getToolContext(), param.getFileList(), param.getRagLibIds());
     }
 
     /**
      * ChatClient 简单调用
      */
     @Override
-    @PostMapping(value = "/chatGenerate", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @PostMapping(value = "chatGenerate", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     @Operation(summary = "生成数据", description = "生成数据")
     @MscPermDeclare(user = UserType.RPC)
     public Flux<String> chatGenerate(@ModelAttribute AiChatGenerateParam param) {
-        return AiChatService.chatGenerate(AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(), param.getConfigId(), param.getSystemPrompt(), param.getUserPrompt(), param.getToolList(), param.getToolContext(), param.getFileList(), param.getRagLibIds());
+        return AiChatService.chatGenerate(param.getSaasId(), param.getUserId(), param.getUserType(), param.getUserInfo(), param.getConfigId(), param.getSystemPrompt(), param.getUserPrompt(), param.getToolList(), param.getToolContext(), param.getFileList(), param.getRagLibIds());
     }
 
     /**
@@ -66,7 +65,7 @@ public class AiChatRpcController implements AiChatRpc {
     @MscPermDeclare(user = UserType.RPC)
     public Flux<ServerSentEvent<String>> chat(HttpServletResponse response, @ModelAttribute AiChatMsgParam param) {
         response.setCharacterEncoding("UTF-8");
-        return AiChatService.chat(AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(), param.getSessionId(), param.getSystemPrompt(), param.getUserPrompt(), param.getToolList(), param.getToolContext(), param.getFileList(), param.getRagLibIds()).map(s -> ServerSentEvent.builder(s == null ? "" : s).build());
+        return AiChatService.chat(param.getSaasId(), param.getUserId(), param.getUserType(), param.getUserInfo(), param.getConfigId(), param.getSessionId(), param.getSystemPrompt(), param.getUserPrompt(), param.getToolList(), param.getToolContext(), param.getFileList(), param.getRagLibIds()).map(s -> ServerSentEvent.builder(s == null ? "" : s).build());
     }
 
     /**
@@ -78,7 +77,7 @@ public class AiChatRpcController implements AiChatRpc {
     @Operation(summary = "初始化会话", description = "初始化会话")
     @MscPermDeclare(user = UserType.RPC)
     public ResponseData<AiSessionInfo> initSession(@ModelAttribute AiChatSessionParam param) {
-        return AiChatService.initSession(AuthServiceHelper.getSaasId(), AuthServiceHelper.getUserId(), AuthServiceHelper.getUserType(), AuthServiceHelper.getUserName(), param.getConfigId(), SessionType.CHAT.getValue(), param.getUserPrompt(), 0, param.getSystemPrompt(), param.getToolList(), param.getRagLibIds());
+        return AiChatService.initSession(param.getSaasId(), param.getUserId(), param.getUserType(), param.getUserInfo(), param.getConfigId(), SessionType.CHAT.getValue(), param.getUserPrompt(), 0, param.getSystemPrompt(), param.getToolList(), param.getRagLibIds());
     }
 
     /**

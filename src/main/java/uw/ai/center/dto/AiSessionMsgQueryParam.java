@@ -33,6 +33,10 @@ public class AiSessionMsgQueryParam extends AuthPageQueryParam{
         return new HashMap<>() {{
             put( "id", "id" );
             put( "saasId", "saas_id" );
+            put( "userId", "user_id" );
+            put( "userType", "user_type" );
+            put( "userInfo", "user_info" );
+            put( "configId", "config_id" );
             put( "sessionId", "session_id" );
             put( "requestTokens", "request_tokens" );
             put( "responseTokens", "response_tokens" );
@@ -57,6 +61,34 @@ public class AiSessionMsgQueryParam extends AuthPageQueryParam{
     @Schema(title="ID数组", description = "ID数组，可同时匹配多个。")
     private Long[] ids;
 
+    /**
+    * 用户id。
+    */
+    @QueryMeta(expr = "user_id=?")
+    @Schema(title="用户id", description = "用户id")
+    private Long userId;
+	
+    /**
+    * 用户类型。
+    */
+    @QueryMeta(expr = "user_type=?")
+    @Schema(title="用户类型", description = "用户类型")
+    private Integer userType;
+	
+    /**
+    * 用户名。
+    */
+    @QueryMeta(expr = "user_info like ?")
+    @Schema(title="用户名", description = "用户名")
+    private String userInfo;
+	
+    /**
+    * 配置ID。
+    */
+    @QueryMeta(expr = "config_id=?")
+    @Schema(title="配置ID", description = "配置ID")
+    private Long configId;
+	
     /**
     * sessionId。
     */
@@ -186,6 +218,94 @@ public class AiSessionMsgQueryParam extends AuthPageQueryParam{
         return this;
     }
 
+    /**
+    * 获取用户id。
+    */
+    public Long getUserId(){
+        return this.userId;
+    }
+
+    /**
+    * 设置用户id。
+    */
+    public void setUserId(Long userId){
+        this.userId = userId;
+    }
+	
+    /**
+    * 设置用户id链式调用。
+    */
+	public AiSessionMsgQueryParam userId(Long userId){
+        setUserId(userId);
+        return this;
+    }
+	
+    /**
+    * 获取用户类型。
+    */
+    public Integer getUserType(){
+        return this.userType;
+    }
+
+    /**
+    * 设置用户类型。
+    */
+    public void setUserType(Integer userType){
+        this.userType = userType;
+    }
+	
+    /**
+    * 设置用户类型链式调用。
+    */
+	public AiSessionMsgQueryParam userType(Integer userType){
+        setUserType(userType);
+        return this;
+    }
+	
+    /**
+    * 获取用户名。
+    */
+    public String getUserInfo(){
+        return this.userInfo;
+    }
+
+    /**
+    * 设置用户名。
+    */
+    public void setUserInfo(String userInfo){
+        this.userInfo = userInfo;
+    }
+	
+    /**
+    * 设置用户名链式调用。
+    */
+    public AiSessionMsgQueryParam userInfo(String userInfo) {
+        setUserInfo(userInfo);
+        return this;
+    }
+	
+    /**
+    * 获取配置ID。
+    */
+    public Long getConfigId(){
+        return this.configId;
+    }
+
+    /**
+    * 设置配置ID。
+    */
+    public void setConfigId(Long configId){
+        this.configId = configId;
+    }
+	
+    /**
+    * 设置配置ID链式调用。
+    */
+	public AiSessionMsgQueryParam configId(Long configId){
+        setConfigId(configId);
+        return this;
+    }
+	
     /**
     * 获取sessionId。
     */

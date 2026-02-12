@@ -15,12 +15,12 @@ import java.util.Date;
  */
 public class AiModelConfigData {
 
-    private static final Logger logger = LoggerFactory.getLogger( AiModelConfigData.class );
+    private static final Logger logger = LoggerFactory.getLogger(AiModelConfigData.class);
 
     /**
      * Ai模型配置。
      */
-    private final AiModelConfig aiModelConfig;
+    private AiModelConfig aiModelConfig;
     /**
      * vendor参数信息集合，所有人可见。
      */
@@ -34,13 +34,24 @@ public class AiModelConfigData {
      */
     private JsonConfigBox embedParamBox;
 
+    public AiModelConfigData() {
+    }
+
     public AiModelConfigData(AiModelConfig aiModelConfig) {
+        setAiModelConfig(aiModelConfig);
+    }
+
+    public AiModelConfig getAiModelConfig() {
+        return aiModelConfig;
+    }
+
+    public void setAiModelConfig(AiModelConfig aiModelConfig) {
         this.aiModelConfig = aiModelConfig;
-        AiVendor aiVendor = AiVendorHelper.getVendor( aiModelConfig.getVendorClass() );
+        AiVendor aiVendor = AiVendorHelper.getVendor(aiModelConfig.getVendorClass());
         if (aiVendor != null) {
-            vendorParamBox = JsonConfigHelper.buildParamBox( aiVendor.vendorParam(), aiModelConfig.getVendorData() ).getData();
-            modelParamBox = JsonConfigHelper.buildParamBox( aiVendor.modelParam(), aiModelConfig.getModelData() ).getData();
-            embedParamBox = JsonConfigHelper.buildParamBox( aiVendor.embedParam(), aiModelConfig.getEmbedData() ).getData();
+            vendorParamBox = JsonConfigHelper.buildParamBox(aiVendor.vendorParam(), aiModelConfig.getVendorData()).getData();
+            modelParamBox = JsonConfigHelper.buildParamBox(aiVendor.modelParam(), aiModelConfig.getModelData()).getData();
+            embedParamBox = JsonConfigHelper.buildParamBox(aiVendor.embedParam(), aiModelConfig.getEmbedData()).getData();
         }
     }
 
