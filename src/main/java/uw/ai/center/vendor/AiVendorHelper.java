@@ -3,7 +3,6 @@ package uw.ai.center.vendor;
 import com.github.benmanes.caffeine.cache.CacheLoader;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import uw.ai.center.entity.AiModelConfig;
 import uw.ai.center.vendor.ollama.OllamaVendor;
 import uw.ai.center.vendor.openai.OpenAiVendor;
@@ -41,7 +40,7 @@ public class AiVendorHelper {
     private static final LoadingCache<Long, AiVendorClientWrapper> vendorClientCache = Caffeine.newBuilder().maximumSize( 1000 ).build( new CacheLoader<Long,
             AiVendorClientWrapper>() {
         @Override
-        public @Nullable AiVendorClientWrapper load(Long configId) {
+        public AiVendorClientWrapper load(Long configId) {
             AiModelConfigData aiModelConfigData = FusionCache.get( AiModelConfigData.class, configId );
             if (aiModelConfigData == null) {
                 return null;
