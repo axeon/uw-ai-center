@@ -115,11 +115,6 @@ public class OpenAiVendor implements AiVendor {
                         }
                     }
 
-                    @Override
-                    public void handleError(ClientHttpResponse response) throws IOException {
-                        logger.error( "OpenAiApi ConfigId[{}] handleError! statusCode: {}, statusText: {}, Body: {}", aiModelConfigData.getId(), response.getStatusCode(),
-                                response.getStatusText(), response.getBody() );
-                    }
                 } ).build();
         // 初始化 ChatModel 和 EmbeddingModel
         ChatModel chatModel =

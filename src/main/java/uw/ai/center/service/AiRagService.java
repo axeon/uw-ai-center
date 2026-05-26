@@ -212,7 +212,7 @@ public class AiRagService {
         int chunkMaxNum = configParamBox.getIntParam(RagLibConfigParam.CHUNK_MAX_NUM);
         double searchSimilarityThreshold = configParamBox.getDoubleParam(RagLibConfigParam.SEARCH_SIMILARITY_THRESHOLD);
         int searchTopK = configParamBox.getIntParam(RagLibConfigParam.SEARCH_TOP_K);
-        TextSplitter textSplitter = new TokenTextSplitter(chunkSize, chunkMinCharSize, chunkMinEmbedSize, chunkMaxNum, true);
+        TextSplitter textSplitter = TokenTextSplitter.builder().withChunkSize(chunkSize).withMinChunkLengthToEmbed(chunkMinEmbedSize).withMinChunkSizeChars(chunkMinCharSize).withMaxNumChunks(chunkMaxNum).withKeepSeparator(true).build();
         SearchRequest searchRequest = SearchRequest.builder().topK(searchTopK).similarityThreshold(searchSimilarityThreshold).build();
         AiVendorClientWrapper aiVendorClientWrapper = AiVendorHelper.getChatClient(ragLib.getEmbedConfigId());
         ElasticsearchVectorStoreOptions elasticsearchVectorStoreOptions = new ElasticsearchVectorStoreOptions();
