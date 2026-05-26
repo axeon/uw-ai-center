@@ -1,67 +1,51 @@
 package uw.ai.center.advisor;
 
+import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.data.message.UserMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.ai.chat.memory.ChatMemory;
-import org.springframework.ai.chat.messages.AssistantMessage;
-import org.springframework.ai.chat.messages.Message;
-import org.springframework.ai.chat.messages.UserMessage;
 import uw.ai.center.entity.AiSessionMsg;
-import uw.ai.center.vo.SessionConversationData;
 import uw.common.app.constant.CommonState;
 import uw.dao.DaoManager;
 
 import java.util.ArrayList;
 import java.util.List;
 
-
 /**
- * 会话内存的mysql实现类，保存会话内的消息。
+ * MySQL 会话记忆（LangChain4j）。
  */
-public class AiMysqlChatMemory implements ChatMemory {
+public class AiMysqlChatMemory {
 
-    private static final Logger logger = LoggerFactory.getLogger( AiMysqlChatMemory.class );
-    /**
-     * dao。
-     */
+    private static final Logger logger = LoggerFactory.getLogger(AiMysqlChatMemory.class);
     private static final DaoManager dao = DaoManager.getInstance();
 
-
     /**
-     * 不实现，手动前端发起请求保存用户的消息和大模型回复的消息。
+     * 从 MySQL 加载会话历史消息。
      */
-    @Override
-    public void add(String conversationId, List<Message> messages) {
-
-    }
-
-    @Override
-    public List<Message> get(String conversationId) {
-        SessionConversationData conversationData = new SessionConversationData( conversationId );
-        if (conversationData.getSessionId() > 0) {
-            List<Message> messages = new ArrayList<>( 16 );
-            dao.list( AiSessionMsg.class, "select * from ai_session_msg where session_id=? order by id desc",
-                    new Object[]{conversationData.getSessionId()} ).onSuccess( msgList -> {
+    public static List<ChatMessage> load(long sessionId) {
+        List<ChatMessage> messages = new ArrayList<>(16);
+        try {
+            dao.list(AiSessionMsg.class,
+                    "select * from ai_session_msg where session_id=? and state=? order by id desc",
+                    new Object[]{sessionId, CommonState.ENABLED.getValue()}).onSuccess(msgList -> {
                 for (AiSessionMsg msg : msgList) {
-                    messages.add( new UserMessage( msg.getUserPrompt() ) );
-                    messages.add( new AssistantMessage( msg.getResponseInfo() ) );
+                    messages.add(new UserMessage(msg.getUserPrompt()));
+                    messages.add(new AiMessage(msg.getResponseInfo()));
                 }
-            } );
-            return messages;
+            });
+        } catch (Exception e) {
+            logger.error("加载会话历史消息失败, sessionId={}", sessionId, e);
         }
-        return List.of();
+        return messages;
     }
 
-
     /**
-     * 清除会话内的消息
-     *
-     * @param conversationId 会话id
+     * 软删除会话消息。
      */
-    @Override
-    public void clear(String conversationId) {
-        SessionConversationData conversationData = new SessionConversationData( conversationId );
-        dao.executeCommand( "update ai_session_msg set state=? where session_id=? and state=?", new Object[]{CommonState.DELETED.getValue(), conversationData.getSessionId(),
-                CommonState.ENABLED.getValue()} );
+    public static void clear(long sessionId) {
+        dao.executeCommand("update ai_session_msg set state=? where session_id=? and state=?",
+                new Object[]{CommonState.DELETED.getValue(), sessionId,
+                        CommonState.ENABLED.getValue()});
     }
 }

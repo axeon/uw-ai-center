@@ -1,29 +1,27 @@
 package uw.ai.center.service;
 
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.benmanes.caffeine.cache.CacheLoader;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import dev.langchain4j.data.document.parser.apache.tika.ApacheTikaDocumentParser;
+import dev.langchain4j.data.embedding.Embedding;
+import dev.langchain4j.data.document.Metadata;
+import dev.langchain4j.data.segment.TextSegment;
+import dev.langchain4j.store.embedding.EmbeddingMatch;
+import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
+import dev.langchain4j.store.embedding.EmbeddingSearchResult;
+import dev.langchain4j.store.embedding.elasticsearch.ElasticsearchEmbeddingStore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.elasticsearch.client.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.ai.document.Document;
-import org.springframework.ai.reader.tika.TikaDocumentReader;
-import org.springframework.ai.transformer.splitter.TextSplitter;
-import org.springframework.ai.transformer.splitter.TokenTextSplitter;
-import org.springframework.ai.vectorstore.SearchRequest;
-import org.springframework.ai.vectorstore.VectorStore;
-import org.springframework.ai.vectorstore.elasticsearch.ElasticsearchVectorStore;
-import org.springframework.ai.vectorstore.elasticsearch.ElasticsearchVectorStoreOptions;
-import org.springframework.ai.vectorstore.elasticsearch.SimilarityFunction;
-import org.springframework.core.io.InputStreamResource;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import uw.ai.center.entity.AiRagDoc;
 import uw.ai.center.entity.AiRagLib;
+import uw.ai.center.util.AiTextSplitter;
 import uw.ai.center.vendor.AiVendorClientWrapper;
 import uw.ai.center.vendor.AiVendorHelper;
 import uw.common.app.helper.JsonConfigHelper;
@@ -89,10 +87,14 @@ public class AiRagService {
     public static Map<String, String> buildDocument(long ragLibId, MultipartFile docFile) {
         AiRagClientWrapper ragClientWrapper = getRagClientWrapper(ragLibId);
         try (InputStream inputStream = docFile.getInputStream()) {
-            TikaDocumentReader reader = new TikaDocumentReader(new InputStreamResource(inputStream));
-            List<Document> documentList = ragClientWrapper.textSplitter.apply(reader.get());
-            ragClientWrapper.vectorStore.add(documentList);
-            return documentList.stream().collect(Collectors.toMap(Document::getId, Document::getText));
+            ApacheTikaDocumentParser parser = new ApacheTikaDocumentParser();
+            dev.langchain4j.data.document.Document lc4jDoc = parser.parse(inputStream);
+            List<TextSegment> segments = ragClientWrapper.textSplitter.split(lc4jDoc.text());
+            List<Embedding> embeddings = ragClientWrapper.embeddingModel.embedAll(segments).content();
+            ragClientWrapper.vectorStore.addAll(embeddings, segments);
+            return segments.stream().collect(Collectors.toMap(
+                    s -> s.metadata().getString("id"),
+                    TextSegment::text));
         } catch (IOException e) {
             logger.error("处理文件[{}]时发生错误!{}", docFile.getOriginalFilename(), e.getMessage(), e);
         }
@@ -107,9 +109,12 @@ public class AiRagService {
      */
     public static Map<String, String> buildDocument(long ragLibId, String fileContent) {
         AiRagClientWrapper ragClientWrapper = getRagClientWrapper(ragLibId);
-        List<Document> documentList = ragClientWrapper.textSplitter.apply(List.of(new Document(fileContent)));
-        ragClientWrapper.vectorStore.add(documentList);
-        return documentList.stream().collect(Collectors.toMap(Document::getId, Document::getText));
+        List<TextSegment> segments = ragClientWrapper.textSplitter.split(fileContent);
+        List<Embedding> embeddings = ragClientWrapper.embeddingModel.embedAll(segments).content();
+        ragClientWrapper.vectorStore.addAll(embeddings, segments);
+        return segments.stream().collect(Collectors.toMap(
+                s -> s.metadata().getString("id"),
+                TextSegment::text));
     }
 
     /**
@@ -122,7 +127,7 @@ public class AiRagService {
             AiRagClientWrapper ragClientWrapper = getRagClientWrapper(aiRagDoc.getLibId());
             Map<String, String> docMap = JsonUtils.parse(aiRagDoc.getDocContent(), new TypeReference<Map<String, String>>() {
             });
-            ragClientWrapper.vectorStore.delete(new ArrayList<>(docMap.keySet()));
+            ragClientWrapper.vectorStore.removeAll(new ArrayList<>(docMap.keySet()));
         });
     }
 
@@ -135,12 +140,14 @@ public class AiRagService {
             AiRagClientWrapper ragClientWrapper = getRagClientWrapper(aiRagDoc.getLibId());
             Map<String, String> docMap = JsonUtils.parse(aiRagDoc.getDocContent(), new TypeReference<Map<String, String>>() {
             });
-//            ragClientWrapper.vectorStore.delete( new ArrayList<>( docMap.keySet() ) );
-            List<Document> documentList = new ArrayList<>(docMap.size());
+            List<TextSegment> segments = new ArrayList<>(docMap.size());
             for (Map.Entry<String, String> entry : docMap.entrySet()) {
-                documentList.add(new Document(entry.getKey(), entry.getValue(), Map.of()));
+                Metadata metadata = new Metadata();
+                metadata.put("id", entry.getKey());
+                segments.add(TextSegment.from(entry.getValue(), metadata));
             }
-            ragClientWrapper.vectorStore.add(documentList);
+            List<Embedding> embeddings = ragClientWrapper.embeddingModel.embedAll(segments).content();
+            ragClientWrapper.vectorStore.addAll(embeddings, segments);
         });
     }
 
@@ -150,17 +157,12 @@ public class AiRagService {
      * @param ragLibId
      */
     public static void deleteLib(long ragLibId) {
-        AiRagClientWrapper ragClientWrapper = getRagClientWrapper(ragLibId);
-        // 安全获取ElasticsearchClient并删除索引
-        ragClientWrapper.vectorStore.getNativeClient().map(client -> (ElasticsearchClient) client) // 转换类型
-                .ifPresent(esClient -> {
-                    try {
-                        // 删除ES索引
-                        esClient.indices().delete(r -> r.index(RAG_ES_INDEX_PREFIX + ragLibId));
-                    } catch (Exception e) {
-                        logger.error("删除ES索引失败", e);
-                    }
-                });
+        try {
+            restClient.performRequest(new org.elasticsearch.client.Request(
+                    "DELETE", "/" + RAG_ES_INDEX_PREFIX + ragLibId));
+        } catch (Exception e) {
+            logger.error("删除ES索引失败", e);
+        }
     }
 
     /**
@@ -182,12 +184,17 @@ public class AiRagService {
      */
     public static String query(long ragLibId, String query) {
         AiRagClientWrapper ragClientWrapper = getRagClientWrapper(ragLibId);
-        var searchRequestToUse = SearchRequest.from(ragClientWrapper.searchRequest).query(query).build();
-        List<Document> documents = ragClientWrapper.vectorStore.similaritySearch(searchRequestToUse);
+        Embedding queryEmbedding = ragClientWrapper.embeddingModel.embed(query).content();
+        EmbeddingSearchRequest searchRequestToUse = EmbeddingSearchRequest.builder()
+                .queryEmbedding(queryEmbedding)
+                .maxResults(ragClientWrapper.searchTopK)
+                .minScore(ragClientWrapper.searchSimilarityThreshold)
+                .build();
+        EmbeddingSearchResult<TextSegment> result = ragClientWrapper.vectorStore.search(searchRequestToUse);
         StringBuilder sb = new StringBuilder(1280);
         sb.append("来自知识库[").append(ragClientWrapper.aiRagLib.getLibName()).append("]检索的信息如下：\n");
-        for (Document document : documents) {
-            sb.append(document.getText()).append("\n");
+        for (EmbeddingMatch<TextSegment> match : result.matches()) {
+            sb.append(match.embedded().text()).append("\n");
         }
         sb.append("\n");
         return sb.toString();
@@ -212,17 +219,25 @@ public class AiRagService {
         int chunkMaxNum = configParamBox.getIntParam(RagLibConfigParam.CHUNK_MAX_NUM);
         double searchSimilarityThreshold = configParamBox.getDoubleParam(RagLibConfigParam.SEARCH_SIMILARITY_THRESHOLD);
         int searchTopK = configParamBox.getIntParam(RagLibConfigParam.SEARCH_TOP_K);
-        TextSplitter textSplitter = TokenTextSplitter.builder().withChunkSize(chunkSize).withMinChunkLengthToEmbed(chunkMinEmbedSize).withMinChunkSizeChars(chunkMinCharSize).withMaxNumChunks(chunkMaxNum).withKeepSeparator(true).build();
-        SearchRequest searchRequest = SearchRequest.builder().topK(searchTopK).similarityThreshold(searchSimilarityThreshold).build();
-        AiVendorClientWrapper aiVendorClientWrapper = AiVendorHelper.getChatClient(ragLib.getEmbedConfigId());
-        ElasticsearchVectorStoreOptions elasticsearchVectorStoreOptions = new ElasticsearchVectorStoreOptions();
-        elasticsearchVectorStoreOptions.setIndexName(RAG_ES_INDEX_PREFIX + ragLibId);
-        elasticsearchVectorStoreOptions.setDimensions(1024);
-        elasticsearchVectorStoreOptions.setSimilarity(SimilarityFunction.cosine);
-        ElasticsearchVectorStore vectorStore =
-                ElasticsearchVectorStore.builder(restClient, aiVendorClientWrapper.getEmbeddingModel()).options(elasticsearchVectorStoreOptions).initializeSchema(true).build();
-        vectorStore.afterPropertiesSet();
-        return new AiRagClientWrapper(ragLib, vectorStore, textSplitter, searchRequest);
+        AiTextSplitter textSplitter = new AiTextSplitter(chunkSize, chunkMinCharSize, chunkMinEmbedSize,
+                chunkMaxNum, true,
+                java.util.List.of('\n', '。', '.', '!', '?', ';', '！', '？', '；'));
+
+        AiVendorClientWrapper vendorWrapper = AiVendorHelper.getClientWrapper(ragLib.getEmbedConfigId());
+        if (vendorWrapper == null) {
+            logger.error("RAG库[{}]获取EmbeddingModel失败", ragLibId);
+            return null;
+        }
+        dev.langchain4j.model.embedding.EmbeddingModel embeddingModel = vendorWrapper.getEmbeddingModel();
+
+        ElasticsearchEmbeddingStore vectorStore = ElasticsearchEmbeddingStore.builder()
+                .restClient(restClient)
+                .indexName(RAG_ES_INDEX_PREFIX + ragLibId)
+                .dimension(1024)
+                .build();
+
+        return new AiRagClientWrapper(ragLib, vectorStore, textSplitter, searchTopK,
+                searchSimilarityThreshold, embeddingModel);
     }
 
     /**
@@ -263,7 +278,11 @@ public class AiRagService {
      * @param vectorStore
      * @param searchRequest
      */
-    record AiRagClientWrapper(AiRagLib aiRagLib, VectorStore vectorStore, TextSplitter textSplitter,
-                              SearchRequest searchRequest) {
+    record AiRagClientWrapper(AiRagLib aiRagLib,
+                              ElasticsearchEmbeddingStore vectorStore,
+                              AiTextSplitter textSplitter,
+                              int searchTopK,
+                              double searchSimilarityThreshold,
+                              dev.langchain4j.model.embedding.EmbeddingModel embeddingModel) {
     }
 }
