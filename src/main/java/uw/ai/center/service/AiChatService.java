@@ -1,14 +1,19 @@
 package uw.ai.center.service;
 
+import dev.langchain4j.agent.tool.ToolExecutionRequest;
+import dev.langchain4j.agent.tool.ToolSpecification;
+import dev.langchain4j.data.message.AiMessage;
+import dev.langchain4j.data.message.ChatMessage;
+import dev.langchain4j.data.message.SystemMessage;
+import dev.langchain4j.data.message.ToolExecutionResultMessage;
+import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.model.StreamingResponseHandler;
+import dev.langchain4j.model.output.Response;
+import dev.langchain4j.model.output.TokenUsage;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.metadata.Usage;
-import org.springframework.ai.chat.model.ChatResponse;
-import org.springframework.ai.document.Document;
-import org.springframework.ai.reader.tika.TikaDocumentReader;
-import org.springframework.core.io.InputStreamResource;
+import dev.langchain4j.data.document.parser.apache.tika.ApacheTikaDocumentParser;
 import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Flux;
 import uw.ai.center.constant.SessionType;
@@ -16,12 +21,12 @@ import uw.ai.center.dto.AiSessionInfoQueryParam;
 import uw.ai.center.dto.AiSessionMsgQueryParam;
 import uw.ai.center.entity.AiSessionInfo;
 import uw.ai.center.entity.AiSessionMsg;
+import uw.ai.center.advisor.AiMysqlChatMemory;
 import uw.ai.center.tool.AiToolHelper;
 import uw.ai.center.vendor.AiVendorClientWrapper;
 import uw.ai.center.vendor.AiVendorHelper;
 import uw.ai.center.vo.AiChatSentEvent;
 import uw.ai.center.vo.AiModelConfigData;
-import uw.ai.center.vo.SessionConversationData;
 import uw.ai.vo.AiToolCallInfo;
 import uw.common.app.constant.CommonState;
 import uw.common.dto.ResponseData;
@@ -32,13 +37,10 @@ import uw.dao.DataList;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
-
-import static org.springframework.ai.chat.memory.ChatMemory.CONVERSATION_ID;
 
 
 /**
@@ -53,13 +55,11 @@ public class AiChatService {
      * ChatClient 简单调用。
      */
     public static ResponseData<String> generate(long saasId, long userId, int userType, String userInfo, long configId, String systemPrompt, String userPrompt, List<AiToolCallInfo> toolList, Map<String, Object> toolContext, MultipartFile[] fileList, long[] ragLibIds) {
-        // 获取ChatClient
-        AiVendorClientWrapper chatClientWrapper = AiVendorHelper.getChatClient(configId);
-        if (chatClientWrapper == null) {
+        AiVendorClientWrapper vendorWrapper = AiVendorHelper.getClientWrapper(configId);
+        if (vendorWrapper == null) {
             return ResponseData.errorMsg("ChatClient获取失败!");
         }
-        //获取基础信息。
-        AiModelConfigData configData = chatClientWrapper.getConfigData();
+        AiModelConfigData configData = vendorWrapper.getConfigData();
         if (StringUtils.isBlank(systemPrompt)) {
             systemPrompt = configData.getModelParamBox().getParam("systemPrompt", "");
         }
@@ -102,37 +102,56 @@ public class AiChatService {
         }
         // 初始化会话消息
         AiSessionMsg sessionMsg = initSessionMsg(saasId, userId, userType, userInfo, configId, sessionInfo.getId(), systemPrompt, userPrompt, toolList, fileInfo, ragLibIds, contextData);
-        // 设置请求开始时间
         sessionMsg.setResponseStartDate(SystemClock.nowDate());
-        ChatClient.ChatClientRequestSpec chatClientRequestSpec = chatClientWrapper.getChatClient().prompt();
+
+        // === LangChain4j 调用 ===
+        List<ChatMessage> messages = new ArrayList<>();
         if (StringUtils.isNotBlank(systemPrompt)) {
-            chatClientRequestSpec.system(systemPrompt);
+            messages.add(new SystemMessage(systemPrompt));
         }
-        if (StringUtils.isNotBlank(contextData)) {
-            userPrompt = userPrompt + contextData;
-        }
-        chatClientRequestSpec.user(userPrompt);
-        // 设置工具调用
-        if (toolList != null && !toolList.isEmpty()) {
-            chatClientRequestSpec.toolCallbacks(AiToolHelper.getToolCallbacks(toolList));
-            Map<String, Object> paramMap = new HashMap<>();
-            if (toolContext != null) {
-                paramMap.putAll(toolContext);
+        String finalPrompt = StringUtils.isNotBlank(contextData) ? userPrompt + contextData : userPrompt;
+        messages.add(new UserMessage(finalPrompt));
+
+        List<ToolSpecification> toolSpecs = (toolList != null && !toolList.isEmpty())
+                ? AiToolHelper.getToolSpecifications(toolList) : null;
+
+        Response<AiMessage> chatResponse;
+        if (toolSpecs != null && !toolSpecs.isEmpty()) {
+            chatResponse = vendorWrapper.getChatLanguageModel().generate(messages, toolSpecs);
+            AiMessage aiMessage = chatResponse.content();
+            // 工具调用循环
+            while (aiMessage.hasToolExecutionRequests()) {
+                for (ToolExecutionRequest req : aiMessage.toolExecutionRequests()) {
+                    // 合并工具上下文到 toolInput
+                    String toolInput = req.arguments();
+                    if (toolContext != null && !toolContext.isEmpty()) {
+                        Map<String, Object> inputMap = JsonUtils.parse(toolInput,
+                                new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {});
+                        if (inputMap == null) {
+                            inputMap = new java.util.HashMap<>();
+                        }
+                        inputMap.putAll(toolContext);
+                        toolInput = JsonUtils.toString(inputMap);
+                    }
+                    String result = AiToolHelper.executeTool(req.name(), toolInput);
+                    messages.add(aiMessage);
+                    messages.add(new ToolExecutionResultMessage(req.id(), req.name(), result));
+                }
+                chatResponse = vendorWrapper.getChatLanguageModel().generate(messages, toolSpecs);
+                aiMessage = chatResponse.content();
             }
-            paramMap.put("saasId", saasId);
-            paramMap.put("userId", userId);
-            paramMap.put("userType", userType);
-            paramMap.put("userInfo", userInfo);
-            chatClientRequestSpec.toolContext(paramMap);
+        } else {
+            chatResponse = vendorWrapper.getChatLanguageModel().generate(messages);
         }
-        ChatResponse chatResponse = chatClientRequestSpec.call().chatResponse();
-        String responseData = chatResponse.getResult().getOutput().getText();
-        Usage tokenUsage = chatResponse.getMetadata().getUsage();
-        sessionMsg.setRequestTokens(tokenUsage.getPromptTokens());
-        sessionMsg.setResponseTokens(tokenUsage.getCompletionTokens());
+
+        String responseData = chatResponse.content().text();
+        TokenUsage tokenUsage = chatResponse.tokenUsage();
+        sessionMsg.setRequestTokens(tokenUsage != null && tokenUsage.inputTokenCount() != null
+                ? tokenUsage.inputTokenCount() : 0);
+        sessionMsg.setResponseTokens(tokenUsage != null && tokenUsage.outputTokenCount() != null
+                ? tokenUsage.outputTokenCount() : 0);
         sessionMsg.setResponseEndDate(SystemClock.nowDate());
         sessionMsg.setResponseInfo(responseData);
-        // 保存会话信息
         saveSessionMsg(sessionMsg);
         return ResponseData.success(responseData);
     }
@@ -141,13 +160,11 @@ public class AiChatService {
      * ChatClient 流式调用
      */
     public static Flux<String> chatGenerate(long saasId, long userId, int userType, String userInfo, long configId, String systemPrompt, String userPrompt, List<AiToolCallInfo> toolList, Map<String, Object> toolContext, MultipartFile[] fileList, long[] ragLibIds) {
-        // 获取ChatClient
-        AiVendorClientWrapper chatClientWrapper = AiVendorHelper.getChatClient(configId);
-        if (chatClientWrapper == null) {
+        AiVendorClientWrapper vendorWrapper = AiVendorHelper.getClientWrapper(configId);
+        if (vendorWrapper == null) {
             return Flux.just(ResponseData.errorMsg("ChatClient获取失败！").toString());
         }
-        //获取基础信息。
-        AiModelConfigData configData = chatClientWrapper.getConfigData();
+        AiModelConfigData configData = vendorWrapper.getConfigData();
         if (StringUtils.isBlank(systemPrompt)) {
             systemPrompt = configData.getModelParamBox().getParam("systemPrompt", "");
         }
@@ -190,50 +207,94 @@ public class AiChatService {
         }
         // 初始化会话消息
         AiSessionMsg sessionMsg = initSessionMsg(saasId, userId, userType, userInfo, configId, sessionInfo.getId(), systemPrompt, userPrompt, toolList, fileInfo, ragLibIds, contextData);
-        // 会话消息的会话ID和消息ID
-        SessionConversationData conversationData = new SessionConversationData(sessionMsg.getSessionId(), sessionMsg.getId());
-        // 返回信息
-        StringBuilder responseData = new StringBuilder();
-        // 最后一个ChatResponse信息
-        AtomicReference<ChatResponse> lastResponseRef = new AtomicReference<>();
-        ChatClient.ChatClientRequestSpec chatClientRequestSpec = chatClientWrapper.getChatClient().prompt();
+
+        // === LangChain4j 流式调用 ===
+        List<ChatMessage> messages = new ArrayList<>();
         if (StringUtils.isNotBlank(systemPrompt)) {
-            chatClientRequestSpec.system(systemPrompt);
+            messages.add(new SystemMessage(systemPrompt));
         }
-        if (StringUtils.isNotBlank(contextData)) {
-            userPrompt = userPrompt + contextData;
-        }
-        chatClientRequestSpec.user(userPrompt);
-        // 设置工具
-        if (toolList != null && !toolList.isEmpty()) {
-            chatClientRequestSpec.toolCallbacks(AiToolHelper.getToolCallbacks(toolList));
-            Map<String, Object> paramMap = new HashMap<>();
-            if (toolContext != null) {
-                paramMap.putAll(toolContext);
+        String finalPrompt = StringUtils.isNotBlank(contextData) ? userPrompt + contextData : userPrompt;
+        messages.add(new UserMessage(finalPrompt));
+
+        List<ToolSpecification> toolSpecs = (toolList != null && !toolList.isEmpty())
+                ? AiToolHelper.getToolSpecifications(toolList) : null;
+
+        boolean hasTools = toolSpecs != null && !toolSpecs.isEmpty();
+
+        // 如果有工具，先同步执行工具调用循环，再流式返回最终结果
+        if (hasTools) {
+            Response<AiMessage> response = vendorWrapper.getChatLanguageModel().generate(messages, toolSpecs);
+            AiMessage aiMessage = response.content();
+            while (aiMessage.hasToolExecutionRequests()) {
+                for (ToolExecutionRequest req : aiMessage.toolExecutionRequests()) {
+                    String toolInput = req.arguments();
+                    if (toolContext != null && !toolContext.isEmpty()) {
+                        Map<String, Object> inputMap = JsonUtils.parse(toolInput,
+                                new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {});
+                        if (inputMap == null) {
+                            inputMap = new java.util.HashMap<>();
+                        }
+                        inputMap.putAll(toolContext);
+                        toolInput = JsonUtils.toString(inputMap);
+                    }
+                    String result = AiToolHelper.executeTool(req.name(), toolInput);
+                    messages.add(aiMessage);
+                    messages.add(new ToolExecutionResultMessage(req.id(), req.name(), result));
+                }
+                response = vendorWrapper.getChatLanguageModel().generate(messages, toolSpecs);
+                aiMessage = response.content();
             }
-            paramMap.put("saasId", saasId);
-            paramMap.put("userId", userId);
-            paramMap.put("userType", userType);
-            paramMap.put("userInfo", userInfo);
-            chatClientRequestSpec.toolContext(paramMap);
-        }
-        // 保存会话信息
-        return chatClientRequestSpec.advisors(spec -> spec.param(CONVERSATION_ID, conversationData.toString())).stream().chatResponse().doFirst(() -> {
+            // 工具执行完毕后用流式返回最终文本
+            String finalText = aiMessage.text();
+            TokenUsage tokenUsage = response.tokenUsage();
             sessionMsg.setResponseStartDate(SystemClock.nowDate());
-        }).doOnComplete(() -> {
-            ChatResponse lastResponse = lastResponseRef.get();
-            Usage tokenUsage = lastResponse.getMetadata().getUsage();
-            sessionMsg.setRequestTokens(tokenUsage.getPromptTokens());
-            sessionMsg.setResponseTokens(tokenUsage.getCompletionTokens());
+            sessionMsg.setRequestTokens(tokenUsage != null && tokenUsage.inputTokenCount() != null
+                    ? tokenUsage.inputTokenCount() : 0);
+            sessionMsg.setResponseTokens(tokenUsage != null && tokenUsage.outputTokenCount() != null
+                    ? tokenUsage.outputTokenCount() : 0);
             sessionMsg.setResponseEndDate(SystemClock.nowDate());
-            sessionMsg.setResponseInfo(responseData.toString());
-            // 保存会话信息
+            sessionMsg.setResponseInfo(finalText);
             saveSessionMsg(sessionMsg);
-        }).filter(x -> x != null && x.getResult() != null && x.getResult().getOutput() != null && x.getResult().getOutput().getText() != null).map(x -> {
-            String content = x.getResult().getOutput().getText();
-            responseData.append(content);
-            lastResponseRef.set(x);
-            return new AiChatSentEvent<>(content).toString();
+            return Flux.just(new AiChatSentEvent<>(finalText).toString());
+        }
+
+        // 无工具：直接流式调用
+        return Flux.create(sink -> {
+            sessionMsg.setResponseStartDate(SystemClock.nowDate());
+            StringBuilder responseBuilder = new StringBuilder();
+            java.util.concurrent.atomic.AtomicReference<Response<AiMessage>> lastResponseRef =
+                    new java.util.concurrent.atomic.AtomicReference<>();
+
+            vendorWrapper.getStreamingChatLanguageModel().generate(messages, new StreamingResponseHandler<AiMessage>() {
+                @Override
+                public void onNext(String token) {
+                    responseBuilder.append(token);
+                    sink.next(new AiChatSentEvent<>(token).toString());
+                }
+
+                @Override
+                public void onComplete(Response<AiMessage> completeResponse) {
+                    lastResponseRef.set(completeResponse);
+                    TokenUsage tokenUsage = completeResponse.tokenUsage();
+                    sessionMsg.setRequestTokens(tokenUsage != null && tokenUsage.inputTokenCount() != null
+                            ? tokenUsage.inputTokenCount() : 0);
+                    sessionMsg.setResponseTokens(tokenUsage != null && tokenUsage.outputTokenCount() != null
+                            ? tokenUsage.outputTokenCount() : 0);
+                    sessionMsg.setResponseEndDate(SystemClock.nowDate());
+                    sessionMsg.setResponseInfo(responseBuilder.toString());
+                    saveSessionMsg(sessionMsg);
+                    sink.complete();
+                }
+
+                @Override
+                public void onError(Throwable error) {
+                    logger.error("流式聊天异常", error);
+                    sessionMsg.setResponseEndDate(SystemClock.nowDate());
+                    sessionMsg.setResponseInfo("[ERROR] " + error.getMessage());
+                    saveSessionMsg(sessionMsg);
+                    sink.error(error);
+                }
+            });
         });
     }
 
@@ -263,13 +324,11 @@ public class AiChatService {
      * @return
      */
     public static ResponseData<AiSessionInfo> initSession(long saasId, long userId, int userType, String userInfo, long configId, int sessionType, String sessionName, Integer windowSize, String systemPrompt, List<AiToolCallInfo> toolList, long[] ragLibIds) {
-        // 获取ChatClient
-        AiVendorClientWrapper chatClientWrapper = AiVendorHelper.getChatClient(configId);
-        if (chatClientWrapper == null) {
+        AiVendorClientWrapper vendorWrapper = AiVendorHelper.getClientWrapper(configId);
+        if (vendorWrapper == null) {
             return ResponseData.errorMsg("ChatClient获取失败!");
         }
-        //获取基础信息。
-        AiModelConfigData configData = chatClientWrapper.getConfigData();
+        AiModelConfigData configData = vendorWrapper.getConfigData();
         if (StringUtils.isBlank(systemPrompt)) {
             systemPrompt = configData.getModelParamBox().getParam("systemPrompt", "");
         }
@@ -314,12 +373,11 @@ public class AiChatService {
             infoMap.put(file.getOriginalFilename(), file.getSize());
             content.append("文件名：").append(file.getOriginalFilename()).append("的内容：\n\n");
             try (InputStream inputStream = file.getInputStream()) {
-                TikaDocumentReader reader = new TikaDocumentReader(new InputStreamResource(inputStream));
-                List<Document> documents = reader.get(); // 假设返回List<Document>
-                if (!documents.isEmpty()) {
-                    for (Document document : documents) {
-                        content.append(document.getText()).append("\n");
-                    }
+                ApacheTikaDocumentParser parser = new ApacheTikaDocumentParser();
+                dev.langchain4j.data.document.Document lc4jDoc = parser.parse(inputStream);
+                String text = lc4jDoc.text();
+                if (text != null && !text.isEmpty()) {
+                    content.append(text).append("\n");
                 } else {
                     return ResponseData.warnMsg("文件[" + file.getOriginalFilename() + "]内容为空，无法提取文本!");
                 }
@@ -483,55 +541,98 @@ public class AiChatService {
         }
         // 初始化会话消息
         AiSessionMsg sessionMsg = initSessionMsg(saasId, userId, userType, userInfo, configId, sessionInfo.getId(), systemPrompt, userPrompt, toolList, fileInfo, ragLibIds, contextData);
-        // 获取ChatClient
-        AiVendorClientWrapper chatClientWrapper = AiVendorHelper.getChatClient(sessionInfo.getConfigId());
-        if (chatClientWrapper == null) {
+        // 获取LangChain4j客户端
+        AiVendorClientWrapper vendorWrapper = AiVendorHelper.getClientWrapper(sessionInfo.getConfigId());
+        if (vendorWrapper == null) {
             return Flux.just(ResponseData.errorMsg("ChatClient获取失败！").toString());
         }
-        // 会话消息的会话ID和消息ID
-        SessionConversationData conversationData = new SessionConversationData(sessionMsg.getSessionId(), sessionMsg.getId());
-        // 返回信息
-        StringBuilder responseData = new StringBuilder();
-        // 最后一个ChatResponse信息
-        AtomicReference<ChatResponse> lastResponseRef = new AtomicReference<>();
-        ChatClient.ChatClientRequestSpec chatClientRequestSpec = chatClientWrapper.getChatClient().prompt();
+
+        // === LangChain4j 流式调用（加载历史消息） ===
+        List<ChatMessage> messages = AiMysqlChatMemory.load(sessionInfo.getId());
         if (StringUtils.isNotBlank(systemPrompt)) {
-            chatClientRequestSpec.system(systemPrompt);
+            messages.add(new SystemMessage(systemPrompt));
         }
-        if (StringUtils.isNotBlank(contextData)) {
-            userPrompt = userPrompt + contextData;
-        }
-        chatClientRequestSpec.user(userPrompt);
-        // 设置工具
-        if (toolList != null && !toolList.isEmpty()) {
-            chatClientRequestSpec.toolCallbacks(AiToolHelper.getToolCallbacks(toolList));
-            Map<String, Object> paramMap = new HashMap<>();
-            if (toolContext != null) {
-                paramMap.putAll(toolContext);
+        String finalPrompt = StringUtils.isNotBlank(contextData) ? userPrompt + contextData : userPrompt;
+        messages.add(new UserMessage(finalPrompt));
+
+        List<ToolSpecification> toolSpecs = (toolList != null && !toolList.isEmpty())
+                ? AiToolHelper.getToolSpecifications(toolList) : null;
+
+        boolean hasTools = toolSpecs != null && !toolSpecs.isEmpty();
+
+        // 如果有工具，先同步执行工具调用循环，再流式返回最终结果
+        if (hasTools) {
+            Response<AiMessage> response = vendorWrapper.getChatLanguageModel().generate(messages, toolSpecs);
+            AiMessage aiMessage = response.content();
+            while (aiMessage.hasToolExecutionRequests()) {
+                for (ToolExecutionRequest req : aiMessage.toolExecutionRequests()) {
+                    String toolInput = req.arguments();
+                    if (toolContext != null && !toolContext.isEmpty()) {
+                        Map<String, Object> inputMap = JsonUtils.parse(toolInput,
+                                new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {});
+                        if (inputMap == null) {
+                            inputMap = new java.util.HashMap<>();
+                        }
+                        inputMap.putAll(toolContext);
+                        toolInput = JsonUtils.toString(inputMap);
+                    }
+                    String result = AiToolHelper.executeTool(req.name(), toolInput);
+                    messages.add(aiMessage);
+                    messages.add(new ToolExecutionResultMessage(req.id(), req.name(), result));
+                }
+                response = vendorWrapper.getChatLanguageModel().generate(messages, toolSpecs);
+                aiMessage = response.content();
             }
-            paramMap.put("saasId", saasId);
-            paramMap.put("userId", userId);
-            paramMap.put("userType", userType);
-            paramMap.put("userInfo", userInfo);
-            chatClientRequestSpec.toolContext(paramMap);
-        }
-        // 保存会话信息
-        return chatClientRequestSpec.advisors(spec -> spec.param(CONVERSATION_ID, conversationData.toString())).stream().chatResponse().doFirst(() -> {
+            String finalText = aiMessage.text();
+            TokenUsage tokenUsage = response.tokenUsage();
             sessionMsg.setResponseStartDate(SystemClock.nowDate());
-        }).doOnComplete(() -> {
-            ChatResponse lastResponse = lastResponseRef.get();
-            Usage tokenUsage = lastResponse.getMetadata().getUsage();
-            sessionMsg.setRequestTokens(tokenUsage.getPromptTokens());
-            sessionMsg.setResponseTokens(tokenUsage.getCompletionTokens());
+            sessionMsg.setRequestTokens(tokenUsage != null && tokenUsage.inputTokenCount() != null
+                    ? tokenUsage.inputTokenCount() : 0);
+            sessionMsg.setResponseTokens(tokenUsage != null && tokenUsage.outputTokenCount() != null
+                    ? tokenUsage.outputTokenCount() : 0);
             sessionMsg.setResponseEndDate(SystemClock.nowDate());
-            sessionMsg.setResponseInfo(responseData.toString());
-            // 保存会话信息
+            sessionMsg.setResponseInfo(finalText);
             saveSessionMsg(sessionMsg);
-        }).filter(x -> x != null && x.getResult() != null && x.getResult().getOutput() != null && x.getResult().getOutput().getText() != null).map(x -> {
-            String content = x.getResult().getOutput().getText();
-            responseData.append(content);
-            lastResponseRef.set(x);
-            return new AiChatSentEvent<>(content).toString();
+            return Flux.just(new AiChatSentEvent<>(finalText).toString());
+        }
+
+        // 无工具：直接流式调用
+        return Flux.create(sink -> {
+            sessionMsg.setResponseStartDate(SystemClock.nowDate());
+            StringBuilder responseBuilder = new StringBuilder();
+            java.util.concurrent.atomic.AtomicReference<Response<AiMessage>> lastResponseRef =
+                    new java.util.concurrent.atomic.AtomicReference<>();
+
+            vendorWrapper.getStreamingChatLanguageModel().generate(messages, new StreamingResponseHandler<AiMessage>() {
+                @Override
+                public void onNext(String token) {
+                    responseBuilder.append(token);
+                    sink.next(new AiChatSentEvent<>(token).toString());
+                }
+
+                @Override
+                public void onComplete(Response<AiMessage> completeResponse) {
+                    lastResponseRef.set(completeResponse);
+                    TokenUsage tokenUsage = completeResponse.tokenUsage();
+                    sessionMsg.setRequestTokens(tokenUsage != null && tokenUsage.inputTokenCount() != null
+                            ? tokenUsage.inputTokenCount() : 0);
+                    sessionMsg.setResponseTokens(tokenUsage != null && tokenUsage.outputTokenCount() != null
+                            ? tokenUsage.outputTokenCount() : 0);
+                    sessionMsg.setResponseEndDate(SystemClock.nowDate());
+                    sessionMsg.setResponseInfo(responseBuilder.toString());
+                    saveSessionMsg(sessionMsg);
+                    sink.complete();
+                }
+
+                @Override
+                public void onError(Throwable error) {
+                    logger.error("流式聊天异常", error);
+                    sessionMsg.setResponseEndDate(SystemClock.nowDate());
+                    sessionMsg.setResponseInfo("[ERROR] " + error.getMessage());
+                    saveSessionMsg(sessionMsg);
+                    sink.error(error);
+                }
+            });
         });
     }
 

@@ -1,8 +1,8 @@
 package uw.ai.center.tool;
 
+import dev.langchain4j.agent.tool.ToolSpecification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.ai.tool.ToolCallback;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import uw.ai.center.entity.AiToolInfo;
@@ -12,6 +12,7 @@ import uw.cache.CacheDataLoader;
 import uw.cache.FusionCache;
 import uw.common.app.constant.CommonState;
 import uw.common.dto.ResponseData;
+import uw.common.util.JsonUtils;
 import uw.dao.DaoManager;
 import uw.dao.DataList;
 
@@ -62,46 +63,43 @@ public class AiToolHelper {
     }
 
     /**
-     * 获取工具回调列表。
-     *
-     * @return
+     * 获取 LangChain4j ToolSpecification 列表。
      */
-    public static ToolCallback[] getAllToolCallbacks() {
-        ToolCallback[] toolCallbacks = new ToolCallback[0];
+    public static List<ToolSpecification> getToolSpecifications(List<AiToolCallInfo> aiToolCallInfoList) {
+        List<ToolSpecification> specs = new ArrayList<>();
         try {
-            Map<String, AiToolInfo> map = FusionCache.get( TOOL_CACHE_NAME, TOOL_CACHE_NAME );
+            Map<String, AiToolInfo> map = FusionCache.get(TOOL_CACHE_NAME, TOOL_CACHE_NAME);
             if (map != null) {
-                toolCallbacks = map.values().stream().map( x -> new AiToolCallback( x, false ) ).toArray( ToolCallback[]::new );
+                for (AiToolCallInfo callInfo : aiToolCallInfoList) {
+                    AiToolInfo toolInfo = map.get(callInfo.getToolCode());
+                    if (toolInfo != null) {
+                        specs.add(new AiToolCallback(toolInfo, callInfo.isReturnDirect()).toToolSpecification());
+                    }
+                }
             }
         } catch (Exception e) {
-            logger.error( "获取ToolCallback失败！{}", e.getMessage(), e );
+            logger.error("获取ToolSpecification失败！{}", e.getMessage(), e);
         }
-        return toolCallbacks;
+        return specs;
     }
 
     /**
-     * 获取工具回调列表。
-     *
-     * @return
+     * 执行工具（通过 RPC 转发到外部微服务）。
      */
-    public static ToolCallback[] getToolCallbacks(List<AiToolCallInfo> aiToolCallInfoList) {
-        ToolCallback[] toolCallbacks = new ToolCallback[0];
+    public static String executeTool(String toolName, String toolInput) {
         try {
-            Map<String, AiToolInfo> map = FusionCache.get( TOOL_CACHE_NAME, TOOL_CACHE_NAME );
-            List<ToolCallback> list = new ArrayList<ToolCallback>( aiToolCallInfoList.size() );
-            for (AiToolCallInfo aiToolCallInfo : aiToolCallInfoList) {
-                AiToolInfo aiToolInfo = map.get( aiToolCallInfo.getToolCode() );
-                if (aiToolInfo != null) {
-                    list.add( new AiToolCallback( aiToolInfo, aiToolCallInfo.isReturnDirect() ) );
+            Map<String, AiToolInfo> map = FusionCache.get(TOOL_CACHE_NAME, TOOL_CACHE_NAME);
+            if (map != null) {
+                AiToolInfo toolInfo = map.get(toolName);
+                if (toolInfo != null) {
+                    return JsonUtils.toString(toolCallback(toolInfo, toolInput));
                 }
             }
-            return list.toArray( toolCallbacks );
         } catch (Exception e) {
-            logger.error( "获取ToolCallback失败！{}", e.getMessage(), e );
+            logger.error("执行工具[{}]失败！{}", toolName, e.getMessage(), e);
         }
-        return toolCallbacks;
+        return ResponseData.errorMsg("工具[" + toolName + "]未找到").toString();
     }
-
 
     /**
      * 执行工具回调。
