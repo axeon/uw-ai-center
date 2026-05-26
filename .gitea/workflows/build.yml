@@ -13,32 +13,34 @@ jobs:
     steps:
       - name: build
         run: |
-          # 拉取代码并构建
+          # 加载用户环境变量（SDKMAN/Java/Maven等）
           source ~/.profile
-          git clone -q ${{gitea.server_url}}/${{ gitea.repository }}.git .
+
+          # 通过gitea.token认证克隆仓库，自动适配http/https协议
+          GIT_SERVER=${{gitea.server_url}}
+          git clone -q ${GIT_SERVER%%://*}://gitea:${{gitea.token}}@${GIT_SERVER#*://}/${{gitea.repository}}.git .
+
+          # Maven构建，跳过测试
           mvn clean package -U -Dmaven.test.skip=true
+          # 从pom.xml提取项目版本号
+          APP_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 
-          # 从 pom.xml 提取项目版本号（取 /project/version 节点）
-          APP_VERSION=`mvn help:evaluate -Dexpression=project.version -q -DforceStdout`
-
-          # 创建qemu & buildx 多架构 builder（已存在则跳过）
+          # 注册QEMU多架构支持（ARM64模拟），已注册则跳过
           [ -f /proc/sys/fs/binfmt_misc/qemu-aarch64 ] || docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+          # 创建或复用buildx多架构构建器，使用buildkitd.toml中的镜像加速配置
           docker buildx use multiarch 2>/dev/null || docker buildx create --use --name multiarch --driver docker-container --driver-opt network=host --config /etc/docker/buildkitd.toml --platform linux/amd64,linux/arm64
 
-          # 登录、构建、推送多架构镜像到私有仓库
-          if  [ -n "${{secrets.REGISTRY_USERNAME}}" ] && [ -n "${{secrets.REGISTRY_TOKEN}}" ]; then
+          # 登录私有Docker Registry
+          if [ -n "${{secrets.REGISTRY_USERNAME}}" ] && [ -n "${{secrets.REGISTRY_TOKEN}}" ]; then
             docker login ${{vars.REGISTRY_SERVER}} -u ${{secrets.REGISTRY_USERNAME}} --password-stdin <<< "${{secrets.REGISTRY_TOKEN}}"
-          else
-            echo "SKIP: registry secrets not configured."
           fi
-          docker buildx build --platform linux/amd64,linux/arm64 --provenance=false --build-arg APP_NAME=${APP_NAME} -t ${{vars.REGISTRY_SERVER}}/${APP_NAME}:${APP_VERSION} --push .
+          # 构建多架构镜像并推送到私有Registry
+          docker buildx build --platform linux/amd64,linux/arm64 --provenance=false -t ${{vars.REGISTRY_SERVER}}/${APP_NAME}:${APP_VERSION} --push .
 
-          # 如果配置了公有仓库凭据，则从私有仓库复制镜像到公有仓库（不重新构建，SHA 一致）
+          # 推送到公共Registry（可选）
           if [ -n "${{vars.PUBLIC_REGISTRY_SERVER}}" ] && [ -n "${{secrets.PUBLIC_REGISTRY_OWNER}}" ] && [ -n "${{secrets.PUBLIC_REGISTRY_USERNAME}}" ] && [ -n "${{secrets.PUBLIC_REGISTRY_TOKEN}}" ]; then
             docker login ${{vars.PUBLIC_REGISTRY_SERVER}} -u ${{secrets.PUBLIC_REGISTRY_USERNAME}} --password-stdin <<< "${{secrets.PUBLIC_REGISTRY_TOKEN}}"
             docker buildx imagetools create -t ${{vars.PUBLIC_REGISTRY_SERVER}}/${{secrets.PUBLIC_REGISTRY_OWNER}}/${APP_NAME}:${APP_VERSION} ${{vars.REGISTRY_SERVER}}/${APP_NAME}:${APP_VERSION} || echo "WARNING: push to public registry failed"
-          else
-            echo "SKIP: public registry not configured."
           fi
 
           # 部署到私有环境
