@@ -206,6 +206,7 @@ public class AiRagService {
      * @param ragLibId
      * @return
      */
+    @SuppressWarnings("removal")
     private static AiRagClientWrapper buildRagClientWrapper(long ragLibId) {
         AiRagLib ragLib = dao.load(AiRagLib.class, ragLibId).getData();
         if (ragLib == null) {
@@ -233,7 +234,6 @@ public class AiRagService {
         ElasticsearchEmbeddingStore vectorStore = ElasticsearchEmbeddingStore.builder()
                 .restClient(restClient)
                 .indexName(RAG_ES_INDEX_PREFIX + ragLibId)
-                .dimension(1024)
                 .build();
 
         return new AiRagClientWrapper(ragLib, vectorStore, textSplitter, searchTopK,

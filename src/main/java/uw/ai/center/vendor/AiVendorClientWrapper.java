@@ -1,7 +1,7 @@
 package uw.ai.center.vendor;
 
-import dev.langchain4j.model.chat.ChatLanguageModel;
-import dev.langchain4j.model.chat.StreamingChatLanguageModel;
+import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
 import io.swagger.v3.oas.annotations.media.Schema;
 import uw.ai.center.vo.AiModelConfigData;
@@ -16,21 +16,21 @@ public class AiVendorClientWrapper {
     private final AiModelConfigData configData;
 
     @Schema(title = "同步聊天模型", description = "同步聊天模型")
-    private final ChatLanguageModel chatLanguageModel;
+    private final ChatModel chatModel;
 
     @Schema(title = "流式聊天模型", description = "流式聊天模型")
-    private final StreamingChatLanguageModel streamingChatLanguageModel;
+    private final StreamingChatModel streamingChatModel;
 
     @Schema(title = "嵌入模型", description = "嵌入模型")
     private final EmbeddingModel embeddingModel;
 
     public AiVendorClientWrapper(AiModelConfigData configData,
-                                 ChatLanguageModel chatLanguageModel,
-                                 StreamingChatLanguageModel streamingChatLanguageModel,
+                                 ChatModel chatModel,
+                                 StreamingChatModel streamingChatModel,
                                  EmbeddingModel embeddingModel) {
         this.configData = configData;
-        this.chatLanguageModel = chatLanguageModel;
-        this.streamingChatLanguageModel = streamingChatLanguageModel;
+        this.chatModel = chatModel;
+        this.streamingChatModel = streamingChatModel;
         this.embeddingModel = embeddingModel;
     }
 
@@ -38,12 +38,12 @@ public class AiVendorClientWrapper {
         return configData;
     }
 
-    public ChatLanguageModel getChatLanguageModel() {
-        return chatLanguageModel;
+    public ChatModel getChatModel() {
+        return chatModel;
     }
 
-    public StreamingChatLanguageModel getStreamingChatLanguageModel() {
-        return streamingChatLanguageModel;
+    public StreamingChatModel getStreamingChatModel() {
+        return streamingChatModel;
     }
 
     public EmbeddingModel getEmbeddingModel() {

@@ -7,8 +7,9 @@ import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.message.UserMessage;
-import dev.langchain4j.model.StreamingResponseHandler;
-import dev.langchain4j.model.output.Response;
+import dev.langchain4j.model.chat.request.ChatRequest;
+import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
 import dev.langchain4j.model.output.TokenUsage;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -115,10 +116,14 @@ public class AiChatService {
         List<ToolSpecification> toolSpecs = (toolList != null && !toolList.isEmpty())
                 ? AiToolHelper.getToolSpecifications(toolList) : null;
 
-        Response<AiMessage> chatResponse;
+        ChatResponse chatResponse;
         if (toolSpecs != null && !toolSpecs.isEmpty()) {
-            chatResponse = vendorWrapper.getChatLanguageModel().generate(messages, toolSpecs);
-            AiMessage aiMessage = chatResponse.content();
+            ChatRequest chatRequest = ChatRequest.builder()
+                    .messages(messages)
+                    .toolSpecifications(toolSpecs)
+                    .build();
+            chatResponse = vendorWrapper.getChatModel().chat(chatRequest);
+            AiMessage aiMessage = chatResponse.aiMessage();
             // 工具调用循环
             while (aiMessage.hasToolExecutionRequests()) {
                 for (ToolExecutionRequest req : aiMessage.toolExecutionRequests()) {
@@ -137,14 +142,18 @@ public class AiChatService {
                     messages.add(aiMessage);
                     messages.add(new ToolExecutionResultMessage(req.id(), req.name(), result));
                 }
-                chatResponse = vendorWrapper.getChatLanguageModel().generate(messages, toolSpecs);
-                aiMessage = chatResponse.content();
+                chatRequest = ChatRequest.builder()
+                        .messages(messages)
+                        .toolSpecifications(toolSpecs)
+                        .build();
+                chatResponse = vendorWrapper.getChatModel().chat(chatRequest);
+                aiMessage = chatResponse.aiMessage();
             }
         } else {
-            chatResponse = vendorWrapper.getChatLanguageModel().generate(messages);
+            chatResponse = vendorWrapper.getChatModel().chat(messages);
         }
 
-        String responseData = chatResponse.content().text();
+        String responseData = chatResponse.aiMessage().text();
         TokenUsage tokenUsage = chatResponse.tokenUsage();
         sessionMsg.setRequestTokens(tokenUsage != null && tokenUsage.inputTokenCount() != null
                 ? tokenUsage.inputTokenCount() : 0);
@@ -223,8 +232,12 @@ public class AiChatService {
 
         // 如果有工具，先同步执行工具调用循环，再流式返回最终结果
         if (hasTools) {
-            Response<AiMessage> response = vendorWrapper.getChatLanguageModel().generate(messages, toolSpecs);
-            AiMessage aiMessage = response.content();
+            ChatRequest chatRequest = ChatRequest.builder()
+                    .messages(messages)
+                    .toolSpecifications(toolSpecs)
+                    .build();
+            ChatResponse response = vendorWrapper.getChatModel().chat(chatRequest);
+            AiMessage aiMessage = response.aiMessage();
             while (aiMessage.hasToolExecutionRequests()) {
                 for (ToolExecutionRequest req : aiMessage.toolExecutionRequests()) {
                     String toolInput = req.arguments();
@@ -241,8 +254,12 @@ public class AiChatService {
                     messages.add(aiMessage);
                     messages.add(new ToolExecutionResultMessage(req.id(), req.name(), result));
                 }
-                response = vendorWrapper.getChatLanguageModel().generate(messages, toolSpecs);
-                aiMessage = response.content();
+                chatRequest = ChatRequest.builder()
+                        .messages(messages)
+                        .toolSpecifications(toolSpecs)
+                        .build();
+                response = vendorWrapper.getChatModel().chat(chatRequest);
+                aiMessage = response.aiMessage();
             }
             // 工具执行完毕后用流式返回最终文本
             String finalText = aiMessage.text();
@@ -262,18 +279,18 @@ public class AiChatService {
         return Flux.create(sink -> {
             sessionMsg.setResponseStartDate(SystemClock.nowDate());
             StringBuilder responseBuilder = new StringBuilder();
-            java.util.concurrent.atomic.AtomicReference<Response<AiMessage>> lastResponseRef =
+            java.util.concurrent.atomic.AtomicReference<ChatResponse> lastResponseRef =
                     new java.util.concurrent.atomic.AtomicReference<>();
 
-            vendorWrapper.getStreamingChatLanguageModel().generate(messages, new StreamingResponseHandler<AiMessage>() {
+            vendorWrapper.getStreamingChatModel().chat(messages, new StreamingChatResponseHandler() {
                 @Override
-                public void onNext(String token) {
+                public void onPartialResponse(String token) {
                     responseBuilder.append(token);
                     sink.next(new AiChatSentEvent<>(token).toString());
                 }
 
                 @Override
-                public void onComplete(Response<AiMessage> completeResponse) {
+                public void onCompleteResponse(ChatResponse completeResponse) {
                     lastResponseRef.set(completeResponse);
                     TokenUsage tokenUsage = completeResponse.tokenUsage();
                     sessionMsg.setRequestTokens(tokenUsage != null && tokenUsage.inputTokenCount() != null
@@ -562,8 +579,12 @@ public class AiChatService {
 
         // 如果有工具，先同步执行工具调用循环，再流式返回最终结果
         if (hasTools) {
-            Response<AiMessage> response = vendorWrapper.getChatLanguageModel().generate(messages, toolSpecs);
-            AiMessage aiMessage = response.content();
+            ChatRequest chatRequest = ChatRequest.builder()
+                    .messages(messages)
+                    .toolSpecifications(toolSpecs)
+                    .build();
+            ChatResponse response = vendorWrapper.getChatModel().chat(chatRequest);
+            AiMessage aiMessage = response.aiMessage();
             while (aiMessage.hasToolExecutionRequests()) {
                 for (ToolExecutionRequest req : aiMessage.toolExecutionRequests()) {
                     String toolInput = req.arguments();
@@ -580,8 +601,12 @@ public class AiChatService {
                     messages.add(aiMessage);
                     messages.add(new ToolExecutionResultMessage(req.id(), req.name(), result));
                 }
-                response = vendorWrapper.getChatLanguageModel().generate(messages, toolSpecs);
-                aiMessage = response.content();
+                chatRequest = ChatRequest.builder()
+                        .messages(messages)
+                        .toolSpecifications(toolSpecs)
+                        .build();
+                response = vendorWrapper.getChatModel().chat(chatRequest);
+                aiMessage = response.aiMessage();
             }
             String finalText = aiMessage.text();
             TokenUsage tokenUsage = response.tokenUsage();
@@ -600,18 +625,18 @@ public class AiChatService {
         return Flux.create(sink -> {
             sessionMsg.setResponseStartDate(SystemClock.nowDate());
             StringBuilder responseBuilder = new StringBuilder();
-            java.util.concurrent.atomic.AtomicReference<Response<AiMessage>> lastResponseRef =
+            java.util.concurrent.atomic.AtomicReference<ChatResponse> lastResponseRef =
                     new java.util.concurrent.atomic.AtomicReference<>();
 
-            vendorWrapper.getStreamingChatLanguageModel().generate(messages, new StreamingResponseHandler<AiMessage>() {
+            vendorWrapper.getStreamingChatModel().chat(messages, new StreamingChatResponseHandler() {
                 @Override
-                public void onNext(String token) {
+                public void onPartialResponse(String token) {
                     responseBuilder.append(token);
                     sink.next(new AiChatSentEvent<>(token).toString());
                 }
 
                 @Override
-                public void onComplete(Response<AiMessage> completeResponse) {
+                public void onCompleteResponse(ChatResponse completeResponse) {
                     lastResponseRef.set(completeResponse);
                     TokenUsage tokenUsage = completeResponse.tokenUsage();
                     sessionMsg.setRequestTokens(tokenUsage != null && tokenUsage.inputTokenCount() != null
