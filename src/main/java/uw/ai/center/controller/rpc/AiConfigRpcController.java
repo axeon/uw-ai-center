@@ -1,5 +1,8 @@
 package uw.ai.center.controller.rpc;
 
+// 当前内网Maven仓库尚无 uw.ai.rpc.AiConfigRpc 和 uw.ai.vo.AiModelConfigVo
+
+/*
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.context.annotation.Primary;
@@ -20,9 +23,6 @@ import uw.dao.DataList;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * AI配置查询RPC接口。
- */
 @RestController
 @Tag(name = "AI配置RPC接口")
 @RequestMapping("/rpc/config")
@@ -58,3 +58,4 @@ public class AiConfigRpcController implements AiConfigRpc {
         return ResponseData.success(result);
     }
 }
+*/
