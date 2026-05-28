@@ -1,5 +1,7 @@
 package uw.ai.center.controller.admin.model;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,6 +23,8 @@ import uw.common.util.SystemClock;
 import uw.dao.DaoManager;
 import uw.dao.DataList;
 
+import java.time.Duration;
+
 /**
  * AI模型配置管理。
  */
@@ -33,8 +37,19 @@ public class AiModelConfigController {
     private final DaoManager dao = DaoManager.getInstance();
 
     /**
-     * 列表AI模型配置。
+     * 本地缓存。
      */
+    private static final Cache<String, Object> modelCache = Caffeine.newBuilder()
+            .maximumSize(200)
+            .expireAfterWrite(Duration.ofMinutes(5))
+            .build();
+
+    private static String loadKey(long id) {
+        return "load_aiModelConfig_" + id;
+    }
+
+    private static final String LITE_LIST_KEY = "liteList_aiModelConfig";
+
     @GetMapping("/list")
     @Operation(summary = "列表AI模型配置", description = "列表AI模型配置")
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.PERM, log = ActionLog.REQUEST)
@@ -43,31 +58,35 @@ public class AiModelConfigController {
         return dao.list(AiModelConfig.class, queryParam);
     }
 
-    /**
-     * 轻量级列表AI模型配置，一般用于select控件。
-     */
     @GetMapping("/liteList")
     @Operation(summary = "轻量级列表AI模型配置", description = "轻量级列表AI模型配置，一般用于select控件。")
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.USER, log = ActionLog.NONE)
     public ResponseData<DataList<AiModelConfig>> liteList(AiModelConfigQueryParam queryParam){
+        DataList<AiModelConfig> cached = (DataList<AiModelConfig>) modelCache.getIfPresent(LITE_LIST_KEY);
+        if (cached != null) {
+            return ResponseData.success(cached);
+        }
         queryParam.SELECT_SQL( "SELECT id,saas_id,mch_id,api_id,vendor_class,model_type,config_code,config_name,model_name,state,create_date,modify_date from ai_model_config " );
-        return dao.list(AiModelConfig.class, queryParam);
+        return dao.list(AiModelConfig.class, queryParam).onSuccess(list -> {
+            modelCache.put(LITE_LIST_KEY, list);
+        });
     }
 
-    /**
-     * 加载AI模型配置。
-     */
     @GetMapping("/load")
     @Operation(summary = "加载AI模型配置", description = "加载AI模型配置")
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.PERM, log = ActionLog.REQUEST)
     public ResponseData<AiModelConfig> load(@Parameter(description = "主键ID", required = true) @RequestParam long id)  {
         AuthServiceHelper.logRef(AiModelConfig.class,id);
-        return dao.queryForSingleObject(AiModelConfig.class, new AuthIdQueryParam(id));
+        String cacheKey = loadKey(id);
+        AiModelConfig cached = (AiModelConfig) modelCache.getIfPresent(cacheKey);
+        if (cached != null) {
+            return ResponseData.success(cached);
+        }
+        return dao.queryForSingleObject(AiModelConfig.class, new AuthIdQueryParam(id)).onSuccess(config -> {
+            modelCache.put(cacheKey, config);
+        });
     }
 
-    /**
-     * 查询数据历史。
-     */
     @GetMapping("/listDataHistory")
     @Operation(summary = "查询数据历史", description = "查询数据历史")
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.PERM, log = ActionLog.REQUEST)
@@ -77,9 +96,6 @@ public class AiModelConfigController {
         return dao.list(SysDataHistory.class, queryParam);
     }
 
-    /**
-     * 查询操作日志。
-     */
     @GetMapping("/listCritLog")
     @Operation(summary = "查询操作日志", description = "查询操作日志")
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.PERM, log = ActionLog.REQUEST)
@@ -89,9 +105,6 @@ public class AiModelConfigController {
         return dao.list(SysCritLog.class, queryParam);
     }
 
-    /**
-     * 新增AI模型配置。
-     */
     @PostMapping("/save")
     @Operation(summary = "新增AI模型配置", description = "新增AI模型配置")
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.PERM, log = ActionLog.CRIT)
@@ -104,13 +117,11 @@ public class AiModelConfigController {
         aiModelConfig.setModifyDate(null);
         aiModelConfig.setState(CommonState.ENABLED.getValue());
         return dao.save( aiModelConfig ).onSuccess(savedEntity -> {
+            modelCache.invalidate(LITE_LIST_KEY);
             SysDataHistoryHelper.saveHistory(aiModelConfig);
         });
     }
 
-    /**
-     * 修改AI模型配置。
-     */
     @PutMapping("/update")
     @Operation(summary = "修改AI模型配置", description = "修改AI模型配置")
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.PERM, log = ActionLog.CRIT)
@@ -129,41 +140,40 @@ public class AiModelConfigController {
             aiModelConfigDb.setModifyDate(SystemClock.nowDate());
             return dao.update( aiModelConfigDb ).onSuccess(updatedEntity -> {
                 AiVendorHelper.invalidateConfig(aiModelConfigDb.getId());
+                modelCache.invalidate(loadKey(aiModelConfig.getId()));
+                modelCache.invalidate(LITE_LIST_KEY);
                 SysDataHistoryHelper.saveHistory( aiModelConfigDb,remark );
             } );
         } );
     }
 
-    /**
-     * 启用AI模型配置。
-     */
     @PutMapping("/enable")
     @Operation(summary = "启用AI模型配置", description = "启用AI模型配置")
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData enable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiModelConfig.class,id,remark);
+        modelCache.invalidate(loadKey(id));
+        modelCache.invalidate(LITE_LIST_KEY);
         return dao.update(new AiModelConfig().modifyDate(SystemClock.nowDate()).state(CommonState.ENABLED.getValue()), new AuthIdStateQueryParam(id, CommonState.DISABLED.getValue()));
     }
 
-    /**
-     * 禁用AI模型配置。
-     */
     @PutMapping("/disable")
     @Operation(summary = "禁用AI模型配置", description = "禁用AI模型配置")
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData disable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiModelConfig.class,id,remark);
+        modelCache.invalidate(loadKey(id));
+        modelCache.invalidate(LITE_LIST_KEY);
         return dao.update(new AiModelConfig().modifyDate(SystemClock.nowDate()).state(CommonState.DISABLED.getValue()), new AuthIdStateQueryParam(id, CommonState.ENABLED.getValue()));
     }
 
-    /**
-     * 删除AI模型配置。
-     */
     @DeleteMapping("/delete")
     @Operation(summary = "删除AI模型配置", description = "删除AI模型配置")
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData delete(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiModelConfig.class,id,remark);
+        modelCache.invalidate(loadKey(id));
+        modelCache.invalidate(LITE_LIST_KEY);
         return dao.update(new AiModelConfig().modifyDate(SystemClock.nowDate()).state(CommonState.DELETED.getValue()), new AuthIdStateQueryParam(id, CommonState.DISABLED.getValue()));
     }
 }

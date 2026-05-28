@@ -32,6 +32,20 @@ public class AiModelApiController {
     private final DaoManager dao = DaoManager.getInstance();
 
     /**
+     * 本地缓存。
+     */
+    private static final Cache<String, Object> modelCache = Caffeine.newBuilder()
+            .maximumSize(200)
+            .expireAfterWrite(Duration.ofMinutes(5))
+            .build();
+
+    private static String loadKey(long id) {
+        return "load_aiModelApi_" + id;
+    }
+
+    private static final String LITE_LIST_KEY = "liteList_aiModelApi";
+
+    /**
      * 列表AI模型API配置。
      */
     @GetMapping("/list")
@@ -49,8 +63,14 @@ public class AiModelApiController {
     @Operation(summary = "轻量级列表AI模型API配置", description = "轻量级列表AI模型API配置，一般用于select控件。")
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.USER, log = ActionLog.NONE)
     public ResponseData<DataList<AiModelApi>> liteList(AiApiConfigQueryParam queryParam){
+        DataList<AiModelApi> cached = (DataList<AiModelApi>) modelCache.getIfPresent(LITE_LIST_KEY);
+        if (cached != null) {
+            return ResponseData.success(cached);
+        }
         queryParam.SELECT_SQL( "SELECT id,saas_id,mch_id,api_code,api_name,api_url,api_key,state,create_date,modify_date from ai_model_api " );
-        return dao.list(AiModelApi.class, queryParam);
+        return dao.list(AiModelApi.class, queryParam).onSuccess(list -> {
+            modelCache.put(LITE_LIST_KEY, list);
+        });
     }
 
     /**
@@ -61,7 +81,14 @@ public class AiModelApiController {
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.PERM, log = ActionLog.REQUEST)
     public ResponseData<AiModelApi> load(@Parameter(description = "主键ID", required = true) @RequestParam long id)  {
         AuthServiceHelper.logRef(AiModelApi.class,id);
-        return dao.queryForSingleObject(AiModelApi.class, new AuthIdQueryParam(id));
+        String cacheKey = loadKey(id);
+        AiModelApi cached = (AiModelApi) modelCache.getIfPresent(cacheKey);
+        if (cached != null) {
+            return ResponseData.success(cached);
+        }
+        return dao.queryForSingleObject(AiModelApi.class, new AuthIdQueryParam(id)).onSuccess(api -> {
+            modelCache.put(cacheKey, api);
+        });
     }
 
     /**
@@ -103,6 +130,7 @@ public class AiModelApiController {
         aiModelApi.setModifyDate(null);
         aiModelApi.setState(CommonState.ENABLED.getValue());
         return dao.save( aiModelApi ).onSuccess(savedEntity -> {
+            modelCache.invalidate(LITE_LIST_KEY);
             SysDataHistoryHelper.saveHistory(aiModelApi);
         });
     }
@@ -137,6 +165,8 @@ public class AiModelApiController {
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData enable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiModelApi.class,id,remark);
+        modelCache.invalidate(loadKey(id));
+        modelCache.invalidate(LITE_LIST_KEY);
         return dao.update(new AiModelApi().modifyDate(SystemClock.nowDate()).state(CommonState.ENABLED.getValue()), new AuthIdStateQueryParam(id, CommonState.DISABLED.getValue()));
     }
 
@@ -148,6 +178,8 @@ public class AiModelApiController {
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData disable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiModelApi.class,id,remark);
+        modelCache.invalidate(loadKey(id));
+        modelCache.invalidate(LITE_LIST_KEY);
         return dao.update(new AiModelApi().modifyDate(SystemClock.nowDate()).state(CommonState.DISABLED.getValue()), new AuthIdStateQueryParam(id, CommonState.ENABLED.getValue()));
     }
 
@@ -159,6 +191,8 @@ public class AiModelApiController {
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData delete(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiModelApi.class,id,remark);
+        modelCache.invalidate(loadKey(id));
+        modelCache.invalidate(LITE_LIST_KEY);
         return dao.update(new AiModelApi().modifyDate(SystemClock.nowDate()).state(CommonState.DELETED.getValue()), new AuthIdStateQueryParam(id, CommonState.DISABLED.getValue()));
     }
 }
