@@ -1,5 +1,7 @@
 package uw.ai.center.controller.admin.model;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -7,6 +9,8 @@ import org.springframework.web.bind.annotation.*;
 import uw.ai.center.dto.AiApiConfigQueryParam;
 import uw.ai.center.entity.AiModelApi;
 import uw.auth.service.AuthServiceHelper;
+
+import java.time.Duration;
 import uw.auth.service.annotation.MscPermDeclare;
 import uw.auth.service.constant.ActionLog;
 import uw.auth.service.constant.AuthType;
@@ -152,6 +156,8 @@ public class AiModelApiController {
             aiModelApiDb.setApiKey(aiModelApi.getApiKey());
             aiModelApiDb.setModifyDate(SystemClock.nowDate());
             return dao.update( aiModelApiDb ).onSuccess(updatedEntity -> {
+                modelCache.invalidate(loadKey(aiModelApi.getId()));
+                modelCache.invalidate(LITE_LIST_KEY);
                 SysDataHistoryHelper.saveHistory( aiModelApiDb,remark );
             } );
         } );
