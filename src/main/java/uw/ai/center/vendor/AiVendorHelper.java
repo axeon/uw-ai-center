@@ -1,12 +1,13 @@
 package uw.ai.center.vendor;
 
-import com.github.benmanes.caffeine.cache.CacheLoader;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import uw.ai.center.entity.AiModelApi;
 import uw.ai.center.entity.AiModelConfig;
+import uw.ai.center.vo.AiApiConfigData;
 import uw.ai.center.vo.AiModelConfigData;
 import uw.ai.center.vendor.ollama.OllamaVendor;
 import uw.ai.center.vendor.openai.OpenAiVendor;
@@ -104,37 +105,46 @@ public class AiVendorHelper {
 
     /**
      * 构建 AiVendorClientWrapper。
+     * 两步查询：modelConfig → apiConfig。
      */
     private static AiVendorClientWrapper buildClientWrapper(long configId) {
-        AiModelConfig config = dao.load(AiModelConfig.class, configId).getData();
-        if (config == null) {
+        // Step 1: 查模型配置
+        AiModelConfig modelConfig = dao.queryForSingleObject(AiModelConfig.class,
+                "select * from ai_model_config where id=?", new Object[]{configId}).getData();
+        if (modelConfig == null) {
             logger.error("AI模型配置[{}]不存在", configId);
             return null;
         }
-        AiModelConfigData configData = new AiModelConfigData(config);
-        if (configData == null) {
-            logger.error("AI模型配置[{}]解析失败", configId);
-            return null;
-        }
-        String vendorClass = configData.getVendorClass();
-        if (vendorClass == null) {
-            logger.error("AI模型配置[{}]未指定vendorClass", configId);
+
+        // Step 2: 查 API 配置
+        AiModelApi apiConfig = dao.queryForSingleObject(AiModelApi.class,
+                "select * from ai_model_api where id=?", new Object[]{modelConfig.getApiId()}).getData();
+        if (apiConfig == null) {
+            logger.error("AI模型配置[{}]关联的API配置[{}]不存在", configId, modelConfig.getApiId());
             return null;
         }
 
+        AiApiConfigData apiConfigData = new AiApiConfigData(apiConfig);
+        AiModelConfigData configData = new AiModelConfigData(modelConfig, apiConfigData);
+
+        logger.info("加载AI模型配置: id={}, configName={}, apiUrl={}, modelName={}, modelType={}, vendorClass={}",
+                modelConfig.getId(), modelConfig.getConfigName(),
+                apiConfig.getApiUrl(), modelConfig.getModelName(),
+                modelConfig.getModelType(), modelConfig.getVendorClass());
+
         // 尝试 OpenAiVendor
-        OpenAiVendor openAiVendor = OPENAI_VENDOR_MAP.get(vendorClass);
+        OpenAiVendor openAiVendor = OPENAI_VENDOR_MAP.get(modelConfig.getVendorClass());
         if (openAiVendor != null) {
             return openAiVendor.buildClientWrapper(configData);
         }
 
         // 尝试 OllamaVendor
-        OllamaVendor ollamaVendor = OLLAMA_VENDOR_MAP.get(vendorClass);
+        OllamaVendor ollamaVendor = OLLAMA_VENDOR_MAP.get(modelConfig.getVendorClass());
         if (ollamaVendor != null) {
             return ollamaVendor.buildClientWrapper(configData);
         }
 
-        logger.error("未找到AI Vendor: {}", vendorClass);
+        logger.error("未找到AI Vendor: {}", modelConfig.getVendorClass());
         return null;
     }
 }

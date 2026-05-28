@@ -117,40 +117,45 @@ public class AiChatService {
                 ? AiToolHelper.getToolSpecifications(toolList) : null;
 
         ChatResponse chatResponse;
-        if (toolSpecs != null && !toolSpecs.isEmpty()) {
-            ChatRequest chatRequest = ChatRequest.builder()
-                    .messages(messages)
-                    .toolSpecifications(toolSpecs)
-                    .build();
-            chatResponse = vendorWrapper.getChatModel().chat(chatRequest);
-            AiMessage aiMessage = chatResponse.aiMessage();
-            // 工具调用循环
-            while (aiMessage.hasToolExecutionRequests()) {
-                for (ToolExecutionRequest req : aiMessage.toolExecutionRequests()) {
-                    // 合并工具上下文到 toolInput
-                    String toolInput = req.arguments();
-                    if (toolContext != null && !toolContext.isEmpty()) {
-                        Map<String, Object> inputMap = JsonUtils.parse(toolInput,
-                                new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {});
-                        if (inputMap == null) {
-                            inputMap = new java.util.HashMap<>();
-                        }
-                        inputMap.putAll(toolContext);
-                        toolInput = JsonUtils.toString(inputMap);
-                    }
-                    String result = AiToolHelper.executeTool(req.name(), toolInput);
-                    messages.add(aiMessage);
-                    messages.add(new ToolExecutionResultMessage(req.id(), req.name(), result));
-                }
-                chatRequest = ChatRequest.builder()
+        try {
+            if (toolSpecs != null && !toolSpecs.isEmpty()) {
+                ChatRequest chatRequest = ChatRequest.builder()
                         .messages(messages)
                         .toolSpecifications(toolSpecs)
                         .build();
                 chatResponse = vendorWrapper.getChatModel().chat(chatRequest);
-                aiMessage = chatResponse.aiMessage();
+                AiMessage aiMessage = chatResponse.aiMessage();
+                // 工具调用循环
+                while (aiMessage.hasToolExecutionRequests()) {
+                    for (ToolExecutionRequest req : aiMessage.toolExecutionRequests()) {
+                        // 合并工具上下文到 toolInput
+                        String toolInput = req.arguments();
+                        if (toolContext != null && !toolContext.isEmpty()) {
+                            Map<String, Object> inputMap = JsonUtils.parse(toolInput,
+                                    new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {});
+                            if (inputMap == null) {
+                                inputMap = new java.util.HashMap<>();
+                            }
+                            inputMap.putAll(toolContext);
+                            toolInput = JsonUtils.toString(inputMap);
+                        }
+                        String result = AiToolHelper.executeTool(req.name(), toolInput);
+                        messages.add(aiMessage);
+                        messages.add(new ToolExecutionResultMessage(req.id(), req.name(), result));
+                    }
+                    chatRequest = ChatRequest.builder()
+                            .messages(messages)
+                            .toolSpecifications(toolSpecs)
+                            .build();
+                    chatResponse = vendorWrapper.getChatModel().chat(chatRequest);
+                    aiMessage = chatResponse.aiMessage();
+                }
+            } else {
+                chatResponse = vendorWrapper.getChatModel().chat(messages);
             }
-        } else {
-            chatResponse = vendorWrapper.getChatModel().chat(messages);
+        } catch (Exception e) {
+            logger.error("AI模型调用失败, configId={}, modelMain={}", configId, configData.getModelMain(), e);
+            return ResponseData.errorMsg("AI模型调用失败: " + e.getMessage());
         }
 
         String responseData = chatResponse.aiMessage().text();

@@ -191,6 +191,57 @@ CREATE TABLE `sys_data_history` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='系统数据历史';
 
 
+-- ============================================================
+-- 2026-05-28: API配置与模型配置分离 — 新建表 DDL
+-- ============================================================
+
+-- 1. 旧表重命名（保留不动）
+-- RENAME TABLE ai_model_config TO ai_model_config_old;
+
+-- 2. 新建 ai_model_api 表
+CREATE TABLE `ai_model_api` (
+    `id`          bigint NOT NULL COMMENT 'ID',
+    `saas_id`     bigint NOT NULL DEFAULT '0' COMMENT 'SAAS ID',
+    `mch_id`      bigint NOT NULL DEFAULT '0' COMMENT '商户ID',
+    `api_code`    varchar(100) DEFAULT NULL COMMENT '配置代码',
+    `api_name`    varchar(200) DEFAULT NULL COMMENT '配置名称',
+    `api_desc`    text COMMENT '配置描述',
+    `api_url`     varchar(200) DEFAULT NULL COMMENT 'API地址',
+    `api_key`     varchar(200) DEFAULT NULL COMMENT 'API密钥',
+    `state`       int DEFAULT NULL COMMENT '状态',
+    `create_date` datetime(3) DEFAULT NULL COMMENT '创建时间',
+    `modify_date` datetime(3) DEFAULT NULL COMMENT '修改时间',
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='AI模型API配置';
+
+-- 3. 新建 ai_model_config 表（替代旧表，执行前需先将旧表重命名）
+CREATE TABLE `ai_model_config_new` (
+    `id`            bigint NOT NULL COMMENT 'ID',
+    `saas_id`       bigint NOT NULL DEFAULT '0' COMMENT 'SAAS ID',
+    `mch_id`        bigint NOT NULL DEFAULT '0' COMMENT '商户ID',
+    `api_id`        bigint NOT NULL COMMENT 'API配置ID',
+    `vendor_class`  varchar(200) NOT NULL COMMENT '供应商类',
+    `model_type`    varchar(50) NOT NULL COMMENT '模型类型: CHAT/EMBEDDING/RERANK/TTS/OCR',
+    `config_code`   varchar(100) DEFAULT NULL COMMENT '配置代码',
+    `config_name`   varchar(200) DEFAULT NULL COMMENT '配置名称',
+    `config_desc`   text COMMENT '配置描述',
+    `model_name`    varchar(100) NOT NULL COMMENT '模型名',
+    `model_data`    json DEFAULT NULL COMMENT '模型参数JSON(平铺: temperature/max_tokens等)',
+    `state`         int DEFAULT NULL COMMENT '状态',
+    `create_date`   datetime(3) DEFAULT NULL COMMENT '创建时间',
+    `modify_date`   datetime(3) DEFAULT NULL COMMENT '修改时间',
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='AI模型配置';
+
+-- ============================================================
+-- 数据迁移逻辑说明（Java脚本执行，此处仅为示意）
+-- ============================================================
+-- 对 ai_model_config_old 每条记录:
+--   Step A: 按 (api_url, api_key) 去重后在 ai_model_api 中建1条记录
+--   Step B: 如果 model_main 不为空 → 在 ai_model_config 中建 CHAT 记录（沿袭旧ID）
+--   Step C: 如果 model_embed 不为空 → 在 ai_model_config 中建 EMBEDDING 记录（新ID）
+--   model_data JSON 平铺合并: vendor_data + model_data + embed_data
+
 -- uw_ai.sys_seq definition
 
 CREATE TABLE `sys_seq` (

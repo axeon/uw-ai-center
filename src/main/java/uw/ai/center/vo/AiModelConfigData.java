@@ -11,187 +11,148 @@ import uw.common.app.vo.JsonConfigBox;
 import java.util.Date;
 
 /**
- * AiModelConfigData 大模型配置。
+ * AiModelConfigData 模型配置数据对象（聚合 ApiConfig + ModelConfig）。
  */
 public class AiModelConfigData {
 
     private static final Logger logger = LoggerFactory.getLogger(AiModelConfigData.class);
 
     /**
-     * Ai模型配置。
+     * 模型配置实体。
      */
     private AiModelConfig aiModelConfig;
+
     /**
-     * vendor参数信息集合，所有人可见。
+     * API连接配置。
+     */
+    private AiApiConfigData apiConfigData;
+
+    /**
+     * vendor参数信息集合。
      */
     private JsonConfigBox vendorParamBox;
+
     /**
-     * model参数信息集合，管理员可见。
+     * model参数信息集合。
      */
     private JsonConfigBox modelParamBox;
-    /**
-     * 嵌入参数信息集合，仅管理员可见。
-     */
-    private JsonConfigBox embedParamBox;
 
     public AiModelConfigData() {
     }
 
-    public AiModelConfigData(AiModelConfig aiModelConfig) {
-        setAiModelConfig(aiModelConfig);
+    public AiModelConfigData(AiModelConfig aiModelConfig, AiApiConfigData apiConfigData) {
+        this.aiModelConfig = aiModelConfig;
+        this.apiConfigData = apiConfigData;
+        initParamBoxes();
+    }
+
+    private void initParamBoxes() {
+        if (aiModelConfig == null) {
+            return;
+        }
+        AiVendor aiVendor = AiVendorHelper.getVendor(aiModelConfig.getVendorClass());
+        if (aiVendor != null) {
+            String modelData = aiModelConfig.getModelData();
+            vendorParamBox = JsonConfigHelper.buildParamBox(aiVendor.vendorParam(), modelData).getData();
+            modelParamBox = JsonConfigHelper.buildParamBox(aiVendor.modelParam(), modelData).getData();
+        }
     }
 
     public AiModelConfig getAiModelConfig() {
         return aiModelConfig;
     }
 
-    public void setAiModelConfig(AiModelConfig aiModelConfig) {
+    public void setAiModelConfig(AiModelConfig aiModelConfig, AiApiConfigData apiConfigData) {
         this.aiModelConfig = aiModelConfig;
-        AiVendor aiVendor = AiVendorHelper.getVendor(aiModelConfig.getVendorClass());
-        if (aiVendor != null) {
-            vendorParamBox = JsonConfigHelper.buildParamBox(aiVendor.vendorParam(), aiModelConfig.getVendorData()).getData();
-            modelParamBox = JsonConfigHelper.buildParamBox(aiVendor.modelParam(), aiModelConfig.getModelData()).getData();
-            embedParamBox = JsonConfigHelper.buildParamBox(aiVendor.embedParam(), aiModelConfig.getEmbedData()).getData();
-        }
+        this.apiConfigData = apiConfigData;
+        initParamBoxes();
     }
 
-    /**
-     * 获取ID。
-     */
+    public AiApiConfigData getApiConfigData() {
+        return apiConfigData;
+    }
+
     public long getId() {
         return aiModelConfig.getId();
     }
 
-    /**
-     * 获取SAAS ID。
-     */
     public long getSaasId() {
         return aiModelConfig.getSaasId();
     }
 
-    /**
-     * 获取商户ID。
-     */
     public long getMchId() {
         return aiModelConfig.getMchId();
     }
 
-    /**
-     * 获取服务商类。
-     */
+    public long getApiId() {
+        return aiModelConfig.getApiId();
+    }
+
     public String getVendorClass() {
         return aiModelConfig.getVendorClass();
     }
 
-    /**
-     * 获取服务商代码。
-     */
+    public String getModelType() {
+        return aiModelConfig.getModelType();
+    }
+
     public String getConfigCode() {
         return aiModelConfig.getConfigCode();
     }
 
-    /**
-     * 获取服务商名称。
-     */
     public String getConfigName() {
         return aiModelConfig.getConfigName();
     }
 
-    /**
-     * 获取服务商描述。
-     */
     public String getConfigDesc() {
         return aiModelConfig.getConfigDesc();
     }
 
-    /**
-     * 获取api地址。
-     */
-    public String getApiUrl() {
-        return aiModelConfig.getApiUrl();
+    public String getModelName() {
+        return aiModelConfig.getModelName();
     }
 
-    /**
-     * 获取api key。
-     */
-    public String getApiKey() {
-        return aiModelConfig.getApiKey();
-    }
-
-    /**
-     * 获取主模型。
-     */
+    /** @deprecated 使用 getModelName() 替代 */
+    @Deprecated
     public String getModelMain() {
-        return aiModelConfig.getModelMain();
+        return aiModelConfig.getModelName();
     }
 
-    /**
-     * 获取嵌入模型。
-     */
+    /** @deprecated 使用 getModelName() 替代 */
+    @Deprecated
     public String getModelEmbed() {
-        return aiModelConfig.getModelEmbed();
+        return aiModelConfig.getModelName();
     }
 
-    /**
-     * 获取服务商配置。
-     */
-    public String getVendorData() {
-        return aiModelConfig.getVendorData();
+    public String getApiUrl() {
+        return apiConfigData != null ? apiConfigData.getApiUrl() : null;
     }
 
-    /**
-     * 获取模型配置。
-     */
+    public String getApiKey() {
+        return apiConfigData != null ? apiConfigData.getApiKey() : null;
+    }
+
     public String getModelData() {
         return aiModelConfig.getModelData();
     }
 
-    /**
-     * 获取嵌入配置。
-     */
-    public String getEmbedData() {
-        return aiModelConfig.getEmbedData();
-    }
-
-    /**
-     * 获取创建时间。
-     */
     public Date getCreateDate() {
         return aiModelConfig.getCreateDate();
     }
 
-    /**
-     * 获取修改时间。
-     */
     public Date getModifyDate() {
         return aiModelConfig.getModifyDate();
     }
 
-    /**
-     * 获取状态。
-     */
     public int getState() {
         return aiModelConfig.getState();
     }
 
-    /**
-     * 获取服务商参数。
-     */
     public JsonConfigBox getVendorParamBox() {
         return vendorParamBox;
     }
 
-    /**
-     * 获取模型参数。
-     */
     public JsonConfigBox getModelParamBox() {
         return modelParamBox;
-    }
-
-    /**
-     * 获取嵌入参数。
-     */
-    public JsonConfigBox getEmbedParamBox() {
-        return embedParamBox;
     }
 }

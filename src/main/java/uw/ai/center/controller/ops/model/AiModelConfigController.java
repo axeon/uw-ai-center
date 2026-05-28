@@ -179,17 +179,14 @@ public class AiModelConfigController {
         AuthServiceHelper.logInfo(AiModelConfig.class,aiModelConfig.getId(),remark);
         return  dao.load( AiModelConfig.class, aiModelConfig.getId() ).onSuccess(aiModelConfigDb-> {
             aiModelConfigDb.setMchId(aiModelConfig.getMchId());
+            aiModelConfigDb.setApiId(aiModelConfig.getApiId());
             aiModelConfigDb.setVendorClass(aiModelConfig.getVendorClass());
+            aiModelConfigDb.setModelType(aiModelConfig.getModelType());
             aiModelConfigDb.setConfigCode(aiModelConfig.getConfigCode());
             aiModelConfigDb.setConfigName(aiModelConfig.getConfigName());
             aiModelConfigDb.setConfigDesc(aiModelConfig.getConfigDesc());
-            aiModelConfigDb.setApiUrl(aiModelConfig.getApiUrl());
-            aiModelConfigDb.setApiKey(aiModelConfig.getApiKey());
-            aiModelConfigDb.setModelMain(aiModelConfig.getModelMain());
-            aiModelConfigDb.setModelEmbed(aiModelConfig.getModelEmbed());
-            aiModelConfigDb.setVendorData(aiModelConfig.getVendorData());
+            aiModelConfigDb.setModelName(aiModelConfig.getModelName());
             aiModelConfigDb.setModelData(aiModelConfig.getModelData());
-            aiModelConfigDb.setEmbedData(aiModelConfig.getEmbedData());
             aiModelConfigDb.setModifyDate(SystemClock.nowDate());
             return dao.update( aiModelConfigDb ).onSuccess(updatedEntity -> {
                 AiVendorHelper.invalidateConfig( aiModelConfigDb.getId());

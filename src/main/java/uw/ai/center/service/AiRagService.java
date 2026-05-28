@@ -206,7 +206,6 @@ public class AiRagService {
      * @param ragLibId
      * @return
      */
-    @SuppressWarnings("removal")
     private static AiRagClientWrapper buildRagClientWrapper(long ragLibId) {
         AiRagLib ragLib = dao.load(AiRagLib.class, ragLibId).getData();
         if (ragLib == null) {
