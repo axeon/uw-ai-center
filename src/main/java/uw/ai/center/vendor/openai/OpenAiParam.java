@@ -8,8 +8,8 @@ import uw.common.util.EnumUtils;
 public class OpenAiParam {
 
     @JsonFormat(shape = JsonFormat.Shape.OBJECT)
-    @Schema(title = "vendor参数", description = "vendor参数")
-    enum Vendor implements JsonConfigParam {
+    @Schema(title = "配置参数", description = "配置参数")
+    enum Config implements JsonConfigParam {
         API_PATH(ParamType.STRING, "/v1/chat/completions", "api路径", "api路径"),
         TEMPERATURE(ParamType.FLOAT, "0.8", "采样温度控制", "控制生成的明显创造性"),
         FREQUENCY_PENALTY(ParamType.FLOAT, "0.0", "频率惩罚", "降低重复内容概率"),
@@ -26,43 +26,16 @@ public class OpenAiParam {
         TOOL_CHOICE(ParamType.STRING, "", "工具选择", "强制调用特定工具"),
         USER(ParamType.STRING, "", "用户标识", "唯一用户标识符"),
         PARALLEL_TOOL_CALLS(ParamType.BOOLEAN, "true", "并行调用", "启用并行函数调用"),
+        SYSTEM_PROMPT(ParamType.STRING, "", "系统提示词", "预设AI角色或行为规则"),
+        EMBED_API_PATH(ParamType.STRING, "/v1/embeddings", "embedding api路径", "Embedding API路径"),
         ;
 
         private final JsonConfigParam.ParamData paramData;
 
-        Vendor(ParamType type, String value, String desc, String regex) {
+        Config(ParamType type, String value, String desc, String regex) {
             this.paramData = new ParamData( EnumUtils.enumNameToDotCase( name() ), type, value, desc, regex );
         }
 
-        /**
-         * 配置参数数据。
-         *
-         * @return
-         */
-        @Override
-        public JsonConfigParam.ParamData getParamData() {
-            return paramData;
-        }
-
-    }
-
-    @JsonFormat(shape = JsonFormat.Shape.OBJECT)
-    @Schema(title = "embed参数", description = "embed参数")
-    enum Embed implements JsonConfigParam {
-        API_PATH(ParamType.STRING, "/v1/embeddings", "api.path", "API路径", "Embedding API路径");
-        ;
-
-        private final JsonConfigParam.ParamData paramData;
-
-        Embed(ParamType type, String value, String name, String desc, String regex) {
-            this.paramData = new ParamData( EnumUtils.enumNameToDotCase( name() ), type, value, desc, regex );
-        }
-
-        /**
-         * 配置参数数据。
-         *
-         * @return
-         */
         @Override
         public JsonConfigParam.ParamData getParamData() {
             return paramData;

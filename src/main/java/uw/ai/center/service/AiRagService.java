@@ -24,6 +24,7 @@ import uw.ai.center.entity.AiRagLib;
 import uw.ai.center.util.AiTextSplitter;
 import uw.ai.center.vendor.AiVendorClientWrapper;
 import uw.ai.center.vendor.AiVendorHelper;
+import uw.ai.center.constant.ModelType;
 import uw.common.app.helper.JsonConfigHelper;
 import uw.common.app.vo.JsonConfigBox;
 import uw.common.app.vo.JsonConfigParam;
@@ -224,7 +225,7 @@ public class AiRagService {
                 java.util.List.of('\n', '。', '.', '!', '?', ';', '！', '？', '；'));
 
         AiVendorClientWrapper vendorWrapper = AiVendorHelper.getClientWrapper(ragLib.getEmbedConfigId());
-        if (vendorWrapper == null) {
+        if (vendorWrapper == null || !vendorWrapper.isType(ModelType.EMBEDDING)) {
             logger.error("RAG库[{}]获取EmbeddingModel失败", ragLibId);
             return null;
         }

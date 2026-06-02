@@ -26,6 +26,7 @@ import uw.ai.center.advisor.AiMysqlChatMemory;
 import uw.ai.center.tool.AiToolHelper;
 import uw.ai.center.vendor.AiVendorClientWrapper;
 import uw.ai.center.vendor.AiVendorHelper;
+import uw.ai.center.constant.ModelType;
 import uw.ai.center.vo.AiChatSentEvent;
 import uw.ai.center.vo.AiModelConfigData;
 import uw.ai.vo.AiToolCallInfo;
@@ -57,12 +58,12 @@ public class AiChatService {
      */
     public static ResponseData<String> generate(long saasId, long userId, int userType, String userInfo, long configId, String systemPrompt, String userPrompt, List<AiToolCallInfo> toolList, Map<String, Object> toolContext, MultipartFile[] fileList, long[] ragLibIds) {
         AiVendorClientWrapper vendorWrapper = AiVendorHelper.getClientWrapper(configId);
-        if (vendorWrapper == null) {
+        if (vendorWrapper == null || !vendorWrapper.isType(ModelType.CHAT)) {
             return ResponseData.errorMsg("ChatClient获取失败!");
         }
         AiModelConfigData configData = vendorWrapper.getConfigData();
         if (StringUtils.isBlank(systemPrompt)) {
-            systemPrompt = configData.getModelParamBox().getParam("systemPrompt", "");
+            systemPrompt = configData.getConfigParamBox().getParam("systemPrompt", "");
         }
         // 初始化会话信息
         AiSessionInfo sessionInfo = loadSession(saasId, userId, SessionType.COMMON.getValue(), null).getData();
@@ -154,7 +155,7 @@ public class AiChatService {
                 chatResponse = vendorWrapper.getChatModel().chat(messages);
             }
         } catch (Exception e) {
-            logger.error("AI模型调用失败, configId={}, modelMain={}", configId, configData.getModelMain(), e);
+            logger.error("AI模型调用失败, configId={}", configId, e);
             return ResponseData.errorMsg("AI模型调用失败: " + e.getMessage());
         }
 
@@ -175,12 +176,12 @@ public class AiChatService {
      */
     public static Flux<String> chatGenerate(long saasId, long userId, int userType, String userInfo, long configId, String systemPrompt, String userPrompt, List<AiToolCallInfo> toolList, Map<String, Object> toolContext, MultipartFile[] fileList, long[] ragLibIds) {
         AiVendorClientWrapper vendorWrapper = AiVendorHelper.getClientWrapper(configId);
-        if (vendorWrapper == null) {
+        if (vendorWrapper == null || !vendorWrapper.isType(ModelType.CHAT)) {
             return Flux.just(ResponseData.errorMsg("ChatClient获取失败！").toString());
         }
         AiModelConfigData configData = vendorWrapper.getConfigData();
         if (StringUtils.isBlank(systemPrompt)) {
-            systemPrompt = configData.getModelParamBox().getParam("systemPrompt", "");
+            systemPrompt = configData.getConfigParamBox().getParam("systemPrompt", "");
         }
         // 初始化会话信息
         AiSessionInfo sessionInfo = loadSession(saasId, userId, SessionType.COMMON.getValue(), null).getData();
@@ -347,12 +348,12 @@ public class AiChatService {
      */
     public static ResponseData<AiSessionInfo> initSession(long saasId, long userId, int userType, String userInfo, long configId, int sessionType, String sessionName, Integer windowSize, String systemPrompt, List<AiToolCallInfo> toolList, long[] ragLibIds) {
         AiVendorClientWrapper vendorWrapper = AiVendorHelper.getClientWrapper(configId);
-        if (vendorWrapper == null) {
+        if (vendorWrapper == null || !vendorWrapper.isType(ModelType.CHAT)) {
             return ResponseData.errorMsg("ChatClient获取失败!");
         }
         AiModelConfigData configData = vendorWrapper.getConfigData();
         if (StringUtils.isBlank(systemPrompt)) {
-            systemPrompt = configData.getModelParamBox().getParam("systemPrompt", "");
+            systemPrompt = configData.getConfigParamBox().getParam("systemPrompt", "");
         }
         long sessionId = dao.getSequenceId(AiSessionInfo.class);
         AiSessionInfo sessionInfo = new AiSessionInfo();
@@ -565,7 +566,7 @@ public class AiChatService {
         AiSessionMsg sessionMsg = initSessionMsg(saasId, userId, userType, userInfo, configId, sessionInfo.getId(), systemPrompt, userPrompt, toolList, fileInfo, ragLibIds, contextData);
         // 获取LangChain4j客户端
         AiVendorClientWrapper vendorWrapper = AiVendorHelper.getClientWrapper(sessionInfo.getConfigId());
-        if (vendorWrapper == null) {
+        if (vendorWrapper == null || !vendorWrapper.isType(ModelType.CHAT)) {
             return Flux.just(ResponseData.errorMsg("ChatClient获取失败！").toString());
         }
 

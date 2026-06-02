@@ -4,9 +4,9 @@ import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 import org.slf4j.Logger;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import uw.ai.center.constant.ModelType;
 import uw.ai.center.vo.AiModelConfigData;
 import uw.ai.center.vendor.AiVendor;
 import uw.ai.center.vendor.AiVendorClientWrapper;
@@ -46,54 +46,60 @@ public class OpenAiVendor implements AiVendor {
     }
 
     @Override
-    public List<JsonConfigParam> vendorParam() {
-        return Arrays.asList( OpenAiParam.Vendor.values() ); // 自动获取所有枚举项
+    public List<JsonConfigParam> configParam() {
+        return Arrays.asList(OpenAiParam.Config.values());
     }
 
     @Override
-    public List<JsonConfigParam> modelParam() {
-        return List.of();
+    public AiVendorClientWrapper buildClientWrapper(AiModelConfigData configData) {
+        ModelType modelType = ModelType.of(configData.getModelType());
+        if (modelType == null) {
+            logger.warn("未知的模型类型: {}, configId={}", configData.getModelType(), configData.getId());
+            return null;
+        }
+        JsonConfigBox configParamBox = configData.getConfigParamBox();
+        double temperature = configParamBox != null
+                ? configParamBox.getDoubleParam("temperature", 0.7) : 0.7;
+
+        return switch (modelType) {
+            case CHAT -> buildChat(configData, temperature);
+            case EMBEDDING -> buildEmbedding(configData);
+            default -> {
+                logger.warn("OpenAiVendor暂不支持模型类型: {}", modelType);
+                yield null;
+            }
+        };
     }
 
-    @Override
-    public List<JsonConfigParam> embedParam() {
-        return List.of();
-    }
-
-    @Override
-    public AiVendorClientWrapper buildClientWrapper(AiModelConfigData aiModelConfigData) {
-        JsonConfigBox vendorParamBox = aiModelConfigData.getVendorParamBox();
-        String apiKey = aiModelConfigData.getApiKey();
-        String apiUrl = aiModelConfigData.getApiUrl();
-        String modelMain = aiModelConfigData.getModelMain();
-        String modelEmbed = aiModelConfigData.getModelEmbed();
-        double temperature = vendorParamBox != null
-                ? vendorParamBox.getDoubleParam("temperature", 0.7) : 0.7;
-
+    private AiVendorClientWrapper buildChat(AiModelConfigData configData, double temperature) {
         var syncModel = OpenAiChatModel.builder()
-                .apiKey(apiKey)
-                .baseUrl(apiUrl)
-                .modelName(modelMain)
+                .apiKey(configData.getApiKey())
+                .baseUrl(configData.getApiUrl())
+                .modelName(configData.getModelName())
                 .temperature(temperature)
                 .timeout(Duration.ofSeconds(120))
                 .build();
 
         var streamingModel = OpenAiStreamingChatModel.builder()
-                .apiKey(apiKey)
-                .baseUrl(apiUrl)
-                .modelName(modelMain)
+                .apiKey(configData.getApiKey())
+                .baseUrl(configData.getApiUrl())
+                .modelName(configData.getModelName())
                 .temperature(temperature)
                 .timeout(Duration.ofSeconds(120))
                 .build();
 
-        var embeddingModel = StringUtils.isNotBlank(modelEmbed) ? OpenAiEmbeddingModel.builder()
-                .apiKey(apiKey)
-                .baseUrl(apiUrl)
-                .modelName(modelEmbed)
-                .timeout(Duration.ofSeconds(60))
-                .build() : null;
+        return new AiVendorClientWrapper(configData, syncModel, streamingModel, null);
+    }
 
-        return new AiVendorClientWrapper(aiModelConfigData, syncModel, streamingModel, embeddingModel);
+    private AiVendorClientWrapper buildEmbedding(AiModelConfigData configData) {
+        var embeddingModel = OpenAiEmbeddingModel.builder()
+                .apiKey(configData.getApiKey())
+                .baseUrl(configData.getApiUrl())
+                .modelName(configData.getModelName())
+                .timeout(Duration.ofSeconds(60))
+                .build();
+
+        return new AiVendorClientWrapper(configData, null, null, embeddingModel);
     }
 
     @Override

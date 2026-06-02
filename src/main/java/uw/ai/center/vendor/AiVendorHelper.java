@@ -31,9 +31,6 @@ public class AiVendorHelper {
      */
     private static final Map<String, AiVendor> VENDOR_MAP = new LinkedHashMap<>();
 
-    private static final Map<String, OpenAiVendor> OPENAI_VENDOR_MAP = new LinkedHashMap<>();
-    private static final Map<String, OllamaVendor> OLLAMA_VENDOR_MAP = new LinkedHashMap<>();
-
     /**
      * AiVendorClientWrapper 缓存（按配置ID）。
      */
@@ -42,18 +39,23 @@ public class AiVendorHelper {
             .build(AiVendorHelper::buildClientWrapper);
 
     /**
-     * 注册 OpenAiVendor 实例。
+     * 注册 AiVendor 实例。
      */
-    public static void registerOpenAiVendor(String className, OpenAiVendor vendor) {
-        OPENAI_VENDOR_MAP.put(className, vendor);
+    public static void registerVendor(String className, AiVendor vendor) {
         VENDOR_MAP.put(className, vendor);
     }
 
     /**
-     * 注册 OllamaVendor 实例。
+     * 注册 OpenAiVendor 实例（向后兼容）。
+     */
+    public static void registerOpenAiVendor(String className, OpenAiVendor vendor) {
+        VENDOR_MAP.put(className, vendor);
+    }
+
+    /**
+     * 注册 OllamaVendor 实例（向后兼容）。
      */
     public static void registerOllamaVendor(String className, OllamaVendor vendor) {
-        OLLAMA_VENDOR_MAP.put(className, vendor);
         VENDOR_MAP.put(className, vendor);
     }
 
@@ -105,7 +107,7 @@ public class AiVendorHelper {
 
     /**
      * 构建 AiVendorClientWrapper。
-     * 两步查询：modelConfig → apiConfig。
+     * 两步查询：modelConfig → apiConfig，委托给 AiVendor.buildClientWrapper。
      */
     private static AiVendorClientWrapper buildClientWrapper(long configId) {
         // Step 1: 查模型配置
@@ -132,19 +134,18 @@ public class AiVendorHelper {
                 apiConfig.getApiUrl(), modelConfig.getModelName(),
                 modelConfig.getModelType(), modelConfig.getVendorClass());
 
-        // 尝试 OpenAiVendor
-        OpenAiVendor openAiVendor = OPENAI_VENDOR_MAP.get(modelConfig.getVendorClass());
-        if (openAiVendor != null) {
-            return openAiVendor.buildClientWrapper(configData);
+        // Step 3: 委托给 Vendor 构建
+        AiVendor vendor = VENDOR_MAP.get(modelConfig.getVendorClass());
+        if (vendor == null) {
+            logger.error("未找到AI Vendor: {}", modelConfig.getVendorClass());
+            return null;
         }
 
-        // 尝试 OllamaVendor
-        OllamaVendor ollamaVendor = OLLAMA_VENDOR_MAP.get(modelConfig.getVendorClass());
-        if (ollamaVendor != null) {
-            return ollamaVendor.buildClientWrapper(configData);
+        AiVendorClientWrapper wrapper = vendor.buildClientWrapper(configData);
+        if (wrapper == null) {
+            logger.error("Vendor[{}]不支持模型类型[{}], configId={}",
+                    vendor.vendorName(), modelConfig.getModelType(), configId);
         }
-
-        logger.error("未找到AI Vendor: {}", modelConfig.getVendorClass());
-        return null;
+        return wrapper;
     }
 }

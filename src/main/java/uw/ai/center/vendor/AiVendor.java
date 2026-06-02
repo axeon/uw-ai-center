@@ -51,38 +51,21 @@ public interface AiVendor {
     }
 
     /**
-     * Vendor参数信息集合，管理员可见。
+     * 配置参数信息集合，管理员可见。
      */
-    @JsonProperty("vendorParam")
-    @Schema(title = "Vendor参数信息集合", description = "Vendor参数信息集合，管理员可见。")
-    List<JsonConfigParam> vendorParam();
+    @JsonProperty("configParam")
+    @Schema(title = "配置参数信息集合", description = "配置参数信息集合，管理员可见。")
+    List<JsonConfigParam> configParam();
 
     /**
-     * model参数信息集合，管理员可见。
+     * 构建模型实例。
+     * 实现类根据 AiModelConfigData 中的 modelType（对应 ModelType 枚举）构建对应类型的客户端。
      */
-    @JsonProperty("modelParam")
-    @Schema(title = "model参数信息集合", description = "model参数信息集合，管理员可见。")
-    List<JsonConfigParam> modelParam();
-
-    /**
-     * embed参数信息集合，仅管理员可见。
-     */
-    @JsonProperty("embedParam")
-    @Schema(title = "embed参数信息集合", description = "embed参数信息集合，仅管理员可见。")
-    List<JsonConfigParam> embedParam();
-
-    /**
-     * 构造模型实例。
-     *
-     * @param aiModelConfigData
-     * @return
-     */
-    AiVendorClientWrapper buildClientWrapper(AiModelConfigData aiModelConfigData);
+    AiVendorClientWrapper buildClientWrapper(AiModelConfigData configData);
 
     /**
      * 获取模型列表。
-     * @return
      */
-    List<String> listModel(String apiUrl,String apiKey);
+    List<String> listModel(String apiUrl, String apiKey);
 
 }

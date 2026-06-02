@@ -6,14 +6,13 @@ import uw.common.app.vo.JsonConfigParam;
 import uw.common.util.EnumUtils;
 
 /**
- * OllamaParam定义。
+ * Ollama 配置参数定义。
  */
 public class OllamaParam {
 
     @JsonFormat(shape = JsonFormat.Shape.OBJECT)
-    @Schema(title = "vendor参数", description = "vendor参数")
-    enum Vendor implements JsonConfigParam {
-        // 定义所有枚举项
+    @Schema(title = "配置参数", description = "配置参数")
+    enum Config implements JsonConfigParam {
         NUMA(ParamType.BOOLEAN, "false", "是否使用 NUMA。", null),
         NUM_CTX(ParamType.INT, "2048", "设置用于生成下一个标记的上下文窗口的大小。", null),
         NUM_BATCH(ParamType.INT, "512", "提示处理最大批次大小。", null),
@@ -45,25 +44,17 @@ public class OllamaParam {
         STOP(ParamType.STRING, "-", "设置要使用的停止序列。当遇到此模式时，LLM 将停止生成文本并返回。可以通过在模型文件中指定多个单独的停止参数来设置多个停止模式。", null),
         FUNCTIONS(ParamType.STRING, "-", "在单个提示请求中启用的功能列表，通过它们的名称进行标识。这些名称中的功能必须存在于 functionCallbacks 注册表中。", null),
         PROXY_TOOL_CALLS(ParamType.BOOLEAN, "false", "如果为真，则将不会处理函数调用，而是将它们代理给客户端。然后是客户端的责任来处理函数调用，将它们分发到适当的函数，并返回结果。如果为假（默认值），则 Spring AI 将内部处理函数调用。仅适用于具有函数调用支持的聊天模型。", null);
-        ;
 
         private final JsonConfigParam.ParamData paramData;
 
-        Vendor(ParamType type, String value, String desc, String regex) {
+        Config(ParamType type, String value, String desc, String regex) {
             this.paramData = new ParamData( EnumUtils.enumNameToDotCase( name() ), type, value, desc, regex );
         }
 
-        /**
-         * 配置参数数据。
-         *
-         * @return
-         */
         @Override
         public JsonConfigParam.ParamData getParamData() {
             return paramData;
         }
 
     }
-
-
 }
