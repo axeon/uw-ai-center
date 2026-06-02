@@ -55,21 +55,6 @@ public class AiVendorHelper {
                 CLIENT_WRAPPER_CACHE.invalidate(key);
             }
         });
-
-        // AiModelApi 自动加载缓存（带CacheChangeNotifyListener，API变更时级联失效关联的模型配置和实例缓存）
-        FusionCache.config(FusionCache.Config.builder()
-                .entityClass(AiModelApi.class)
-                .localCacheMaxNum(10000)
-                .cacheExpireMillis(86400_000L)
-                .nullProtectMillis(86400_000L)
-                .build(), new CacheDataLoader<Long, AiModelApi>() {
-            @Override
-            public AiModelApi load(Long apiId) throws Exception {
-                return dao.load(AiModelApi.class, apiId).getData();
-            }
-        }, (CacheChangeNotifyListener<Long, AiModelApi>) (key, oldValue, newValue) -> {
-            onApiConfigChange(key);
-        });
     }
 
     /**
@@ -140,23 +125,8 @@ public class AiVendorHelper {
     }
 
     /**
-     * 当AiModelApi缓存变更时，级联失效关联的模型配置和实例缓存。
-     */
-    private static void onApiConfigChange(Long apiId) {
-        dao.list(AiModelConfig.class,
-                "select id from ai_model_config where api_id=?", new Object[]{apiId}).onSuccess(list -> {
-            for (AiModelConfig config : list) {
-                FusionCache.invalidate(AiModelConfig.class, config.getId());
-                if (CLIENT_WRAPPER_CACHE.getIfPresent(config.getId()) != null) {
-                    CLIENT_WRAPPER_CACHE.invalidate(config.getId());
-                }
-            }
-        });
-    }
-
-    /**
      * 构建 AiVendorClientWrapper。
-     * 从FusionCache自动加载配置，委托给 AiVendor.buildClientWrapper。
+     * 从FusionCache自动加载模型配置，查询API配置，委托给 AiVendor.buildClientWrapper。
      */
     private static AiVendorClientWrapper buildClientWrapper(long configId) {
         AiModelConfig modelConfig = FusionCache.get(AiModelConfig.class, configId);
@@ -165,7 +135,8 @@ public class AiVendorHelper {
             return null;
         }
 
-        AiModelApi apiConfig = FusionCache.get(AiModelApi.class, modelConfig.getApiId());
+        AiModelApi apiConfig = dao.queryForSingleObject(AiModelApi.class,
+                "select * from ai_model_api where id=?", new Object[]{modelConfig.getApiId()}).getData();
         if (apiConfig == null) {
             logger.error("AI模型配置[{}]关联的API配置[{}]不存在", configId, modelConfig.getApiId());
             return null;
