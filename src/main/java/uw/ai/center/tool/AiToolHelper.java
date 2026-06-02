@@ -27,35 +27,28 @@ import java.util.stream.Collectors;
 @Service
 public class AiToolHelper {
 
+    private static final Logger logger = LoggerFactory.getLogger(AiToolHelper.class);
 
-    private static final Logger logger = LoggerFactory.getLogger( AiToolHelper.class );
-
-    /**
-     * 工具列表缓存名称。
-     */
-    private static final String TOOL_CACHE_NAME = "AiToolInfoList";
-    /**
-     * DaoManager。
-     */
     private static final DaoManager dao = DaoManager.getInstance();
-    /**
-     * Rest模板类
-     */
     private static RestTemplate authRestTemplate;
 
     static {
-
-        // AI模型配置数据缓存。
-        FusionCache.config( FusionCache.Config.builder().cacheName( TOOL_CACHE_NAME ).localCacheMaxNum( 3 ).cacheExpireMillis( 86400_000L ).nullProtectMillis( 10_000L ).build(), new CacheDataLoader<String, Map<String, AiToolInfo>>() {
+        FusionCache.config(FusionCache.Config.builder()
+                .cacheName(AiToolInfo.class.getSimpleName())
+                .localCacheMaxNum(3)
+                .cacheExpireMillis(86400_000L)
+                .nullProtectMillis(10_000L)
+                .build(), new CacheDataLoader<String, Map<String, AiToolInfo>>() {
             @Override
             public Map<String, AiToolInfo> load(String toolCode) throws Exception {
-                DataList<AiToolInfo> dataList = dao.list( AiToolInfo.class, "select * from ai_tool_info where state=?", new Object[]{CommonState.ENABLED.getValue()} ).getData();
+                DataList<AiToolInfo> dataList = dao.list(AiToolInfo.class,
+                        "select * from ai_tool_info where state=?", new Object[]{CommonState.ENABLED.getValue()}).getData();
                 if (dataList == null) {
                     return null;
                 }
-                return dataList.stream().collect( Collectors.toMap( x -> x.getAppName() + "/" + x.getToolClass(), x -> x, (existingValue, newValue) -> existingValue ) );
+                return dataList.stream().collect(Collectors.toMap(x -> x.getAppName() + "/" + x.getToolClass(), x -> x, (existingValue, newValue) -> existingValue));
             }
-        } );
+        });
     }
 
     public AiToolHelper(RestTemplate authRestTemplate) {
@@ -68,7 +61,7 @@ public class AiToolHelper {
     public static List<ToolSpecification> getToolSpecifications(List<AiToolCallInfo> aiToolCallInfoList) {
         List<ToolSpecification> specs = new ArrayList<>();
         try {
-            Map<String, AiToolInfo> map = FusionCache.get(TOOL_CACHE_NAME, TOOL_CACHE_NAME);
+            Map<String, AiToolInfo> map = FusionCache.get(AiToolInfo.class.getSimpleName(), AiToolInfo.class.getSimpleName());
             if (map != null) {
                 for (AiToolCallInfo callInfo : aiToolCallInfoList) {
                     AiToolInfo toolInfo = map.get(callInfo.getToolCode());
@@ -88,7 +81,7 @@ public class AiToolHelper {
      */
     public static String executeTool(String toolName, String toolInput) {
         try {
-            Map<String, AiToolInfo> map = FusionCache.get(TOOL_CACHE_NAME, TOOL_CACHE_NAME);
+            Map<String, AiToolInfo> map = FusionCache.get(AiToolInfo.class.getSimpleName(), AiToolInfo.class.getSimpleName());
             if (map != null) {
                 AiToolInfo toolInfo = map.get(toolName);
                 if (toolInfo != null) {
@@ -103,28 +96,21 @@ public class AiToolHelper {
 
     /**
      * 执行工具回调。
-     *
-     * @param aiToolInfo
-     * @param toolInput
-     * @return
      */
     public static ResponseData toolCallback(AiToolInfo aiToolInfo, String toolInput) {
         AiToolExecuteParam param = new AiToolExecuteParam();
-        param.setToolId( aiToolInfo.getId() );
-        param.setToolClass( aiToolInfo.getToolClass() );
-        param.setToolInput( toolInput );
+        param.setToolId(aiToolInfo.getId());
+        param.setToolClass(aiToolInfo.getToolClass());
+        param.setToolInput(toolInput);
         String url = "http://" + aiToolInfo.getAppName() + "/rpc/ai/tool/execute";
-        // 发送POST请求并获取响应
-        ResponseData responseData = authRestTemplate.postForEntity( url, param, ResponseData.class ).getBody();
+        ResponseData responseData = authRestTemplate.postForEntity(url, param, ResponseData.class).getBody();
         return responseData;
     }
 
     /**
      * 刷新工具缓存。
-     *
-     * @return
      */
     public static boolean invalidateToolCache() {
-        return FusionCache.invalidate( TOOL_CACHE_NAME, TOOL_CACHE_NAME );
+        return FusionCache.invalidate(AiToolInfo.class.getSimpleName(), AiToolInfo.class.getSimpleName());
     }
 }

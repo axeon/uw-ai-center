@@ -62,14 +62,11 @@ public class AiModelConfigController {
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.PERM, log = ActionLog.REQUEST)
     public ResponseData<AiModelConfig> load(@Parameter(description = "主键ID", required = true) @RequestParam long id)  {
         AuthServiceHelper.logRef(AiModelConfig.class,id);
-        String cacheKey = "load_" + id;
-        AiModelConfig cached = FusionCache.get(AiModelConfig.class, cacheKey);
-        if (cached != null) {
-            return ResponseData.success(cached);
+        AiModelConfig config = FusionCache.get(AiModelConfig.class, id);
+        if (config != null) {
+            return ResponseData.success(config);
         }
-        return dao.queryForSingleObject(AiModelConfig.class, new AuthIdQueryParam(id)).onSuccess(config -> {
-            FusionCache.put(AiModelConfig.class, cacheKey, config, CACHE_TTL_MILLIS);
-        });
+        return ResponseData.errorMsg("AI模型配置不存在");
     }
 
     @GetMapping("/listDataHistory")
@@ -125,7 +122,7 @@ public class AiModelConfigController {
             aiModelConfigDb.setModifyDate(SystemClock.nowDate());
             return dao.update( aiModelConfigDb ).onSuccess(updatedEntity -> {
                 AiVendorHelper.invalidateConfig(aiModelConfigDb.getId());
-                FusionCache.invalidate(AiModelConfig.class, "load_" + aiModelConfig.getId());
+                FusionCache.invalidate(AiModelConfig.class, aiModelConfig.getId());
                 FusionCache.invalidate(AiModelConfig.class, "liteList");
                 SysDataHistoryHelper.saveHistory( aiModelConfigDb,remark );
             } );
@@ -137,7 +134,7 @@ public class AiModelConfigController {
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData enable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiModelConfig.class,id,remark);
-        FusionCache.invalidate(AiModelConfig.class, "load_" + id);
+        FusionCache.invalidate(AiModelConfig.class, id);
         FusionCache.invalidate(AiModelConfig.class, "liteList");
         return dao.update(new AiModelConfig().modifyDate(SystemClock.nowDate()).state(CommonState.ENABLED.getValue()), new AuthIdStateQueryParam(id, CommonState.DISABLED.getValue()));
     }
@@ -147,7 +144,7 @@ public class AiModelConfigController {
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData disable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiModelConfig.class,id,remark);
-        FusionCache.invalidate(AiModelConfig.class, "load_" + id);
+        FusionCache.invalidate(AiModelConfig.class, id);
         FusionCache.invalidate(AiModelConfig.class, "liteList");
         return dao.update(new AiModelConfig().modifyDate(SystemClock.nowDate()).state(CommonState.DISABLED.getValue()), new AuthIdStateQueryParam(id, CommonState.ENABLED.getValue()));
     }
@@ -157,7 +154,7 @@ public class AiModelConfigController {
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData delete(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiModelConfig.class,id,remark);
-        FusionCache.invalidate(AiModelConfig.class, "load_" + id);
+        FusionCache.invalidate(AiModelConfig.class, id);
         FusionCache.invalidate(AiModelConfig.class, "liteList");
         return dao.update(new AiModelConfig().modifyDate(SystemClock.nowDate()).state(CommonState.DELETED.getValue()), new AuthIdStateQueryParam(id, CommonState.DISABLED.getValue()));
     }
