@@ -73,11 +73,7 @@ public class AiModelApiController {
     @MscPermDeclare(user = UserType.OPS, auth = AuthType.PERM, log = ActionLog.REQUEST)
     public ResponseData<AiModelApi> load(@Parameter(description = "主键ID", required = true) @RequestParam long id)  {
         AuthServiceHelper.logRef(AiModelApi.class,id);
-        AiModelApi api = FusionCache.get(AiModelApi.class, id);
-        if (api != null) {
-            return ResponseData.success(api);
-        }
-        return ResponseData.errorMsg("AI模型API配置不存在");
+        return dao.queryForSingleObject(AiModelApi.class, new AuthIdQueryParam(id));
     }
 
     /**

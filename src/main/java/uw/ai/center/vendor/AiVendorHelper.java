@@ -11,8 +11,6 @@ import uw.ai.center.vo.AiApiConfigData;
 import uw.ai.center.vo.AiModelConfigData;
 import uw.ai.center.vendor.ollama.OllamaVendor;
 import uw.ai.center.vendor.openai.OpenAiVendor;
-import uw.cache.CacheChangeNotifyListener;
-import uw.cache.CacheDataLoader;
 import uw.cache.FusionCache;
 import uw.dao.DaoManager;
 
@@ -27,7 +25,6 @@ import java.util.Map;
 public class AiVendorHelper {
 
     private static final Logger logger = LoggerFactory.getLogger(AiVendorHelper.class);
-    private static final DaoManager dao = DaoManager.getInstance();
 
     private static final Map<String, AiVendor> VENDOR_MAP = new LinkedHashMap<>();
 
@@ -37,25 +34,6 @@ public class AiVendorHelper {
     private static final LoadingCache<Long, AiVendorClientWrapper> CLIENT_WRAPPER_CACHE = Caffeine.newBuilder()
             .maximumSize(1000)
             .build(AiVendorHelper::buildClientWrapper);
-
-    static {
-        // AiModelConfig 自动加载缓存（带CacheChangeNotifyListener，配置变更时级联失效实例缓存）
-        FusionCache.config(FusionCache.Config.builder()
-                .entityClass(AiModelConfig.class)
-                .localCacheMaxNum(10000)
-                .cacheExpireMillis(86400_000L)
-                .nullProtectMillis(86400_000L)
-                .build(), new CacheDataLoader<Long, AiModelConfig>() {
-            @Override
-            public AiModelConfig load(Long configId) throws Exception {
-                return dao.load(AiModelConfig.class, configId).getData();
-            }
-        }, (CacheChangeNotifyListener<Long, AiModelConfig>) (key, oldValue, newValue) -> {
-            if (CLIENT_WRAPPER_CACHE.getIfPresent(key) != null) {
-                CLIENT_WRAPPER_CACHE.invalidate(key);
-            }
-        });
-    }
 
     /**
      * 注册 AiVendor 实例。
@@ -125,6 +103,16 @@ public class AiVendorHelper {
     }
 
     /**
+     * 级联失效ClientWrapper实例缓存。
+     * 由AiCacheConfig的CacheChangeNotifyListener调用。
+     */
+    public static void invalidateClientWrapper(Long configId) {
+        if (CLIENT_WRAPPER_CACHE.getIfPresent(configId) != null) {
+            CLIENT_WRAPPER_CACHE.invalidate(configId);
+        }
+    }
+
+    /**
      * 构建 AiVendorClientWrapper。
      * 从FusionCache自动加载模型配置，查询API配置，委托给 AiVendor.buildClientWrapper。
      */
@@ -135,8 +123,7 @@ public class AiVendorHelper {
             return null;
         }
 
-        AiModelApi apiConfig = dao.queryForSingleObject(AiModelApi.class,
-                "select * from ai_model_api where id=?", new Object[]{modelConfig.getApiId()}).getData();
+        AiModelApi apiConfig = FusionCache.get(AiModelApi.class, modelConfig.getApiId());
         if (apiConfig == null) {
             logger.error("AI模型配置[{}]关联的API配置[{}]不存在", configId, modelConfig.getApiId());
             return null;

@@ -62,11 +62,7 @@ public class AiModelConfigController {
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.REQUEST)
     public ResponseData<AiModelConfig> load(@Parameter(description = "主键ID", required = true) @RequestParam long id)  {
         AuthServiceHelper.logRef(AiModelConfig.class,id);
-        AiModelConfig config = FusionCache.get(AiModelConfig.class, id);
-        if (config != null) {
-            return ResponseData.success(config);
-        }
-        return ResponseData.errorMsg("AI模型配置不存在");
+        return dao.queryForSingleObject(AiModelConfig.class, new AuthIdQueryParam(id));
     }
 
     @GetMapping("/listDataHistory")
