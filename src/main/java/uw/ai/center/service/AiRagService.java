@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.benmanes.caffeine.cache.CacheLoader;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import dev.langchain4j.data.document.parser.apache.tika.ApacheTikaDocumentParser;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.document.Metadata;
@@ -14,7 +15,6 @@ import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
 import dev.langchain4j.store.embedding.EmbeddingSearchResult;
 import dev.langchain4j.store.embedding.elasticsearch.ElasticsearchEmbeddingStore;
 import io.swagger.v3.oas.annotations.media.Schema;
-import org.elasticsearch.client.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -62,9 +62,9 @@ public class AiRagService {
      */
     private static final DaoManager dao = DaoManager.getInstance();
     /**
-     * RestClient实例.
+     * ElasticsearchClient实例（替代原RestClient，使用ES官方高级客户端API）.
      */
-    private static RestClient restClient;
+    private static ElasticsearchClient esClient;
     /**
      * 实例缓存。
      */
@@ -75,8 +75,8 @@ public class AiRagService {
         }
     });
 
-    private AiRagService(RestClient restClient) {
-        AiRagService.restClient = restClient;
+    private AiRagService(ElasticsearchClient esClient) {
+        AiRagService.esClient = esClient;
     }
 
     /**
@@ -155,12 +155,11 @@ public class AiRagService {
     /**
      * 删除RAG库.
      *
-     * @param ragLibId
+     * @param ragLibId RAG库ID
      */
     public static void deleteLib(long ragLibId) {
         try {
-            restClient.performRequest(new org.elasticsearch.client.Request(
-                    "DELETE", "/" + RAG_ES_INDEX_PREFIX + ragLibId));
+            esClient.indices().delete(d -> d.index(RAG_ES_INDEX_PREFIX + ragLibId));
         } catch (Exception e) {
             logger.error("删除ES索引失败", e);
         }
@@ -232,7 +231,7 @@ public class AiRagService {
         dev.langchain4j.model.embedding.EmbeddingModel embeddingModel = vendorWrapper.getEmbeddingModel();
 
         ElasticsearchEmbeddingStore vectorStore = ElasticsearchEmbeddingStore.builder()
-                .restClient(restClient)
+                .client(esClient)
                 .indexName(RAG_ES_INDEX_PREFIX + ragLibId)
                 .build();
 
@@ -276,7 +275,6 @@ public class AiRagService {
      * RAG实例封装类.
      *
      * @param vectorStore
-     * @param searchRequest
      */
     record AiRagClientWrapper(AiRagLib aiRagLib,
                               ElasticsearchEmbeddingStore vectorStore,
