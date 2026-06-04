@@ -133,14 +133,18 @@ public class AiRagService {
     }
 
     /**
-     * 删除文档.
+     * 重建文档（先删旧数据再写入，避免ES中出现重复chunk）.
+     * 修复：原实现直接addAll追加写入，若ES中已有相同ID的chunk会导致重复。
      *
+     * @param ragDocId RAG文档ID
      */
     public static void rebuildDocument(long ragDocId) {
         dao.load(AiRagDoc.class,ragDocId).onSuccess(aiRagDoc -> {
             AiRagClientWrapper ragClientWrapper = getRagClientWrapper(aiRagDoc.getLibId());
             Map<String, String> docMap = JsonUtils.parse(aiRagDoc.getDocContent(), new TypeReference<Map<String, String>>() {
             });
+            // 先删除旧的chunk数据，再写入新的，避免重复
+            ragClientWrapper.vectorStore.removeAll(new ArrayList<>(docMap.keySet()));
             List<TextSegment> segments = new ArrayList<>(docMap.size());
             for (Map.Entry<String, String> entry : docMap.entrySet()) {
                 Metadata metadata = new Metadata();
@@ -173,6 +177,17 @@ public class AiRagService {
      */
     public static AiRagClientWrapper getRagClientWrapper(long ragLibId) {
         return ragClientCache.get(ragLibId);
+    }
+
+    /**
+     * 失效RAG客户端缓存.
+     * 在RAG库配置（libConfig/embedConfigId等）变更时调用，
+     * 使下次请求重新构建AiRagClientWrapper，读取最新配置。
+     *
+     * @param libId RAG库ID
+     */
+    public static void invalidateRagClientCache(long libId) {
+        ragClientCache.invalidate(libId);
     }
 
     /**

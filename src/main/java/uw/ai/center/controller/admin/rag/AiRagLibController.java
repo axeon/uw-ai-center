@@ -188,6 +188,8 @@ public class AiRagLibController {
             aiRagLibDb.setModifyDate(SystemClock.nowDate());
             return dao.update( aiRagLibDb ).onSuccess(updatedEntity -> {
                 SysDataHistoryHelper.saveHistory( aiRagLibDb,remark );
+                // 修改RAG库配置后失效缓存，使下次请求重新构建AiRagClientWrapper
+                AiRagService.invalidateRagClientCache(aiRagLib.getId());
             } );
         } );
     }
@@ -231,7 +233,9 @@ public class AiRagLibController {
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData delete(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiRagLib.class,id,remark);
-        return dao.update(new AiRagLib().modifyDate(SystemClock.nowDate()).state(CommonState.DELETED.getValue()), new IdStateQueryParam(id, CommonState.DISABLED.getValue()));
+        return dao.update(new AiRagLib().modifyDate(SystemClock.nowDate()).state(CommonState.DELETED.getValue()), new IdStateQueryParam(id, CommonState.DISABLED.getValue()))
+            // 删除RAG库时同步删除ES索引，避免ES中残留无用数据
+            .onSuccess(v -> { AiRagService.deleteLib(id); });
     }
 
 }
