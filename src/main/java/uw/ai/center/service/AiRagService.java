@@ -21,7 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import uw.ai.center.entity.AiRagDoc;
 import uw.ai.center.entity.AiRagLib;
-import uw.ai.center.util.AiTextSplitter;
+import uw.ai.center.util.AiDocumentSplitter;
 import uw.ai.center.vendor.AiVendorClientWrapper;
 import uw.ai.center.vendor.AiVendorHelper;
 import uw.ai.center.constant.ModelType;
@@ -80,19 +80,25 @@ public class AiRagService {
     }
 
     /**
-     * 添加文档.
+     * 添加文档（文件上传方式）.
+     * 使用Tika解析文件，再用AiDocumentSplitter分割为带UUID的TextSegment列表。
      *
-     * @param ragLibId
-     * @param docFile
+     * @param ragLibId RAG库ID
+     * @param docFile 上传的文档文件
+     * @return Map<UUID, chunkText> 用于存入AiRagDoc.docContent
      */
     public static Map<String, String> buildDocument(long ragLibId, MultipartFile docFile) {
         AiRagClientWrapper ragClientWrapper = getRagClientWrapper(ragLibId);
         try (InputStream inputStream = docFile.getInputStream()) {
+            // 使用Tika解析文档为纯文本
             ApacheTikaDocumentParser parser = new ApacheTikaDocumentParser();
             dev.langchain4j.data.document.Document lc4jDoc = parser.parse(inputStream);
-            List<TextSegment> segments = ragClientWrapper.textSplitter.split(lc4jDoc.text());
+            // 使用AiDocumentSplitter分割（内含原生递归分割+UUID生成+最大数量限制）
+            List<TextSegment> segments = ragClientWrapper.documentSplitter.split(lc4jDoc.text());
             List<Embedding> embeddings = ragClientWrapper.embeddingModel.embedAll(segments).content();
-            ragClientWrapper.vectorStore.addAll(embeddings, segments);
+            // 使用metadata.id作为ES文档_id，使_id与metadata.id一致，这样removeAll才能按_id正确删除
+            List<String> ids = segments.stream().map(s -> s.metadata().getString("id")).toList();
+            ragClientWrapper.vectorStore.addAll(ids, embeddings, segments);
             return segments.stream().collect(Collectors.toMap(
                     s -> s.metadata().getString("id"),
                     TextSegment::text));
@@ -103,28 +109,33 @@ public class AiRagService {
     }
 
     /**
-     * 添加文档.
+     * 添加文档（纯文本方式）.
+     * 使用AiDocumentSplitter分割为带UUID的TextSegment列表。
      *
-     * @param ragLibId
-     * @param fileContent
+     * @param ragLibId RAG库ID
+     * @param fileContent 纯文本内容
+     * @return Map<UUID, chunkText> 用于存入AiRagDoc.docContent
      */
     public static Map<String, String> buildDocument(long ragLibId, String fileContent) {
         AiRagClientWrapper ragClientWrapper = getRagClientWrapper(ragLibId);
-        List<TextSegment> segments = ragClientWrapper.textSplitter.split(fileContent);
+        // 使用AiDocumentSplitter分割（内含原生递归分割+UUID生成+最大数量限制）
+        List<TextSegment> segments = ragClientWrapper.documentSplitter.split(fileContent);
         List<Embedding> embeddings = ragClientWrapper.embeddingModel.embedAll(segments).content();
-        ragClientWrapper.vectorStore.addAll(embeddings, segments);
+        // 使用metadata.id作为ES文档_id，使_id与metadata.id一致，这样removeAll才能按_id正确删除
+        List<String> ids = segments.stream().map(s -> s.metadata().getString("id")).toList();
+        ragClientWrapper.vectorStore.addAll(ids, embeddings, segments);
         return segments.stream().collect(Collectors.toMap(
                 s -> s.metadata().getString("id"),
                 TextSegment::text));
     }
 
     /**
-     * 删除文档.
+     * 删除文档向量.
      *
      * @param ragDocId
      */
     public static void deleteDocument(long ragDocId) {
-        dao.load(AiRagDoc.class,ragDocId).onSuccess(aiRagDoc -> {
+        dao.load(AiRagDoc.class, ragDocId).onSuccess(aiRagDoc -> {
             AiRagClientWrapper ragClientWrapper = getRagClientWrapper(aiRagDoc.getLibId());
             Map<String, String> docMap = JsonUtils.parse(aiRagDoc.getDocContent(), new TypeReference<Map<String, String>>() {
             });
@@ -134,12 +145,11 @@ public class AiRagService {
 
     /**
      * 重建文档（先删旧数据再写入，避免ES中出现重复chunk）.
-     * 修复：原实现直接addAll追加写入，若ES中已有相同ID的chunk会导致重复。
      *
      * @param ragDocId RAG文档ID
      */
     public static void rebuildDocument(long ragDocId) {
-        dao.load(AiRagDoc.class,ragDocId).onSuccess(aiRagDoc -> {
+        dao.load(AiRagDoc.class, ragDocId).onSuccess(aiRagDoc -> {
             AiRagClientWrapper ragClientWrapper = getRagClientWrapper(aiRagDoc.getLibId());
             Map<String, String> docMap = JsonUtils.parse(aiRagDoc.getDocContent(), new TypeReference<Map<String, String>>() {
             });
@@ -229,14 +239,13 @@ public class AiRagService {
         String configData = ragLib.getLibConfig();
         JsonConfigBox configParamBox = JsonConfigHelper.buildParamBox(RAG_LIB_CONFIG_PARAMS, configData).getData();
         int chunkSize = configParamBox.getIntParam(RagLibConfigParam.CHUNK_SIZE);
-        int chunkMinCharSize = configParamBox.getIntParam(RagLibConfigParam.CHUNK_MIN_CHAR_SIZE);
-        int chunkMinEmbedSize = configParamBox.getIntParam(RagLibConfigParam.CHUNK_MIN_EMBED_SIZE);
         int chunkMaxNum = configParamBox.getIntParam(RagLibConfigParam.CHUNK_MAX_NUM);
         double searchSimilarityThreshold = configParamBox.getDoubleParam(RagLibConfigParam.SEARCH_SIMILARITY_THRESHOLD);
         int searchTopK = configParamBox.getIntParam(RagLibConfigParam.SEARCH_TOP_K);
-        AiTextSplitter textSplitter = new AiTextSplitter(chunkSize, chunkMinCharSize, chunkMinEmbedSize,
-                chunkMaxNum, true,
-                java.util.List.of('\n', '。', '.', '!', '?', ';', '！', '？', '；'));
+        // 使用AiDocumentSplitter封装原生递归分割器，内含UUID生成和最大数量限制
+        // 递归层级：段落(\n\n) → 行(\n) → 句子 → 词 → 字符，超长段自动降级到子分割器
+        // overlap为chunkSize的10%（如chunkSize=800则overlap=80），提供跨chunk边界上下文
+        AiDocumentSplitter documentSplitter = new AiDocumentSplitter(chunkSize, chunkSize / 10, chunkMaxNum);
 
         AiVendorClientWrapper vendorWrapper = AiVendorHelper.getClientWrapper(ragLib.getEmbedConfigId());
         if (vendorWrapper == null || !vendorWrapper.isType(ModelType.EMBEDDING)) {
@@ -250,7 +259,7 @@ public class AiRagService {
                 .indexName(RAG_ES_INDEX_PREFIX + ragLibId)
                 .build();
 
-        return new AiRagClientWrapper(ragLib, vectorStore, textSplitter, searchTopK,
+        return new AiRagClientWrapper(ragLib, vectorStore, documentSplitter, searchTopK,
                 searchSimilarityThreshold, embeddingModel);
     }
 
@@ -261,8 +270,6 @@ public class AiRagService {
     @Schema(title = "文档库参数", description = "文档库参数")
     public enum RagLibConfigParam implements JsonConfigParam {
         CHUNK_SIZE(JsonConfigParam.ParamType.INT, "800", "文本块大小", null),
-        CHUNK_MIN_CHAR_SIZE(JsonConfigParam.ParamType.INT, "350", "文本块最小字符数", null),
-        CHUNK_MIN_EMBED_SIZE(JsonConfigParam.ParamType.INT, "5", "文本块embed最小长度，低于这个长度将会不会embed。", null),
         CHUNK_MAX_NUM(JsonConfigParam.ParamType.INT, "10000", "文本块最大数量", null),
         SEARCH_SIMILARITY_THRESHOLD(JsonConfigParam.ParamType.DOUBLE, "0.0", "搜索匹配下限，低于此下限值的将不会被使用", null),
         SEARCH_TOP_K(JsonConfigParam.ParamType.INT, "4", "搜索topK", null),
@@ -288,12 +295,18 @@ public class AiRagService {
 
     /**
      * RAG实例封装类.
+     * 封装每个RAG库的向量存储、分割器、搜索参数和嵌入模型。
      *
-     * @param vectorStore
+     * @param aiRagLib RAG库配置实体
+     * @param vectorStore ES向量存储
+     * @param documentSplitter AiDocumentSplitter分割器（封装原生递归分割+UUID生成+最大数量限制）
+     * @param searchTopK 搜索返回数量
+     * @param searchSimilarityThreshold 搜索相似度阈值
+     * @param embeddingModel 嵌入模型
      */
     record AiRagClientWrapper(AiRagLib aiRagLib,
                               ElasticsearchEmbeddingStore vectorStore,
-                              AiTextSplitter textSplitter,
+                              AiDocumentSplitter documentSplitter,
                               int searchTopK,
                               double searchSimilarityThreshold,
                               dev.langchain4j.model.embedding.EmbeddingModel embeddingModel) {
