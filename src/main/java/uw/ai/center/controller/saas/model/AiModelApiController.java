@@ -33,11 +33,6 @@ public class AiModelApiController {
     private final DaoManager dao = DaoManager.getInstance();
 
     /**
-     * 缓存过期时间：5分钟。
-     */
-    private static final long CACHE_TTL_MILLIS = 300_000L;
-
-    /**
      * 列表AI模型API配置。
      */
     @GetMapping("/list")
@@ -55,14 +50,8 @@ public class AiModelApiController {
     @Operation(summary = "轻量级列表AI模型API配置", description = "轻量级列表AI模型API配置，一般用于select控件。")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.USER, log = ActionLog.NONE)
     public ResponseData<DataList<AiModelApi>> liteList(AiApiConfigQueryParam queryParam){
-        DataList<AiModelApi> cached = FusionCache.get(AiModelApi.class, "liteList");
-        if (cached != null) {
-            return ResponseData.success(cached);
-        }
         queryParam.SELECT_SQL( "SELECT id,saas_id,mch_id,api_code,api_name,api_url,api_key,state,create_date,modify_date from ai_model_api " );
-        return dao.list(AiModelApi.class, queryParam).onSuccess(list -> {
-            FusionCache.put(AiModelApi.class, "liteList", list, CACHE_TTL_MILLIS);
-        });
+        return dao.list(AiModelApi.class, queryParam);
     }
 
     /**
@@ -115,7 +104,6 @@ public class AiModelApiController {
         aiModelApi.setModifyDate(null);
         aiModelApi.setState(CommonState.ENABLED.getValue());
         return dao.save( aiModelApi ).onSuccess(savedEntity -> {
-            FusionCache.invalidate(AiModelApi.class, "liteList");
             SysDataHistoryHelper.saveHistory(aiModelApi);
         });
     }
@@ -138,7 +126,6 @@ public class AiModelApiController {
             aiModelApiDb.setModifyDate(SystemClock.nowDate());
             return dao.update( aiModelApiDb ).onSuccess(updatedEntity -> {
                 FusionCache.invalidate(AiModelApi.class, aiModelApi.getId());
-                FusionCache.invalidate(AiModelApi.class, "liteList");
                 SysDataHistoryHelper.saveHistory( aiModelApiDb,remark );
             } );
         } );
@@ -153,7 +140,6 @@ public class AiModelApiController {
     public ResponseData enable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiModelApi.class,id,remark);
         FusionCache.invalidate(AiModelApi.class, id);
-        FusionCache.invalidate(AiModelApi.class, "liteList");
         return dao.update(new AiModelApi().modifyDate(SystemClock.nowDate()).state(CommonState.ENABLED.getValue()), new AuthIdStateQueryParam(id, CommonState.DISABLED.getValue()));
     }
 
@@ -166,7 +152,6 @@ public class AiModelApiController {
     public ResponseData disable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiModelApi.class,id,remark);
         FusionCache.invalidate(AiModelApi.class, id);
-        FusionCache.invalidate(AiModelApi.class, "liteList");
         return dao.update(new AiModelApi().modifyDate(SystemClock.nowDate()).state(CommonState.DISABLED.getValue()), new AuthIdStateQueryParam(id, CommonState.ENABLED.getValue()));
     }
 
@@ -179,7 +164,6 @@ public class AiModelApiController {
     public ResponseData delete(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiModelApi.class,id,remark);
         FusionCache.invalidate(AiModelApi.class, id);
-        FusionCache.invalidate(AiModelApi.class, "liteList");
         return dao.update(new AiModelApi().modifyDate(SystemClock.nowDate()).state(CommonState.DELETED.getValue()), new AuthIdStateQueryParam(id, CommonState.DISABLED.getValue()));
     }
 }
