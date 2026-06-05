@@ -10,6 +10,7 @@ import dev.langchain4j.data.document.parser.apache.tika.ApacheTikaDocumentParser
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.document.Metadata;
 import dev.langchain4j.data.segment.TextSegment;
+import dev.langchain4j.model.embedding.EmbeddingModel;
 import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
 import dev.langchain4j.store.embedding.EmbeddingSearchResult;
 import dev.langchain4j.store.embedding.elasticsearch.ElasticsearchEmbeddingStore;
@@ -201,7 +202,10 @@ public class AiRagService {
 
     /**
      * 查询（双路召回 + 加权融合）.
-     * 通过AiRagSearcher执行向量+BM25双路检索，归一化加权融合后取TopK。
+     * 第一路：向量检索（ES KNN搜索），召回数量由libConfig的search.vector.k控制（默认10）
+     * 第二路：BM25全文检索（ES match查询），召回数量由libConfig的search.bm25.k控制（默认10）
+     * 合并去重后，对两路分数做Min-Max归一化，按权重加权融合排序（权重由libConfig的search.vector.weight和search.bm25.weight控制，默认0.7和0.3），取最终TopK。
+     * 若BM25搜索失败则降级为纯向量检索。
      *
      * @param ragLibId RAG库ID
      * @param query 用户查询文本
@@ -213,17 +217,19 @@ public class AiRagService {
         Embedding queryEmbedding = ragClientWrapper.embeddingModel.embed(query).content();
         EmbeddingSearchRequest vectorRequest = EmbeddingSearchRequest.builder()
                 .queryEmbedding(queryEmbedding)
-                .maxResults(AiRagSearcher.getVectorSearchK())
+                .maxResults(ragClientWrapper.searchVectorK)
                 .minScore(ragClientWrapper.searchSimilarityThreshold)
                 .build();
         EmbeddingSearchResult<TextSegment> vectorResult = ragClientWrapper.vectorStore.search(vectorRequest);
 
         // BM25全文检索
         List<AiRagSearcher.Bm25SearchHit> bm25Results =
-                AiRagSearcher.searchBm25(esClient, RAG_ES_INDEX_PREFIX + ragLibId, query, AiRagSearcher.getBm25SearchK());
+                AiRagSearcher.searchBm25(esClient, RAG_ES_INDEX_PREFIX + ragLibId, query, ragClientWrapper.searchBm25K);
 
-        // 合并去重 + 加权融合
-        List<AiRagSearcher.ScoredChunk> merged = AiRagSearcher.mergeAndFuse(vectorResult.matches(), bm25Results);
+        // 合并去重 + 加权融合（权重从libConfig读取）
+        List<AiRagSearcher.ScoredChunk> merged = AiRagSearcher.mergeAndFuse(
+                vectorResult.matches(), bm25Results,
+                ragClientWrapper.searchVectorWeight, ragClientWrapper.searchBm25Weight);
 
         // 取最终 TopK，拼接文本
         StringBuilder sb = new StringBuilder(1280);
@@ -252,6 +258,11 @@ public class AiRagService {
         int chunkMaxNum = configParamBox.getIntParam(RagLibConfigParam.CHUNK_MAX_NUM);
         double searchSimilarityThreshold = configParamBox.getDoubleParam(RagLibConfigParam.SEARCH_SIMILARITY_THRESHOLD);
         int searchTopK = configParamBox.getIntParam(RagLibConfigParam.SEARCH_TOP_K);
+        // 双路召回参数：从libConfig读取，未配置时使用枚举默认值
+        int searchVectorK = configParamBox.getIntParam(RagLibConfigParam.SEARCH_VECTOR_K);
+        int searchBm25K = configParamBox.getIntParam(RagLibConfigParam.SEARCH_BM25_K);
+        double searchVectorWeight = configParamBox.getDoubleParam(RagLibConfigParam.SEARCH_VECTOR_WEIGHT);
+        double searchBm25Weight = configParamBox.getDoubleParam(RagLibConfigParam.SEARCH_BM25_WEIGHT);
         // 使用AiDocumentSplitter封装原生递归分割器，内含UUID生成和最大数量限制
         // 递归层级：段落(\n\n) → 行(\n) → 句子 → 词 → 字符，超长段自动降级到子分割器
         // overlap为chunkSize的10%（如chunkSize=800则overlap=80），提供跨chunk边界上下文
@@ -270,7 +281,8 @@ public class AiRagService {
                 .build();
 
         return new AiRagClientWrapper(ragLib, vectorStore, documentSplitter, searchTopK,
-                searchSimilarityThreshold, embeddingModel);
+                searchSimilarityThreshold, searchVectorK, searchBm25K, searchVectorWeight, searchBm25Weight,
+                embeddingModel);
     }
 
     /**
@@ -282,7 +294,11 @@ public class AiRagService {
         CHUNK_SIZE(JsonConfigParam.ParamType.INT, "800", "文本块大小", null),
         CHUNK_MAX_NUM(JsonConfigParam.ParamType.INT, "10000", "文本块最大数量", null),
         SEARCH_SIMILARITY_THRESHOLD(JsonConfigParam.ParamType.DOUBLE, "0.0", "搜索匹配下限，低于此下限值的将不会被使用", null),
-        SEARCH_TOP_K(JsonConfigParam.ParamType.INT, "4", "搜索topK", null),
+        SEARCH_TOP_K(JsonConfigParam.ParamType.INT, "4", "最终返回结果数量（从融合排序结果中取TopK）", null),
+        SEARCH_VECTOR_K(JsonConfigParam.ParamType.INT, "10", "向量召回数量", null),
+        SEARCH_BM25_K(JsonConfigParam.ParamType.INT, "10", "BM25召回数量", null),
+        SEARCH_VECTOR_WEIGHT(JsonConfigParam.ParamType.DOUBLE, "0.7", "向量分数权重", null),
+        SEARCH_BM25_WEIGHT(JsonConfigParam.ParamType.DOUBLE, "0.3", "BM25分数权重", null),
         ;
 
         private final ParamData paramData;
@@ -310,8 +326,12 @@ public class AiRagService {
      * @param aiRagLib RAG库配置实体
      * @param vectorStore ES向量存储
      * @param documentSplitter AiDocumentSplitter分割器（封装原生递归分割+UUID生成+最大数量限制）
-     * @param searchTopK 搜索返回数量
-     * @param searchSimilarityThreshold 搜索相似度阈值
+     * @param searchTopK 搜索返回数量（从libConfig读取，默认4）
+     * @param searchSimilarityThreshold 搜索相似度阈值（从libConfig读取，默认0.0）
+     * @param searchVectorK 向量召回数量（从libConfig读取，默认10）
+     * @param searchBm25K BM25召回数量（从libConfig读取，默认10）
+     * @param searchVectorWeight 向量分数权重（从libConfig读取，默认0.7）
+     * @param searchBm25Weight BM25分数权重（从libConfig读取，默认0.3）
      * @param embeddingModel 嵌入模型
      */
     record AiRagClientWrapper(AiRagLib aiRagLib,
@@ -319,6 +339,10 @@ public class AiRagService {
                               AiDocumentSplitter documentSplitter,
                               int searchTopK,
                               double searchSimilarityThreshold,
-                              dev.langchain4j.model.embedding.EmbeddingModel embeddingModel) {
+                              int searchVectorK,
+                              int searchBm25K,
+                              double searchVectorWeight,
+                              double searchBm25Weight,
+                              EmbeddingModel embeddingModel) {
     }
 }

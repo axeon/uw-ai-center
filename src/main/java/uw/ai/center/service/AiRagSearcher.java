@@ -23,21 +23,6 @@ public class AiRagSearcher {
 
     private static final Logger logger = LoggerFactory.getLogger(AiRagSearcher.class);
 
-    // ===== 双路召回硬编码参数 =====
-    /** 向量召回数量 */
-    private static final int VECTOR_SEARCH_K = 10;
-    /** BM25召回数量 */
-    private static final int BM25_SEARCH_K = 10;
-    /** 向量分数权重（W1） */
-    private static final double VECTOR_WEIGHT = 0.7;
-    /** BM25分数权重（W2） */
-    private static final double BM25_WEIGHT = 0.3;
-
-    /**
-     * ES索引前缀（从AiRagService传入）.
-     */
-    private static final String RAG_ES_INDEX_PREFIX = "uw.ai.rag.";
-
     /**
      * BM25全文搜索.
      * 利用ES索引中已有的text字段（类型为text，支持分词），通过ES match查询实现BM25检索。
@@ -46,7 +31,7 @@ public class AiRagSearcher {
      * @param esClient ES高级客户端
      * @param indexName ES索引名（如 uw.ai.rag.123）
      * @param query 用户查询文本
-     * @param k 返回数量
+     * @param k 返回数量（从libConfig的search.bm25.k读取，默认10）
      * @return BM25搜索命中列表
      */
     public static List<Bm25SearchHit> searchBm25(ElasticsearchClient esClient, String indexName, String query, int k) {
@@ -70,10 +55,18 @@ public class AiRagSearcher {
                 String id = metadata != null ? (String) metadata.get("id") : hit.id();
                 results.add(new Bm25SearchHit(id, hit.score() != null ? hit.score() : 0.0, text));
             }
+            // 调试日志：输出BM25搜索结果数量和每条的得分
+            logger.info("BM25搜索完成, index={}, query={}, 返回{}条结果", indexName, query, results.size());
+            for (int i = 0; i < results.size(); i++) {
+                Bm25SearchHit r = results.get(i);
+                // 截取前50字符避免日志过长
+                String preview = r.text != null && r.text.length() > 50 ? r.text.substring(0, 50) + "..." : r.text;
+                logger.info("  BM25[{}]: id={}, score={}, text={}", i, r.id, String.format("%.4f", r.score), preview);
+            }
             return results;
         } catch (Exception e) {
             // BM25失败时降级：返回空列表，query()方法会退化为纯向量检索
-            logger.error("BM25搜索失败, index={}", indexName, e);
+            logger.error("BM25搜索失败, index={}, query={}", indexName, query, e);
             return List.of();
         }
     }
@@ -85,11 +78,15 @@ public class AiRagSearcher {
      *
      * @param vectorMatches 向量检索命中列表
      * @param bm25Hits BM25检索命中列表
+     * @param vectorWeight 向量分数权重（从libConfig读取，默认0.7）
+     * @param bm25Weight BM25分数权重（从libConfig读取，默认0.3）
      * @return 按融合得分降序排列的得分块列表
      */
     public static List<ScoredChunk> mergeAndFuse(
             List<EmbeddingMatch<TextSegment>> vectorMatches,
-            List<Bm25SearchHit> bm25Hits) {
+            List<Bm25SearchHit> bm25Hits,
+            double vectorWeight,
+            double bm25Weight) {
 
         // id -> [向量归一化分, BM25归一化分]
         Map<String, double[]> chunkMap = new LinkedHashMap<>();
@@ -132,27 +129,28 @@ public class AiRagSearcher {
             }
         }
 
-        // 加权融合：finalScore = W1 * 向量分 + W2 * BM25分
-        return chunkMap.entrySet().stream()
+        // 加权融合：finalScore = vectorWeight * 向量分 + bm25Weight * BM25分
+        List<ScoredChunk> result = chunkMap.entrySet().stream()
                 .map(e -> new ScoredChunk(e.getKey(),
-                        VECTOR_WEIGHT * e.getValue()[0] + BM25_WEIGHT * e.getValue()[1],
+                        vectorWeight * e.getValue()[0] + bm25Weight * e.getValue()[1],
                         textMap.get(e.getKey())))
+                .filter(c -> c.score > 0)  // 过滤掉两路归一化分都为0的无效结果
                 .sorted()  // ScoredChunk实现了Comparable，按score降序排列
                 .collect(Collectors.toList());
-    }
 
-    /**
-     * 获取向量召回数量.
-     */
-    public static int getVectorSearchK() {
-        return VECTOR_SEARCH_K;
-    }
-
-    /**
-     * 获取BM25召回数量.
-     */
-    public static int getBm25SearchK() {
-        return BM25_SEARCH_K;
+        // 调试日志：输出融合后的排序结果
+        logger.info("双路融合完成, 向量{}条 + BM25{}条, 合并去重后{}条, 权重向量={}, BM25={}",
+                vectorMatches.size(), bm25Hits.size(), result.size(),
+                String.format("%.1f", vectorWeight), String.format("%.1f", bm25Weight));
+        for (int i = 0; i < Math.min(result.size(), 10); i++) {
+            ScoredChunk c = result.get(i);
+            double[] scores = chunkMap.get(c.id);
+            String preview = c.text != null && c.text.length() > 50 ? c.text.substring(0, 50) + "..." : c.text;
+            logger.info("  融合[{}]: id={}, 融合分={}, 向量归一化={}, BM25归一化={}, text={}",
+                    i, c.id, String.format("%.4f", c.score),
+                    String.format("%.4f", scores[0]), String.format("%.4f", scores[1]), preview);
+        }
+        return result;
     }
 
     /**
@@ -170,7 +168,7 @@ public class AiRagSearcher {
      * 实现Comparable接口，用于sorted()排序。
      *
      * @param id chunk的UUID
-     * @param score 融合得分 = VECTOR_WEIGHT * 向量归一化分 + BM25_WEIGHT * BM25归一化分
+     * @param score 融合得分 = vectorWeight * 向量归一化分 + bm25Weight * BM25归一化分（权重从libConfig读取）
      * @param text chunk文本内容
      */
     public record ScoredChunk(String id, double score, String text) implements Comparable<ScoredChunk> {
