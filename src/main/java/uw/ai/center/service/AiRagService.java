@@ -10,7 +10,6 @@ import dev.langchain4j.data.document.parser.apache.tika.ApacheTikaDocumentParser
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.document.Metadata;
 import dev.langchain4j.data.segment.TextSegment;
-import dev.langchain4j.store.embedding.EmbeddingMatch;
 import dev.langchain4j.store.embedding.EmbeddingSearchRequest;
 import dev.langchain4j.store.embedding.EmbeddingSearchResult;
 import dev.langchain4j.store.embedding.elasticsearch.ElasticsearchEmbeddingStore;
@@ -201,26 +200,37 @@ public class AiRagService {
     }
 
     /**
-     * 查询.
+     * 查询（双路召回 + 加权融合）.
+     * 通过AiRagSearcher执行向量+BM25双路检索，归一化加权融合后取TopK。
      *
-     * @param ragLibId
-     * @param query
-     * @return
+     * @param ragLibId RAG库ID
+     * @param query 用户查询文本
+     * @return 拼接的检索结果文本
      */
     public static String query(long ragLibId, String query) {
         AiRagClientWrapper ragClientWrapper = getRagClientWrapper(ragLibId);
+        // 向量检索
         Embedding queryEmbedding = ragClientWrapper.embeddingModel.embed(query).content();
-        EmbeddingSearchRequest searchRequestToUse = EmbeddingSearchRequest.builder()
+        EmbeddingSearchRequest vectorRequest = EmbeddingSearchRequest.builder()
                 .queryEmbedding(queryEmbedding)
-                .maxResults(ragClientWrapper.searchTopK)
+                .maxResults(AiRagSearcher.getVectorSearchK())
                 .minScore(ragClientWrapper.searchSimilarityThreshold)
                 .build();
-        EmbeddingSearchResult<TextSegment> result = ragClientWrapper.vectorStore.search(searchRequestToUse);
+        EmbeddingSearchResult<TextSegment> vectorResult = ragClientWrapper.vectorStore.search(vectorRequest);
+
+        // BM25全文检索
+        List<AiRagSearcher.Bm25SearchHit> bm25Results =
+                AiRagSearcher.searchBm25(esClient, RAG_ES_INDEX_PREFIX + ragLibId, query, AiRagSearcher.getBm25SearchK());
+
+        // 合并去重 + 加权融合
+        List<AiRagSearcher.ScoredChunk> merged = AiRagSearcher.mergeAndFuse(vectorResult.matches(), bm25Results);
+
+        // 取最终 TopK，拼接文本
         StringBuilder sb = new StringBuilder(1280);
         sb.append("来自知识库[").append(ragClientWrapper.aiRagLib.getLibName()).append("]检索的信息如下：\n");
-        for (EmbeddingMatch<TextSegment> match : result.matches()) {
-            sb.append(match.embedded().text()).append("\n");
-        }
+        // 按 searchTopK（从libConfig读取，默认4）截取最终结果
+        merged.stream().limit(ragClientWrapper.searchTopK).forEach(chunk ->
+                sb.append(chunk.text()).append("\n"));
         sb.append("\n");
         return sb.toString();
     }
