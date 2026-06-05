@@ -12,7 +12,6 @@ import uw.auth.service.annotation.MscPermDeclare;
 import uw.auth.service.constant.ActionLog;
 import uw.auth.service.constant.AuthType;
 import uw.auth.service.constant.UserType;
-import uw.cache.FusionCache;
 import uw.common.app.constant.CommonState;
 import uw.common.app.dto.*;
 import uw.common.app.entity.*;
@@ -109,7 +108,6 @@ public class AiModelConfigController {
             aiModelConfigDb.setModifyDate(SystemClock.nowDate());
             return dao.update( aiModelConfigDb ).onSuccess(updatedEntity -> {
                 AiVendorHelper.invalidateConfig(aiModelConfigDb.getId());
-                FusionCache.invalidate(AiModelConfig.class, aiModelConfig.getId());
                 SysDataHistoryHelper.saveHistory( aiModelConfigDb,remark );
             } );
         } );
@@ -120,8 +118,7 @@ public class AiModelConfigController {
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData enable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiModelConfig.class,id,remark);
-        FusionCache.invalidate(AiModelConfig.class, id);
-        return dao.update(new AiModelConfig().modifyDate(SystemClock.nowDate()).state(CommonState.ENABLED.getValue()), new AuthIdStateQueryParam(id, CommonState.DISABLED.getValue()));
+        return dao.update(new AiModelConfig().modifyDate(SystemClock.nowDate()).state(CommonState.ENABLED.getValue()), new AuthIdStateQueryParam(id, CommonState.DISABLED.getValue())).onSuccess(() -> AiVendorHelper.invalidateConfig(id));
     }
 
     @PutMapping("/disable")
@@ -129,8 +126,7 @@ public class AiModelConfigController {
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData disable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiModelConfig.class,id,remark);
-        FusionCache.invalidate(AiModelConfig.class, id);
-        return dao.update(new AiModelConfig().modifyDate(SystemClock.nowDate()).state(CommonState.DISABLED.getValue()), new AuthIdStateQueryParam(id, CommonState.ENABLED.getValue()));
+        return dao.update(new AiModelConfig().modifyDate(SystemClock.nowDate()).state(CommonState.DISABLED.getValue()), new AuthIdStateQueryParam(id, CommonState.ENABLED.getValue())).onSuccess(() -> AiVendorHelper.invalidateConfig(id));
     }
 
     @DeleteMapping("/delete")
@@ -138,7 +134,6 @@ public class AiModelConfigController {
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData delete(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiModelConfig.class,id,remark);
-        FusionCache.invalidate(AiModelConfig.class, id);
-        return dao.update(new AiModelConfig().modifyDate(SystemClock.nowDate()).state(CommonState.DELETED.getValue()), new AuthIdStateQueryParam(id, CommonState.DISABLED.getValue()));
+        return dao.update(new AiModelConfig().modifyDate(SystemClock.nowDate()).state(CommonState.DELETED.getValue()), new AuthIdStateQueryParam(id, CommonState.DISABLED.getValue())).onSuccess(() -> AiVendorHelper.invalidateConfig(id));
     }
 }

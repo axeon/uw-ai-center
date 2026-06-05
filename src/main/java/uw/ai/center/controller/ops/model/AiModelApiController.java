@@ -6,12 +6,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 import uw.ai.center.dto.AiApiConfigQueryParam;
 import uw.ai.center.entity.AiModelApi;
+import uw.ai.center.vendor.AiVendorHelper;
 import uw.auth.service.AuthServiceHelper;
 import uw.auth.service.annotation.MscPermDeclare;
 import uw.auth.service.constant.ActionLog;
 import uw.auth.service.constant.AuthType;
 import uw.auth.service.constant.UserType;
-import uw.cache.FusionCache;
 import uw.common.app.constant.CommonState;
 import uw.common.app.dto.*;
 import uw.common.app.entity.*;
@@ -125,7 +125,7 @@ public class AiModelApiController {
             aiModelApiDb.setApiKey(aiModelApi.getApiKey());
             aiModelApiDb.setModifyDate(SystemClock.nowDate());
             return dao.update( aiModelApiDb ).onSuccess(updatedEntity -> {
-                FusionCache.invalidate(AiModelApi.class, aiModelApi.getId());
+                AiVendorHelper.invalidateApiConfig(aiModelApiDb.getId());
                 SysDataHistoryHelper.saveHistory( aiModelApiDb,remark );
             } );
         } );
@@ -139,8 +139,7 @@ public class AiModelApiController {
     @MscPermDeclare(user = UserType.OPS, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData enable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiModelApi.class,id,remark);
-        FusionCache.invalidate(AiModelApi.class, id);
-        return dao.update(new AiModelApi().modifyDate(SystemClock.nowDate()).state(CommonState.ENABLED.getValue()), new AuthIdStateQueryParam(id, CommonState.DISABLED.getValue()));
+        return dao.update(new AiModelApi().modifyDate(SystemClock.nowDate()).state(CommonState.ENABLED.getValue()), new AuthIdStateQueryParam(id, CommonState.DISABLED.getValue())).onSuccess(() -> AiVendorHelper.invalidateApiConfig(id));
     }
 
     /**
@@ -151,8 +150,7 @@ public class AiModelApiController {
     @MscPermDeclare(user = UserType.OPS, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData disable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiModelApi.class,id,remark);
-        FusionCache.invalidate(AiModelApi.class, id);
-        return dao.update(new AiModelApi().modifyDate(SystemClock.nowDate()).state(CommonState.DISABLED.getValue()), new AuthIdStateQueryParam(id, CommonState.ENABLED.getValue()));
+        return dao.update(new AiModelApi().modifyDate(SystemClock.nowDate()).state(CommonState.DISABLED.getValue()), new AuthIdStateQueryParam(id, CommonState.ENABLED.getValue())).onSuccess(() -> AiVendorHelper.invalidateApiConfig(id));
     }
 
     /**
@@ -163,7 +161,6 @@ public class AiModelApiController {
     @MscPermDeclare(user = UserType.OPS, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData delete(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiModelApi.class,id,remark);
-        FusionCache.invalidate(AiModelApi.class, id);
-        return dao.update(new AiModelApi().modifyDate(SystemClock.nowDate()).state(CommonState.DELETED.getValue()), new AuthIdStateQueryParam(id, CommonState.DISABLED.getValue()));
+        return dao.update(new AiModelApi().modifyDate(SystemClock.nowDate()).state(CommonState.DELETED.getValue()), new AuthIdStateQueryParam(id, CommonState.DISABLED.getValue())).onSuccess(() -> AiVendorHelper.invalidateApiConfig(id));
     }
 }
