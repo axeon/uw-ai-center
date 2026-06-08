@@ -162,7 +162,9 @@ public class AiRagService {
                 segments.add(TextSegment.from(entry.getValue(), metadata));
             }
             List<Embedding> embeddings = ragClientWrapper.embeddingModel.embedAll(segments).content();
-            ragClientWrapper.vectorStore.addAll(embeddings, segments);
+            // 使用metadata.id作为ES文档_id，使_id与metadata.id一致，这样removeAll才能按_id正确删除
+            List<String> ids = segments.stream().map(s -> s.metadata().getString("id")).toList();
+            ragClientWrapper.vectorStore.addAll(ids, embeddings, segments);
         });
     }
 
