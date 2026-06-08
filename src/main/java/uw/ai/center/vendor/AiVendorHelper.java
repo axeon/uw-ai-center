@@ -109,9 +109,14 @@ public class AiVendorHelper {
 
     /**
      * 获取 AiVendorClientWrapper（LangChain4j客户端封装）。
+     * 配置不存在或未启用时抛出IllegalStateException，避免调用方NPE。
      */
     public static AiVendorClientWrapper getClientWrapper(long configId) {
-        return CLIENT_WRAPPER_CACHE.get(configId);
+        AiVendorClientWrapper wrapper = CLIENT_WRAPPER_CACHE.get(configId);
+        if (wrapper == null) {
+            throw new IllegalStateException("AI模型配置[" + configId + "]不存在或未启用");
+        }
+        return wrapper;
     }
 
     /**
@@ -173,12 +178,12 @@ public class AiVendorHelper {
     /**
      * 构建 AiVendorClientWrapper。
      * 从FusionCache获取聚合数据，委托给 AiVendor.buildClientWrapper。
+     * 配置不存在、Vendor未注册或模型类型不支持时抛出IllegalStateException。
      */
     private static AiVendorClientWrapper buildClientWrapper(long configId) {
         AiModelConfigData configData = FusionCache.get(AiModelConfigData.class, configId);
         if (configData == null) {
-            logger.error("AI模型配置[{}]不存在或未启用", configId);
-            return null;
+            throw new IllegalStateException("AI模型配置[" + configId + "]不存在或未启用");
         }
 
         logger.info("加载AI模型配置: id={}, configName={}, apiUrl={}, modelName={}, modelType={}, vendorClass={}",
@@ -188,14 +193,12 @@ public class AiVendorHelper {
 
         AiVendor vendor = VENDOR_MAP.get(configData.getVendorClass());
         if (vendor == null) {
-            logger.error("未找到AI Vendor: {}", configData.getVendorClass());
-            return null;
+            throw new IllegalStateException("未找到AI Vendor: " + configData.getVendorClass());
         }
 
         AiVendorClientWrapper wrapper = vendor.buildClientWrapper(configData);
         if (wrapper == null) {
-            logger.error("Vendor[{}]不支持模型类型[{}], configId={}",
-                    vendor.vendorName(), configData.getModelType(), configId);
+            throw new IllegalStateException("Vendor[" + vendor.vendorName() + "]不支持模型类型[" + configData.getModelType() + "], configId=" + configId);
         }
         return wrapper;
     }

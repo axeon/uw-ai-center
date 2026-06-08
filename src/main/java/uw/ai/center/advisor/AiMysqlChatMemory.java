@@ -22,12 +22,14 @@ public class AiMysqlChatMemory {
 
     /**
      * 从 MySQL 加载会话历史消息。
+     * 按id升序加载，保证历史消息时间顺序正确（最旧在前、最新在后）。
+     * 限制最多加载50条，避免会话消息过多导致Token超限。
      */
     public static List<ChatMessage> load(long sessionId) {
         List<ChatMessage> messages = new ArrayList<>(16);
         try {
             dao.list(AiSessionMsg.class,
-                    "select * from ai_session_msg where session_id=? and state=? order by id desc",
+                    "select * from ai_session_msg where session_id=? and state=? order by id asc limit 50",
                     new Object[]{sessionId, CommonState.ENABLED.getValue()}).onSuccess(msgList -> {
                 for (AiSessionMsg msg : msgList) {
                     messages.add(new UserMessage(msg.getUserPrompt()));

@@ -62,8 +62,13 @@ public class AiChatService {
      * ChatClient 简单调用。
      */
     public static ResponseData<String> generate(long saasId, long userId, int userType, String userInfo, long configId, String systemPrompt, String userPrompt, List<AiToolCallInfo> toolList, Map<String, Object> toolContext, MultipartFile[] fileList, long[] ragLibIds) {
-        AiVendorClientWrapper vendorWrapper = AiVendorHelper.getClientWrapper(configId);
-        if (vendorWrapper == null || !vendorWrapper.isType(ModelType.CHAT)) {
+        AiVendorClientWrapper vendorWrapper;
+        try {
+            vendorWrapper = AiVendorHelper.getClientWrapper(configId);
+        } catch (IllegalStateException e) {
+            return ResponseData.errorMsg("ChatClient获取失败: " + e.getMessage());
+        }
+        if (!vendorWrapper.isType(ModelType.CHAT)) {
             return ResponseData.errorMsg("ChatClient获取失败!");
         }
         AiModelConfigData configData = vendorWrapper.getConfigData();
@@ -166,7 +171,7 @@ public class AiChatService {
             }
         } catch (Exception e) {
             logger.error("AI模型调用失败, configId={}", configId, e);
-            return ResponseData.errorMsg("AI模型调用失败: " + e.getMessage());
+            return ResponseData.errorMsg("AI模型调用失败，请稍后重试");
         }
 
         String responseData = chatResponse.aiMessage().text();
@@ -185,8 +190,13 @@ public class AiChatService {
      * ChatClient 流式调用
      */
     public static Flux<String> chatGenerate(long saasId, long userId, int userType, String userInfo, long configId, String systemPrompt, String userPrompt, List<AiToolCallInfo> toolList, Map<String, Object> toolContext, MultipartFile[] fileList, long[] ragLibIds) {
-        AiVendorClientWrapper vendorWrapper = AiVendorHelper.getClientWrapper(configId);
-        if (vendorWrapper == null || !vendorWrapper.isType(ModelType.CHAT)) {
+        AiVendorClientWrapper vendorWrapper;
+        try {
+            vendorWrapper = AiVendorHelper.getClientWrapper(configId);
+        } catch (IllegalStateException e) {
+            return Flux.just(ResponseData.errorMsg("ChatClient获取失败: " + e.getMessage()).toString());
+        }
+        if (!vendorWrapper.isType(ModelType.CHAT)) {
             return Flux.just(ResponseData.errorMsg("ChatClient获取失败！").toString());
         }
         AiModelConfigData configData = vendorWrapper.getConfigData();
@@ -363,8 +373,13 @@ public class AiChatService {
      * @return
      */
     public static ResponseData<AiSessionInfo> initSession(long saasId, long userId, int userType, String userInfo, long configId, int sessionType, String sessionName, Integer windowSize, String systemPrompt, List<AiToolCallInfo> toolList, long[] ragLibIds) {
-        AiVendorClientWrapper vendorWrapper = AiVendorHelper.getClientWrapper(configId);
-        if (vendorWrapper == null || !vendorWrapper.isType(ModelType.CHAT)) {
+        AiVendorClientWrapper vendorWrapper;
+        try {
+            vendorWrapper = AiVendorHelper.getClientWrapper(configId);
+        } catch (IllegalStateException e) {
+            return ResponseData.errorMsg("ChatClient获取失败: " + e.getMessage());
+        }
+        if (!vendorWrapper.isType(ModelType.CHAT)) {
             return ResponseData.errorMsg("ChatClient获取失败!");
         }
         AiModelConfigData configData = vendorWrapper.getConfigData();
@@ -581,8 +596,13 @@ public class AiChatService {
         // 初始化会话消息
         AiSessionMsg sessionMsg = initSessionMsg(saasId, userId, userType, userInfo, configId, sessionInfo.getId(), systemPrompt, userPrompt, toolList, fileInfo, ragLibIds, contextData);
         // 获取LangChain4j客户端
-        AiVendorClientWrapper vendorWrapper = AiVendorHelper.getClientWrapper(sessionInfo.getConfigId());
-        if (vendorWrapper == null || !vendorWrapper.isType(ModelType.CHAT)) {
+        AiVendorClientWrapper vendorWrapper;
+        try {
+            vendorWrapper = AiVendorHelper.getClientWrapper(sessionInfo.getConfigId());
+        } catch (IllegalStateException e) {
+            return Flux.just(ResponseData.errorMsg("ChatClient获取失败: " + e.getMessage()).toString());
+        }
+        if (!vendorWrapper.isType(ModelType.CHAT)) {
             return Flux.just(ResponseData.errorMsg("ChatClient获取失败！").toString());
         }
 

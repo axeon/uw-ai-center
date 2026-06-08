@@ -270,9 +270,15 @@ public class AiRagService {
         // overlap为chunkSize的10%（如chunkSize=800则overlap=80），提供跨chunk边界上下文
         AiDocumentSplitter documentSplitter = new AiDocumentSplitter(chunkSize, chunkSize / 10, chunkMaxNum);
 
-        AiVendorClientWrapper vendorWrapper = AiVendorHelper.getClientWrapper(ragLib.getEmbedConfigId());
-        if (vendorWrapper == null || !vendorWrapper.isType(ModelType.EMBEDDING)) {
-            logger.error("RAG库[{}]获取EmbeddingModel失败", ragLibId);
+        AiVendorClientWrapper vendorWrapper;
+        try {
+            vendorWrapper = AiVendorHelper.getClientWrapper(ragLib.getEmbedConfigId());
+        } catch (IllegalStateException e) {
+            logger.error("RAG库[{}]获取EmbeddingModel失败: {}", ragLibId, e.getMessage());
+            return null;
+        }
+        if (!vendorWrapper.isType(ModelType.EMBEDDING)) {
+            logger.error("RAG库[{}]获取EmbeddingModel失败: 配置不是EMBEDDING类型", ragLibId);
             return null;
         }
         dev.langchain4j.model.embedding.EmbeddingModel embeddingModel = vendorWrapper.getEmbeddingModel();

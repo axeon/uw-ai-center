@@ -100,7 +100,7 @@ public class AiToolRpcController implements AiToolRpc {
             return ResponseData.success();
         } catch (Throwable e) {
             logger.error("更新tool配置信息失败！", e);
-            return ResponseData.errorMsg("更新tool配置信息失败！" + e.getMessage());
+            return ResponseData.errorMsg("更新tool配置信息失败！");
         }
     }
 }
