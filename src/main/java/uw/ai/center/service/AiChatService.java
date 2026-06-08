@@ -54,6 +54,11 @@ public class AiChatService {
     private static final DaoManager dao = DaoManager.getInstance();
 
     /**
+     * 工具调用最大迭代次数，防止AI模型反复请求工具调用导致无限循环。
+     */
+    private static final int MAX_TOOL_ITERATIONS = 10;
+
+    /**
      * ChatClient 简单调用。
      */
     public static ResponseData<String> generate(long saasId, long userId, int userType, String userInfo, long configId, String systemPrompt, String userPrompt, List<AiToolCallInfo> toolList, Map<String, Object> toolContext, MultipartFile[] fileList, long[] ragLibIds) {
@@ -126,8 +131,10 @@ public class AiChatService {
                         .build();
                 chatResponse = vendorWrapper.getChatModel().chat(chatRequest);
                 AiMessage aiMessage = chatResponse.aiMessage();
-                // 工具调用循环
-                while (aiMessage.hasToolExecutionRequests()) {
+                // 工具调用循环（含最大迭代次数保护，防止AI模型反复请求工具调用导致无限循环）
+                int iteration = 0;
+                while (aiMessage.hasToolExecutionRequests() && iteration < MAX_TOOL_ITERATIONS) {
+                    iteration++;
                     for (ToolExecutionRequest req : aiMessage.toolExecutionRequests()) {
                         // 合并工具上下文到 toolInput
                         String toolInput = req.arguments();
@@ -150,6 +157,9 @@ public class AiChatService {
                             .build();
                     chatResponse = vendorWrapper.getChatModel().chat(chatRequest);
                     aiMessage = chatResponse.aiMessage();
+                }
+                if (iteration >= MAX_TOOL_ITERATIONS && aiMessage.hasToolExecutionRequests()) {
+                    logger.warn("工具调用达到最大迭代次数 {}, configId={}", MAX_TOOL_ITERATIONS, configId);
                 }
             } else {
                 chatResponse = vendorWrapper.getChatModel().chat(messages);
@@ -244,7 +254,10 @@ public class AiChatService {
                     .build();
             ChatResponse response = vendorWrapper.getChatModel().chat(chatRequest);
             AiMessage aiMessage = response.aiMessage();
-            while (aiMessage.hasToolExecutionRequests()) {
+            // 工具调用循环（含最大迭代次数保护，防止AI模型反复请求工具调用导致无限循环）
+            int iteration = 0;
+            while (aiMessage.hasToolExecutionRequests() && iteration < MAX_TOOL_ITERATIONS) {
+                iteration++;
                 for (ToolExecutionRequest req : aiMessage.toolExecutionRequests()) {
                     String toolInput = req.arguments();
                     if (toolContext != null && !toolContext.isEmpty()) {
@@ -266,6 +279,9 @@ public class AiChatService {
                         .build();
                 response = vendorWrapper.getChatModel().chat(chatRequest);
                 aiMessage = response.aiMessage();
+            }
+            if (iteration >= MAX_TOOL_ITERATIONS && aiMessage.hasToolExecutionRequests()) {
+                logger.warn("工具调用达到最大迭代次数 {}, configId={}", MAX_TOOL_ITERATIONS, configId);
             }
             // 工具执行完毕后用流式返回最终文本
             String finalText = aiMessage.text();
@@ -591,7 +607,10 @@ public class AiChatService {
                     .build();
             ChatResponse response = vendorWrapper.getChatModel().chat(chatRequest);
             AiMessage aiMessage = response.aiMessage();
-            while (aiMessage.hasToolExecutionRequests()) {
+            // 工具调用循环（含最大迭代次数保护，防止AI模型反复请求工具调用导致无限循环）
+            int iteration = 0;
+            while (aiMessage.hasToolExecutionRequests() && iteration < MAX_TOOL_ITERATIONS) {
+                iteration++;
                 for (ToolExecutionRequest req : aiMessage.toolExecutionRequests()) {
                     String toolInput = req.arguments();
                     if (toolContext != null && !toolContext.isEmpty()) {
@@ -613,6 +632,9 @@ public class AiChatService {
                         .build();
                 response = vendorWrapper.getChatModel().chat(chatRequest);
                 aiMessage = response.aiMessage();
+            }
+            if (iteration >= MAX_TOOL_ITERATIONS && aiMessage.hasToolExecutionRequests()) {
+                logger.warn("工具调用达到最大迭代次数 {}, configId={}", MAX_TOOL_ITERATIONS, sessionInfo.getConfigId());
             }
             String finalText = aiMessage.text();
             TokenUsage tokenUsage = response.tokenUsage();
