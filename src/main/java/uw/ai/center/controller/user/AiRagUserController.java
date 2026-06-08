@@ -36,9 +36,9 @@ public class AiRagUserController {
      */
     @GetMapping("/list")
     @Operation(summary = "列表RAG库", description = "列表RAG库")
-    @MscPermDeclare(auth = AuthType.NONE, log = ActionLog.BASE)
+    @MscPermDeclare(auth = AuthType.USER, log = ActionLog.BASE)
     public ResponseData<DataList<AiRagLib>> list(UserRagLibQueryParam queryParam) {
-        AuthServiceHelper.logRef( AiModelConfig.class );
+        queryParam.setSaasId(AuthServiceHelper.getSaasId());
         queryParam.SELECT_SQL( "select id, saas_id, lib_type, lib_name, lib_desc, embed_config_id, embed_model_name, create_date, modify_date, state FROM ai_rag_lib ");
         return dao.list( AiRagLib.class, queryParam );
     }

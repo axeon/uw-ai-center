@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import uw.ai.center.dto.UserModelConfigQueryParam;
 import uw.ai.center.entity.AiModelConfig;
+import uw.auth.service.AuthServiceHelper;
 import uw.auth.service.annotation.MscPermDeclare;
 import uw.auth.service.constant.ActionLog;
 import uw.auth.service.constant.AuthType;
@@ -33,8 +34,9 @@ public class AiModelUserController {
      */
     @GetMapping("/list")
     @Operation(summary = "列表AI服务模型", description = "列表AI服务模型")
-    @MscPermDeclare(auth = AuthType.NONE, log = ActionLog.BASE)
+    @MscPermDeclare(auth = AuthType.USER, log = ActionLog.BASE)
     public ResponseData<DataList<AiModelConfig>> list(UserModelConfigQueryParam queryParam) {
+        queryParam.setSaasId(AuthServiceHelper.getSaasId());
         queryParam.SELECT_SQL("SELECT id, saas_id, mch_id, vendor_class, config_code, config_name, config_desc, api_url, model_main, model_embed, create_date, modify_date, state from ai_model_config ");
         return dao.list(AiModelConfig.class, queryParam);
     }

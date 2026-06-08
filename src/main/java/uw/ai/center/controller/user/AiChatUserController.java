@@ -74,8 +74,9 @@ public class AiChatUserController {
      */
     @GetMapping("/listSessionInfo")
     @Operation(summary = "列出会话信息", description = "列出会话信息")
-    @MscPermDeclare(auth = AuthType.NONE, log = ActionLog.BASE)
+    @MscPermDeclare(auth = AuthType.USER, log = ActionLog.BASE)
     public ResponseData<DataList<AiSessionInfo>> listSessionInfo(AiSessionInfoQueryParam queryParam) {
+        queryParam.setUserId(AuthServiceHelper.getUserId());
         return AiChatService.listSessionInfo(queryParam);
     }
 
@@ -87,8 +88,9 @@ public class AiChatUserController {
      */
     @GetMapping("/listSessionMsg")
     @Operation(summary = "列出会话消息", description = "列出会话消息")
-    @MscPermDeclare(auth = AuthType.NONE, log = ActionLog.BASE)
+    @MscPermDeclare(auth = AuthType.USER, log = ActionLog.BASE)
     public ResponseData<DataList<AiSessionMsg>> listSessionMsg(AiSessionMsgQueryParam queryParam) {
+        queryParam.setUserId(AuthServiceHelper.getUserId());
         return AiChatService.listSessionMsg(queryParam);
     }
 

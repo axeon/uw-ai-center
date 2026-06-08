@@ -12,7 +12,10 @@ import uw.ai.vo.AiTranslateListParam;
 import uw.ai.vo.AiTranslateMapParam;
 import uw.ai.vo.AiTranslateResultData;
 import uw.auth.service.AuthServiceHelper;
+import uw.auth.service.annotation.MscPermDeclare;
 import uw.auth.service.annotation.ResponseAdviceIgnore;
+import uw.auth.service.constant.ActionLog;
+import uw.auth.service.constant.AuthType;
 import uw.common.dto.ResponseData;
 
 /**
@@ -22,6 +25,7 @@ import uw.common.dto.ResponseData;
 @RequestMapping("/open/translate")
 @Tag(name = "Ai翻译接口")
 @ResponseAdviceIgnore
+@MscPermDeclare(auth = AuthType.USER, log = ActionLog.BASE)
 public class AiTranslateOpenController {
     private static final Logger logger = LoggerFactory.getLogger( AiTranslateOpenController.class );
 
