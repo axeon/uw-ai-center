@@ -73,7 +73,7 @@ public class OpenAiVendor implements AiVendor {
 
     private AiVendorClientWrapper buildChat(AiModelConfigData configData, double temperature) {
         var syncModel = OpenAiChatModel.builder()
-                .apiKey(configData.getApiKey())
+                .apiKey(configData.getApiKeyRaw())
                 .baseUrl(configData.getApiUrl())
                 .modelName(configData.getModelName())
                 .temperature(temperature)
@@ -81,7 +81,7 @@ public class OpenAiVendor implements AiVendor {
                 .build();
 
         var streamingModel = OpenAiStreamingChatModel.builder()
-                .apiKey(configData.getApiKey())
+                .apiKey(configData.getApiKeyRaw())
                 .baseUrl(configData.getApiUrl())
                 .modelName(configData.getModelName())
                 .temperature(temperature)
@@ -93,7 +93,7 @@ public class OpenAiVendor implements AiVendor {
 
     private AiVendorClientWrapper buildEmbedding(AiModelConfigData configData) {
         var embeddingModel = OpenAiEmbeddingModel.builder()
-                .apiKey(configData.getApiKey())
+                .apiKey(configData.getApiKeyRaw())
                 .baseUrl(configData.getApiUrl())
                 .modelName(configData.getModelName())
                 .timeout(Duration.ofSeconds(60))

@@ -21,14 +21,6 @@ public class AiApiConfigData {
         this.aiModelApi = aiModelApi;
     }
 
-    public AiModelApi getAiModelApi() {
-        return aiModelApi;
-    }
-
-    public void setAiModelApi(AiModelApi aiModelApi) {
-        this.aiModelApi = aiModelApi;
-    }
-
     public long getId() {
         return aiModelApi.getId();
     }
@@ -57,7 +49,18 @@ public class AiApiConfigData {
         return aiModelApi.getApiUrl();
     }
 
+    /**
+     * 获取API密钥（掩码处理，用于前端展示）。
+     * 只显示前半部分，后半部分用****代替，方便辨识同时保护密钥安全。
+     */
     public String getApiKey() {
+        return AiModelApi.maskApiKey(aiModelApi.getApiKey());
+    }
+
+    /**
+     * 获取API密钥明文（仅供服务端内部使用，如构建Vendor客户端，不序列化到前端）。
+     */
+    public String getApiKeyRaw() {
         return aiModelApi.getApiKey();
     }
 

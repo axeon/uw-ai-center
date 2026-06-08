@@ -51,7 +51,11 @@ public class AiModelApiController {
     @MscPermDeclare(user = UserType.OPS, auth = AuthType.USER, log = ActionLog.NONE)
     public ResponseData<DataList<AiModelApi>> liteList(AiApiConfigQueryParam queryParam){
         queryParam.SELECT_SQL( "SELECT id,saas_id,mch_id,api_code,api_name,api_url,api_key,state,create_date,modify_date from ai_model_api " );
-        return dao.list(AiModelApi.class, queryParam);
+        return dao.list(AiModelApi.class, queryParam).onSuccess(dataList -> {
+            for (AiModelApi item : dataList.results()) {
+                item.setApiKey(AiModelApi.maskApiKey(item.getApiKey()));
+            }
+        });
     }
 
     /**

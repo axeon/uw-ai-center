@@ -114,6 +114,13 @@ public class AiModelConfigData {
         return apiConfigData != null ? apiConfigData.getApiKey() : null;
     }
 
+    /**
+     * 获取API密钥明文（仅供服务端内部使用，如构建Vendor客户端，不序列化到前端）。
+     */
+    public String getApiKeyRaw() {
+        return apiConfigData != null ? apiConfigData.getApiKeyRaw() : null;
+    }
+
     public String getModelData() {
         return aiModelConfig.getModelData();
     }
