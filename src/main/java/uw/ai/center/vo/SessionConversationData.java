@@ -17,10 +17,17 @@ public class SessionConversationData {
     private long msgId;
 
     public SessionConversationData(String conversationId) {
-        int pos  = conversationId.indexOf(":");
-        if (pos > 0) {
-            sessionId = Long.parseLong(conversationId.substring(0, pos));
-            msgId = Long.parseLong(conversationId.substring(pos + 1));
+        try {
+            if (conversationId == null) {
+                return;
+            }
+            int pos = conversationId.indexOf(":");
+            if (pos > 0) {
+                sessionId = Long.parseLong(conversationId.substring(0, pos));
+                msgId = Long.parseLong(conversationId.substring(pos + 1));
+            }
+        } catch (NumberFormatException e) {
+            // 格式错误时不赋值，保持默认 0
         }
     }
 

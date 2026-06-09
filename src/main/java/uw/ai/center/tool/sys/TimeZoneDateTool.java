@@ -6,6 +6,7 @@ import uw.ai.tool.AiTool;
 import uw.ai.tool.AiToolParam;
 import uw.common.dto.ResponseData;
 
+import java.time.DateTimeException;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
@@ -54,10 +55,14 @@ public class TimeZoneDateTool implements AiTool<TimeZoneDateTool.ToolParam, Resp
      */
     @Override
     public ResponseData<String> apply(TimeZoneDateTool.ToolParam toolParam) {
-        ZoneId zoneId = ZoneId.of( toolParam.getTimeZone() );
-        ZonedDateTime zonedNow = ZonedDateTime.now( zoneId );
-        String data = zonedNow.toString() + "@" + toolParam.getTimeZone();
-        return ResponseData.success( data );
+        try {
+            ZoneId zoneId = ZoneId.of(toolParam.getTimeZone());
+            ZonedDateTime zonedNow = ZonedDateTime.now(zoneId);
+            String data = zonedNow.toString() + "@" + toolParam.getTimeZone();
+            return ResponseData.success(data);
+        } catch (DateTimeException e) {
+            return ResponseData.errorMsg("无效的时区: " + toolParam.getTimeZone());
+        }
     }
 
     /**

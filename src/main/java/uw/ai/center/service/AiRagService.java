@@ -193,7 +193,8 @@ public class AiRagService {
         try {
             esClient.indices().delete(d -> d.index(RAG_ES_INDEX_PREFIX + ragLibId));
         } catch (Exception e) {
-            logger.error("删除ES索引失败", e);
+            logger.error("删除ES索引失败, ragLibId={}", ragLibId, e);
+            throw new RuntimeException("删除ES索引失败: " + ragLibId, e);
         }
     }
 
