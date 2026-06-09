@@ -137,8 +137,16 @@ public class AiRagService {
     public static void deleteDocument(long ragDocId) {
         dao.load(AiRagDoc.class, ragDocId).onSuccess(aiRagDoc -> {
             AiRagClientWrapper ragClientWrapper = getRagClientWrapper(aiRagDoc.getLibId());
+            if (ragClientWrapper == null) {
+                logger.error("RAG客户端不存在, libId={}", aiRagDoc.getLibId());
+                return;
+            }
             Map<String, String> docMap = JsonUtils.parse(aiRagDoc.getDocContent(), new TypeReference<Map<String, String>>() {
             });
+            if (docMap == null || docMap.isEmpty()) {
+                logger.warn("文档内容为空, ragDocId={}", ragDocId);
+                return;
+            }
             ragClientWrapper.vectorStore.removeAll(new ArrayList<>(docMap.keySet()));
         });
     }
@@ -151,8 +159,16 @@ public class AiRagService {
     public static void rebuildDocument(long ragDocId) {
         dao.load(AiRagDoc.class, ragDocId).onSuccess(aiRagDoc -> {
             AiRagClientWrapper ragClientWrapper = getRagClientWrapper(aiRagDoc.getLibId());
+            if (ragClientWrapper == null) {
+                logger.error("RAG客户端不存在, libId={}", aiRagDoc.getLibId());
+                return;
+            }
             Map<String, String> docMap = JsonUtils.parse(aiRagDoc.getDocContent(), new TypeReference<Map<String, String>>() {
             });
+            if (docMap == null || docMap.isEmpty()) {
+                logger.warn("文档内容为空, ragDocId={}", ragDocId);
+                return;
+            }
             // 先删除旧的chunk数据，再写入新的，避免重复
             ragClientWrapper.vectorStore.removeAll(new ArrayList<>(docMap.keySet()));
             List<TextSegment> segments = new ArrayList<>(docMap.size());

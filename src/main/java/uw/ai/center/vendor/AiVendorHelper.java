@@ -17,9 +17,10 @@ import uw.cache.FusionCache;
 import uw.dao.DaoManager;
 import uw.dao.DataList;
 
-import java.util.LinkedHashMap;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * AI Vendor 帮助类，管理 Vendors、AiModelConfigData 聚合缓存和 AiVendorClientWrapper 实例缓存。
@@ -31,7 +32,7 @@ public class AiVendorHelper {
 
     private static final DaoManager dao = DaoManager.getInstance();
 
-    private static final Map<String, AiVendor> VENDOR_MAP = new LinkedHashMap<>();
+    private static final Map<String, AiVendor> VENDOR_MAP = new ConcurrentHashMap<>();
 
     /**
      * AiVendorClientWrapper 实例缓存（Caffeine本地缓存）。
@@ -94,10 +95,10 @@ public class AiVendorHelper {
     }
 
     /**
-     * 获取所有AI供应商列表。
+     * 获取所有AI供应商列表（不可变视图，防止外部修改）。
      */
     public static Map<String, AiVendor> getVendorMap() {
-        return VENDOR_MAP;
+        return Collections.unmodifiableMap(VENDOR_MAP);
     }
 
     /**
