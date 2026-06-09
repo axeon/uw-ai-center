@@ -28,6 +28,7 @@ public class AiModelConfigQueryParam extends AuthPageQueryParam {
         put("apiId", "api_id");
         put("vendorClass", "vendor_class");
         put("modelType", "model_type");
+        put("modelTag", "model_tag");
         put("configCode", "config_code");
         put("configName", "config_name");
         put("modelName", "model_name");
@@ -87,6 +88,13 @@ public class AiModelConfigQueryParam extends AuthPageQueryParam {
     @QueryMeta(expr = "model_type like ?")
     @Schema(title = "模型类型: CHAT/EMBEDDING/RERANK/TTS/OCR", description = "模型类型: CHAT/EMBEDDING/RERANK/TTS/OCR")
     private String modelType;
+
+    /**
+     * 模型能力标签。
+     */
+    @QueryMeta(expr = "model_tag like ?")
+    @Schema(title = "模型能力标签", description = "模型能力标签")
+    private String modelTag;
 
     /**
      * 配置代码。
@@ -281,6 +289,28 @@ public class AiModelConfigQueryParam extends AuthPageQueryParam {
      */
     public AiModelConfigQueryParam modelType(String modelType) {
         setModelType(modelType);
+        return this;
+    }
+
+    /**
+     * 获取模型能力标签。
+     */
+    public String getModelTag() {
+        return this.modelTag;
+    }
+
+    /**
+     * 设置模型能力标签。
+     */
+    public void setModelTag(String modelTag) {
+        this.modelTag = modelTag;
+    }
+
+    /**
+     * 设置模型能力标签链式调用。
+     */
+    public AiModelConfigQueryParam modelTag(String modelTag) {
+        setModelTag(modelTag);
         return this;
     }
 

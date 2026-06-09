@@ -65,6 +65,13 @@ public class AiModelConfig implements DataEntity,Serializable{
     private String modelType;
 
     /**
+     * 模型能力标签
+     */
+    @ColumnMeta(columnName="model_tag", dataType="String", dataSize=200, nullable=true)
+    @Schema(title = "模型能力标签", description = "模型能力标签", maxLength=200, nullable=true )
+    private String modelTag;
+
+    /**
      * 配置代码
      */
     @ColumnMeta(columnName="config_code", dataType="String", dataSize=100, nullable=true)
@@ -212,6 +219,13 @@ public class AiModelConfig implements DataEntity,Serializable{
      */
     public String getModelType(){
         return this.modelType;
+    }
+
+    /**
+     * 获取模型能力标签。
+     */
+    public String getModelTag(){
+        return this.modelTag;
     }
 
     /**
@@ -364,6 +378,22 @@ public class AiModelConfig implements DataEntity,Serializable{
      */
     public AiModelConfig modelType(String modelType){
         setModelType(modelType);
+        return this;
+    }
+
+    /**
+     * 设置模型能力标签。
+     */
+    public void setModelTag(String modelTag){
+        _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "modelTag", this.modelTag, modelTag, !_IS_LOADED );
+        this.modelTag = modelTag;
+    }
+
+    /**
+     *  设置模型能力标签链式调用。
+     */
+    public AiModelConfig modelTag(String modelTag){
+        setModelTag(modelTag);
         return this;
     }
 

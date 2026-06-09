@@ -90,6 +90,10 @@ public class AiModelConfigData {
         return aiModelConfig.getModelType();
     }
 
+    public String getModelTag() {
+        return aiModelConfig.getModelTag();
+    }
+
     public String getConfigCode() {
         return aiModelConfig.getConfigCode();
     }
