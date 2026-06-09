@@ -12,7 +12,9 @@ public enum ModelType {
     EMBEDDING("嵌入模型"),
     RERANK("重排模型"),
     TTS("语音合成"),
-    OCR("文字识别");
+    OCR("文字识别"),
+    IMAGE_GENERATION("图片生成"),
+    AUDIO_TRANSCRIPTION("语音识别");
 
     private final String desc;
 

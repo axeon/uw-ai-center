@@ -2,6 +2,7 @@ package uw.ai.center.conf;
 
 import org.springframework.context.annotation.Configuration;
 import uw.ai.center.vendor.AiVendorHelper;
+import uw.ai.center.vendor.dashscope.DashScopeVendor;
 import uw.ai.center.vendor.ollama.OllamaVendor;
 import uw.ai.center.vendor.openai.OpenAiVendor;
 
@@ -11,8 +12,9 @@ import uw.ai.center.vendor.openai.OpenAiVendor;
 @Configuration
 public class Lc4jVendorAutoConfiguration {
 
-    public Lc4jVendorAutoConfiguration(OpenAiVendor openAiVendor, OllamaVendor ollamaVendor) {
+    public Lc4jVendorAutoConfiguration(OpenAiVendor openAiVendor, OllamaVendor ollamaVendor, DashScopeVendor dashScopeVendor) {
         AiVendorHelper.registerOpenAiVendor(OpenAiVendor.class.getName(), openAiVendor);
         AiVendorHelper.registerOllamaVendor(OllamaVendor.class.getName(), ollamaVendor);
+        AiVendorHelper.registerVendor(DashScopeVendor.class.getName(), dashScopeVendor);
     }
 }

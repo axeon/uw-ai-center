@@ -3,15 +3,20 @@ package uw.ai.center.vendor;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
+ import dev.langchain4j.model.image.ImageModel;
+import dev.langchain4j.model.audio.AudioTranscriptionModel;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uw.ai.center.constant.ModelType;
+import uw.ai.center.model.TtsModel;
 import uw.ai.center.vo.AiModelConfigData;
 
 /**
  * AI供应商客户端封装类（LangChain4j）。
- * 按modelType构建：CHAT类型提供ChatModel+StreamingChatModel，EMBEDDING类型提供EmbeddingModel。
+ * 按modelType构建：CHAT类型提供ChatModel+StreamingChatModel，EMBEDDING类型提供EmbeddingModel，
+ * IMAGE_GENERATION类型提供ImageModel，AUDIO_TRANSCRIPTION类型提供AudioTranscriptionModel，
+ * TTS类型提供TtsModel。
  * 实现AutoCloseable，在缓存失效时主动释放底层HTTP连接池等资源。
  */
 @Schema(title = "AI客户端封装类", description = "AI客户端封装类")
@@ -31,14 +36,29 @@ public class AiVendorClientWrapper implements AutoCloseable {
     @Schema(title = "嵌入模型", description = "嵌入模型，EMBEDDING类型时可用")
     private final EmbeddingModel embeddingModel;
 
+    @Schema(title = "图片生成模型", description = "图片生成模型，IMAGE_GENERATION类型时可用")
+    private final ImageModel imageModel;
+
+    @Schema(title = "语音识别模型", description = "语音识别模型，AUDIO_TRANSCRIPTION类型时可用")
+    private final AudioTranscriptionModel audioTranscriptionModel;
+
+    @Schema(title = "语音合成模型", description = "语音合成模型，TTS类型时可用")
+    private final TtsModel ttsModel;
+
     public AiVendorClientWrapper(AiModelConfigData configData,
                                  ChatModel chatModel,
                                  StreamingChatModel streamingChatModel,
-                                 EmbeddingModel embeddingModel) {
+                                 EmbeddingModel embeddingModel,
+                                 ImageModel imageModel,
+                                 AudioTranscriptionModel audioTranscriptionModel,
+                                 TtsModel ttsModel) {
         this.configData = configData;
         this.chatModel = chatModel;
         this.streamingChatModel = streamingChatModel;
         this.embeddingModel = embeddingModel;
+        this.imageModel = imageModel;
+        this.audioTranscriptionModel = audioTranscriptionModel;
+        this.ttsModel = ttsModel;
     }
 
     public AiModelConfigData getConfigData() {
@@ -55,6 +75,18 @@ public class AiVendorClientWrapper implements AutoCloseable {
 
     public EmbeddingModel getEmbeddingModel() {
         return embeddingModel;
+    }
+
+    public ImageModel getImageModel() {
+        return imageModel;
+    }
+
+    public AudioTranscriptionModel getAudioTranscriptionModel() {
+        return audioTranscriptionModel;
+    }
+
+    public TtsModel getTtsModel() {
+        return ttsModel;
     }
 
     /**
@@ -77,27 +109,21 @@ public class AiVendorClientWrapper implements AutoCloseable {
      */
     @Override
     public void close() {
-        try {
-            if (chatModel instanceof AutoCloseable closeable) {
+        closeResource(chatModel, "ChatModel");
+        closeResource(streamingChatModel, "StreamingChatModel");
+        closeResource(embeddingModel, "EmbeddingModel");
+        closeResource(imageModel, "ImageModel");
+        closeResource(audioTranscriptionModel, "AudioTranscriptionModel");
+        closeResource(ttsModel, "TtsModel");
+    }
+
+    private void closeResource(Object resource, String name) {
+        if (resource instanceof AutoCloseable closeable) {
+            try {
                 closeable.close();
+            } catch (Exception e) {
+                logger.warn("关闭{}资源失败", name, e);
             }
-        } catch (Exception e) {
-            // 日志记录但不抛出，避免影响其他资源的释放
-            logger.warn("关闭ChatModel资源失败", e);
-        }
-        try {
-            if (streamingChatModel instanceof AutoCloseable closeable) {
-                closeable.close();
-            }
-        } catch (Exception e) {
-            logger.warn("关闭StreamingChatModel资源失败", e);
-        }
-        try {
-            if (embeddingModel instanceof AutoCloseable closeable) {
-                closeable.close();
-            }
-        } catch (Exception e) {
-            logger.warn("关闭EmbeddingModel资源失败", e);
         }
     }
 }
