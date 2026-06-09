@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import uw.ai.center.entity.AiToolInfo;
+import uw.ai.center.util.SecurityUtils;
 import uw.ai.vo.AiToolCallInfo;
 import uw.ai.vo.AiToolExecuteParam;
 import uw.cache.CacheDataLoader;
@@ -98,12 +99,21 @@ public class AiToolHelper {
      * 执行工具回调。
      */
     public static ResponseData toolCallback(AiToolInfo aiToolInfo, String toolInput) {
+        String appName = aiToolInfo.getAppName();
+        // SSRF防护：校验appName为合法服务名，防止注入IP或恶意域名
+        if (!SecurityUtils.checkServiceName(appName)) {
+            return ResponseData.errorMsg("工具配置异常");
+        }
         AiToolExecuteParam param = new AiToolExecuteParam();
         param.setToolId(aiToolInfo.getId());
         param.setToolClass(aiToolInfo.getToolClass());
         param.setToolInput(toolInput);
-        String url = "http://" + aiToolInfo.getAppName() + "/rpc/ai/tool/execute";
+        String url = "http://" + appName + "/rpc/ai/tool/execute";
         ResponseData responseData = authRestTemplate.postForEntity(url, param, ResponseData.class).getBody();
+        if (responseData == null) {
+            logger.error("工具回调返回为空, url={}", url);
+            return ResponseData.errorMsg("工具执行返回为空");
+        }
         return responseData;
     }
 
