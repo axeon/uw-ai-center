@@ -168,10 +168,13 @@ public class AiVendorHelper {
 
     /**
      * 级联失效ClientWrapper实例缓存。
+     * 失效前先调用close()释放底层HTTP连接池等资源。
      * 由CacheChangeNotifyListener自动调用。
      */
     public static void invalidateClientWrapper(Long configId) {
-        if (CLIENT_WRAPPER_CACHE.getIfPresent(configId) != null) {
+        AiVendorClientWrapper wrapper = CLIENT_WRAPPER_CACHE.getIfPresent(configId);
+        if (wrapper != null) {
+            wrapper.close();
             CLIENT_WRAPPER_CACHE.invalidate(configId);
         }
     }
