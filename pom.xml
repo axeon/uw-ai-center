@@ -15,7 +15,6 @@
     </parent>
 
     <properties>
-        <java.version>21</java.version>
         <langchain4j.version>1.15.0</langchain4j.version>
     </properties>
 
