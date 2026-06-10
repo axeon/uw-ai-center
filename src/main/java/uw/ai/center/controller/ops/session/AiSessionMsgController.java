@@ -13,9 +13,9 @@ import uw.auth.service.constant.AuthType;
 import uw.auth.service.constant.UserType;
 import uw.common.app.constant.CommonState;
 import uw.common.app.dto.IdStateQueryParam;
-import uw.common.dto.ResponseData;
+import uw.common.response.ResponseData;
 import uw.dao.DaoManager;
-import uw.dao.DataList;
+import uw.common.data.PageList;
 import uw.dao.TransactionException;
 
 
@@ -40,7 +40,7 @@ public class AiSessionMsgController {
     @GetMapping("/list")
     @Operation(summary = "列表session消息", description = "列表session消息")
     @MscPermDeclare(user = UserType.OPS, auth = AuthType.PERM, log = ActionLog.REQUEST)
-    public ResponseData<DataList<AiSessionMsg>> list(AiSessionMsgQueryParam queryParam) {
+    public ResponseData<PageList<AiSessionMsg>> list(AiSessionMsgQueryParam queryParam) {
         AuthServiceHelper.logRef(AiSessionMsg.class);
         return dao.list(AiSessionMsg.class, queryParam);
     }
@@ -53,7 +53,7 @@ public class AiSessionMsgController {
     @GetMapping("/liteList")
     @Operation(summary = "轻量级列表session消息", description = "轻量级列表session消息，一般用于select控件。")
     @MscPermDeclare(user = UserType.OPS, auth = AuthType.USER, log = ActionLog.NONE)
-    public ResponseData<DataList<AiSessionMsg>> liteList(AiSessionMsgQueryParam queryParam) {
+    public ResponseData<PageList<AiSessionMsg>> liteList(AiSessionMsgQueryParam queryParam) {
         queryParam.SELECT_SQL( "SELECT id,session_id,create_date,state from ai_session_msg " );
         return dao.list(AiSessionMsg.class, queryParam);
     }

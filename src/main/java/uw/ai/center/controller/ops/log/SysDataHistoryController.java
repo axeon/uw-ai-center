@@ -12,9 +12,9 @@ import uw.auth.service.constant.AuthType;
 import uw.auth.service.constant.UserType;
 import uw.common.app.dto.SysDataHistoryQueryParam;
 import uw.common.app.entity.SysDataHistory;
-import uw.common.dto.ResponseData;
+import uw.common.response.ResponseData;
 import uw.dao.DaoManager;
-import uw.dao.DataList;
+import uw.common.data.PageList;
 import uw.dao.TransactionException;
 
 
@@ -39,7 +39,7 @@ public class SysDataHistoryController {
     @GetMapping("/list")
     @Operation(summary = "数据历史查询", description = "列表数据历史")
     @MscPermDeclare(user = UserType.OPS, auth = AuthType.PERM, log = ActionLog.REQUEST)
-    public ResponseData<DataList<SysDataHistory>> list(SysDataHistoryQueryParam queryParam){
+    public ResponseData<PageList<SysDataHistory>> list(SysDataHistoryQueryParam queryParam){
         AuthServiceHelper.logRef( SysDataHistory.class );
         return dao.list( SysDataHistory.class, queryParam );
     }

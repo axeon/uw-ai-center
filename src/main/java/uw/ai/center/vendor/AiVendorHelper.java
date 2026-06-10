@@ -15,7 +15,7 @@ import uw.cache.CacheChangeNotifyListener;
 import uw.cache.CacheDataLoader;
 import uw.cache.FusionCache;
 import uw.dao.DaoManager;
-import uw.dao.DataList;
+import uw.common.data.PageList;
 
 import java.util.Collections;
 import java.util.List;
@@ -53,12 +53,12 @@ public class AiVendorHelper {
             @Override
             public AiModelConfigData load(Long configId) throws Exception {
                 // 只加载启用状态的配置
-                AiModelConfig modelConfig = dao.queryForSingleObject(AiModelConfig.class,
+                AiModelConfig modelConfig = dao.queryForObject(AiModelConfig.class,
                         "select * from ai_model_config where id=? and state=1", new Object[]{configId}).getData();
                 if (modelConfig == null) {
                     return null;
                 }
-                AiModelApi apiConfig = dao.queryForSingleObject(AiModelApi.class,
+                AiModelApi apiConfig = dao.queryForObject(AiModelApi.class,
                         "select * from ai_model_api where id=? and state=1", new Object[]{modelConfig.getApiId()}).getData();
                 if (apiConfig == null) {
                     return null;
@@ -157,7 +157,7 @@ public class AiVendorHelper {
      * API配置变更时，级联失效关联的模型配置缓存。
      */
     public static void invalidateApiConfig(long apiId) {
-        DataList<AiModelConfig> configs = dao.list(AiModelConfig.class,
+        PageList<AiModelConfig> configs = dao.list(AiModelConfig.class,
                 "select id from ai_model_config where api_id=?", new Object[]{apiId}).getData();
         if (configs != null) {
             for (AiModelConfig config : configs) {

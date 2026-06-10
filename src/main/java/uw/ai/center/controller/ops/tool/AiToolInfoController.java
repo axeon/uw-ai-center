@@ -19,10 +19,10 @@ import uw.common.app.dto.SysDataHistoryQueryParam;
 import uw.common.app.entity.SysCritLog;
 import uw.common.app.entity.SysDataHistory;
 import uw.common.app.helper.SysDataHistoryHelper;
-import uw.common.dto.ResponseData;
+import uw.common.response.ResponseData;
 import uw.common.util.SystemClock;
 import uw.dao.DaoManager;
-import uw.dao.DataList;
+import uw.common.data.PageList;
 
 
 /**
@@ -47,7 +47,7 @@ public class AiToolInfoController {
     @GetMapping("/list")
     @Operation(summary = "列表AI工具信息", description = "列表AI工具信息")
     @MscPermDeclare(user = UserType.OPS, auth = AuthType.PERM, log = ActionLog.REQUEST)
-    public ResponseData<DataList<AiToolInfo>> list(AiToolInfoQueryParam queryParam){
+    public ResponseData<PageList<AiToolInfo>> list(AiToolInfoQueryParam queryParam){
         AuthServiceHelper.logRef(AiToolInfo.class);
         return dao.list(AiToolInfo.class, queryParam);
     }
@@ -60,7 +60,7 @@ public class AiToolInfoController {
     @GetMapping("/liteList")
     @Operation(summary = "轻量级列表AI工具信息", description = "轻量级列表AI工具信息，一般用于select控件。")
     @MscPermDeclare(user = UserType.OPS, auth = AuthType.USER, log = ActionLog.NONE)
-    public ResponseData<DataList<AiToolInfo>> liteList(AiToolInfoQueryParam queryParam){
+    public ResponseData<PageList<AiToolInfo>> liteList(AiToolInfoQueryParam queryParam){
         queryParam.SELECT_SQL( "SELECT id,app_name,tool_class,tool_version,tool_name,create_date,modify_date,state from ai_tool_info " );
         return dao.list(AiToolInfo.class, queryParam);
     }
@@ -88,7 +88,7 @@ public class AiToolInfoController {
     @GetMapping("/listDataHistory")
     @Operation(summary = "查询数据历史", description = "查询数据历史")
     @MscPermDeclare(user = UserType.OPS, auth = AuthType.PERM, log = ActionLog.REQUEST)
-    public ResponseData<DataList<SysDataHistory>> listDataHistory(SysDataHistoryQueryParam queryParam){
+    public ResponseData<PageList<SysDataHistory>> listDataHistory(SysDataHistoryQueryParam queryParam){
         AuthServiceHelper.logRef(AiToolInfo.class, queryParam.getEntityId());
         queryParam.setEntityClass(AiToolInfo.class);
         return dao.list(SysDataHistory.class, queryParam);
@@ -103,7 +103,7 @@ public class AiToolInfoController {
     @GetMapping("/listCritLog")
     @Operation(summary = "查询操作日志", description = "查询操作日志")
     @MscPermDeclare(user = UserType.OPS, auth = AuthType.PERM, log = ActionLog.REQUEST)
-    public ResponseData<DataList<SysCritLog>> listCritLog(SysCritLogQueryParam queryParam)  {
+    public ResponseData<PageList<SysCritLog>> listCritLog(SysCritLogQueryParam queryParam)  {
         AuthServiceHelper.logRef(AiToolInfo.class, queryParam.getBizId());
         queryParam.setBizTypeClass(AiToolInfo.class);
         return dao.list(SysCritLog.class, queryParam);

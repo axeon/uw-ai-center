@@ -18,13 +18,15 @@ import uw.auth.service.AuthServiceHelper;
 import uw.auth.service.annotation.MscPermDeclare;
 import uw.auth.service.annotation.ResponseAdviceIgnore;
 import uw.auth.service.constant.UserType;
-import uw.common.dto.ResponseData;
+import uw.common.response.ResponseData;
 
+/**
+ * AI翻译RPC接口。
+ */
 @RestController
 @Tag(name = "TranslateRPC接口")
 @RequestMapping("/rpc/translate")
 @Primary
-@ResponseAdviceIgnore
 public class AiTranslateRpcController implements AiTranslateRpc {
     private static final Logger logger = LoggerFactory.getLogger( AiTranslateRpcController.class );
 

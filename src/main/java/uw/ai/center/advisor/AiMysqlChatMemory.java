@@ -46,7 +46,7 @@ public class AiMysqlChatMemory {
      * 软删除会话消息。
      */
     public static void clear(long sessionId) {
-        dao.executeCommand("update ai_session_msg set state=? where session_id=? and state=?",
+        dao.execute("update ai_session_msg set state=? where session_id=? and state=?",
                 new Object[]{CommonState.DELETED.getValue(), sessionId,
                         CommonState.ENABLED.getValue()});
     }

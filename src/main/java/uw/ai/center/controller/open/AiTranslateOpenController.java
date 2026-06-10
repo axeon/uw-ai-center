@@ -16,7 +16,7 @@ import uw.auth.service.annotation.MscPermDeclare;
 import uw.auth.service.annotation.ResponseAdviceIgnore;
 import uw.auth.service.constant.ActionLog;
 import uw.auth.service.constant.AuthType;
-import uw.common.dto.ResponseData;
+import uw.common.response.ResponseData;
 
 /**
  * Ai翻译接口。

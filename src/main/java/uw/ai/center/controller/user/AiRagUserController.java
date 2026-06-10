@@ -12,9 +12,9 @@ import uw.auth.service.AuthServiceHelper;
 import uw.auth.service.annotation.MscPermDeclare;
 import uw.auth.service.constant.ActionLog;
 import uw.auth.service.constant.AuthType;
-import uw.common.dto.ResponseData;
+import uw.common.response.ResponseData;
 import uw.dao.DaoManager;
-import uw.dao.DataList;
+import uw.common.data.PageList;
 import uw.dao.TransactionException;
 
 
@@ -36,9 +36,9 @@ public class AiRagUserController {
      */
     @GetMapping("/list")
     @Operation(summary = "列表RAG库", description = "列表RAG库")
-    @MscPermDeclare(auth = AuthType.USER, log = ActionLog.BASE)
-    public ResponseData<DataList<AiRagLib>> list(UserRagLibQueryParam queryParam) {
-        queryParam.setSaasId(AuthServiceHelper.getSaasId());
+    @MscPermDeclare(auth = AuthType.NONE, log = ActionLog.BASE)
+    public ResponseData<PageList<AiRagLib>> list(UserRagLibQueryParam queryParam) {
+        AuthServiceHelper.logRef( AiModelConfig.class );
         queryParam.SELECT_SQL( "select id, saas_id, lib_type, lib_name, lib_desc, embed_config_id, embed_model_name, create_date, modify_date, state FROM ai_rag_lib ");
         return dao.list( AiRagLib.class, queryParam );
     }

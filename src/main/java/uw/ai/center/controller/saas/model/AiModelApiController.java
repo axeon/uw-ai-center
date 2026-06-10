@@ -16,10 +16,10 @@ import uw.common.app.constant.CommonState;
 import uw.common.app.dto.*;
 import uw.common.app.entity.*;
 import uw.common.app.helper.SysDataHistoryHelper;
-import uw.common.dto.ResponseData;
+import uw.common.response.ResponseData;
 import uw.common.util.SystemClock;
 import uw.dao.DaoManager;
-import uw.dao.DataList;
+import uw.common.data.PageList;
 
 /**
  * AI模型API配置管理。
@@ -38,7 +38,7 @@ public class AiModelApiController {
     @GetMapping("/list")
     @Operation(summary = "列表AI模型API配置", description = "列表AI模型API配置")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.REQUEST)
-    public ResponseData<DataList<AiModelApi>> list(AiApiConfigQueryParam queryParam){
+    public ResponseData<PageList<AiModelApi>> list(AiApiConfigQueryParam queryParam){
         AuthServiceHelper.logRef(AiModelApi.class);
         return dao.list(AiModelApi.class, queryParam);
     }
@@ -49,10 +49,10 @@ public class AiModelApiController {
     @GetMapping("/liteList")
     @Operation(summary = "轻量级列表AI模型API配置", description = "轻量级列表AI模型API配置，一般用于select控件。")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.USER, log = ActionLog.NONE)
-    public ResponseData<DataList<AiModelApi>> liteList(AiApiConfigQueryParam queryParam){
+    public ResponseData<PageList<AiModelApi>> liteList(AiApiConfigQueryParam queryParam){
         queryParam.SELECT_SQL( "SELECT id,saas_id,mch_id,api_code,api_name,api_url,api_key,state,create_date,modify_date from ai_model_api " );
         return dao.list(AiModelApi.class, queryParam).onSuccess(dataList -> {
-            for (AiModelApi item : dataList.results()) {
+            for (AiModelApi item : dataList) {
                 item.setApiKey(AiModelApi.maskApiKey(item.getApiKey()));
             }
         });
@@ -66,7 +66,7 @@ public class AiModelApiController {
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.REQUEST)
     public ResponseData<AiModelApi> load(@Parameter(description = "主键ID", required = true) @RequestParam long id)  {
         AuthServiceHelper.logRef(AiModelApi.class,id);
-        return dao.queryForSingleObject(AiModelApi.class, new AuthIdQueryParam(id));
+        return dao.queryForObject(AiModelApi.class, new AuthIdQueryParam(id));
     }
 
     /**
@@ -75,7 +75,7 @@ public class AiModelApiController {
     @GetMapping("/listDataHistory")
     @Operation(summary = "查询数据历史", description = "查询数据历史")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.REQUEST)
-    public ResponseData<DataList<SysDataHistory>> listDataHistory(SysDataHistoryQueryParam queryParam){
+    public ResponseData<PageList<SysDataHistory>> listDataHistory(SysDataHistoryQueryParam queryParam){
         AuthServiceHelper.logRef(AiModelApi.class, queryParam.getEntityId());
         queryParam.setEntityClass(AiModelApi.class);
         return dao.list(SysDataHistory.class, queryParam);
@@ -87,7 +87,7 @@ public class AiModelApiController {
     @GetMapping("/listCritLog")
     @Operation(summary = "查询操作日志", description = "查询操作日志")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.REQUEST)
-    public ResponseData<DataList<SysCritLog>> listCritLog(SysCritLogQueryParam queryParam)  {
+    public ResponseData<PageList<SysCritLog>> listCritLog(SysCritLogQueryParam queryParam)  {
         AuthServiceHelper.logRef(AiModelApi.class, queryParam.getBizId());
         queryParam.setBizTypeClass(AiModelApi.class);
         return dao.list(SysCritLog.class, queryParam);
@@ -120,7 +120,7 @@ public class AiModelApiController {
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData<AiModelApi> update(@RequestBody AiModelApi aiModelApi, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiModelApi.class,aiModelApi.getId(),remark);
-        return dao.queryForSingleObject( AiModelApi.class,new AuthIdQueryParam(aiModelApi.getId()) ).onSuccess(aiModelApiDb-> {
+        return dao.queryForObject( AiModelApi.class,new AuthIdQueryParam(aiModelApi.getId()) ).onSuccess(aiModelApiDb-> {
             aiModelApiDb.setMchId(aiModelApi.getMchId());
             aiModelApiDb.setApiCode(aiModelApi.getApiCode());
             aiModelApiDb.setApiName(aiModelApi.getApiName());

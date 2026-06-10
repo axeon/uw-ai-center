@@ -14,9 +14,9 @@ import uw.auth.service.constant.UserType;
 import uw.common.app.constant.CommonState;
 import uw.common.app.dto.AuthIdQueryParam;
 import uw.common.app.dto.IdStateQueryParam;
-import uw.common.dto.ResponseData;
+import uw.common.response.ResponseData;
 import uw.dao.DaoManager;
-import uw.dao.DataList;
+import uw.common.data.PageList;
 import uw.dao.TransactionException;
 
 
@@ -41,7 +41,7 @@ public class AiSessionInfoController {
     @GetMapping("/list")
     @Operation(summary = "列表session会话", description = "列表session会话")
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.PERM, log = ActionLog.REQUEST)
-    public ResponseData<DataList<AiSessionInfo>> list(AiSessionInfoQueryParam queryParam) {
+    public ResponseData<PageList<AiSessionInfo>> list(AiSessionInfoQueryParam queryParam) {
         AuthServiceHelper.logRef(AiSessionInfo.class);
         return dao.list(AiSessionInfo.class, queryParam);
     }
@@ -54,7 +54,7 @@ public class AiSessionInfoController {
     @GetMapping("/liteList")
     @Operation(summary = "轻量级列表session会话", description = "轻量级列表session会话，一般用于select控件。")
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.USER, log = ActionLog.NONE)
-    public ResponseData<DataList<AiSessionInfo>> liteList(AiSessionInfoQueryParam queryParam) {
+    public ResponseData<PageList<AiSessionInfo>> liteList(AiSessionInfoQueryParam queryParam) {
         queryParam.SELECT_SQL("SELECT id,saas_id,mch_id,user_id,user_type,group_id,user_name,nick_name,real_name,session_name,create_date,modify_date,state from ai_session_info ");
         return dao.list(AiSessionInfo.class, queryParam);
     }
@@ -70,7 +70,7 @@ public class AiSessionInfoController {
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.PERM, log = ActionLog.REQUEST)
     public ResponseData<AiSessionInfo> load(@Parameter(description = "主键ID", required = true) @RequestParam long id) {
         AuthServiceHelper.logRef(AiSessionInfo.class, id);
-        return dao.queryForSingleObject(AiSessionInfo.class, new AuthIdQueryParam(id));
+        return dao.queryForObject(AiSessionInfo.class, new AuthIdQueryParam(id));
     }
 
     /**

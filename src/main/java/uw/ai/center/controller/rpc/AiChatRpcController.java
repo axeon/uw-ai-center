@@ -23,8 +23,8 @@ import uw.ai.vo.AiChatSessionParam;
 import uw.auth.service.annotation.MscPermDeclare;
 import uw.auth.service.annotation.ResponseAdviceIgnore;
 import uw.auth.service.constant.UserType;
-import uw.common.dto.ResponseData;
-import uw.dao.DataList;
+import uw.common.response.ResponseData;
+import uw.common.data.PageList;
 
 @RestController
 @Tag(name = "ChatRPC接口")
@@ -89,7 +89,7 @@ public class AiChatRpcController implements AiChatRpc {
     @GetMapping("/listSessionInfo")
     @Operation(summary = "列出会话信息", description = "列出会话信息")
     @MscPermDeclare(user = UserType.RPC)
-    public ResponseData<DataList<AiSessionInfo>> listSessionInfo(AiSessionInfoQueryParam queryParam) {
+    public ResponseData<PageList<AiSessionInfo>> listSessionInfo(AiSessionInfoQueryParam queryParam) {
         return AiChatService.listSessionInfo(queryParam);
     }
 
@@ -102,7 +102,7 @@ public class AiChatRpcController implements AiChatRpc {
     @GetMapping("/listSessionMsg")
     @Operation(summary = "列出会话消息", description = "列出会话消息")
     @MscPermDeclare(user = UserType.RPC)
-    public ResponseData<DataList<AiSessionMsg>> listSessionMsg(AiSessionMsgQueryParam queryParam) {
+    public ResponseData<PageList<AiSessionMsg>> listSessionMsg(AiSessionMsgQueryParam queryParam) {
         return AiChatService.listSessionMsg(queryParam);
     }
 

@@ -22,11 +22,11 @@ import uw.common.app.dto.SysDataHistoryQueryParam;
 import uw.common.app.entity.SysCritLog;
 import uw.common.app.entity.SysDataHistory;
 import uw.common.app.helper.SysDataHistoryHelper;
-import uw.common.dto.ResponseData;
+import uw.common.response.ResponseData;
 import uw.common.util.JsonUtils;
 import uw.common.util.SystemClock;
 import uw.dao.DaoManager;
-import uw.dao.DataList;
+import uw.common.data.PageList;
 
 import java.util.Map;
 
@@ -52,7 +52,7 @@ public class AiRagDocController {
     @GetMapping("/list")
     @Operation(summary = "列表rag文档信息", description = "列表rag文档信息")
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.PERM, log = ActionLog.REQUEST)
-    public ResponseData<DataList<AiRagDoc>> list(AiRagDocQueryParam queryParam){
+    public ResponseData<PageList<AiRagDoc>> list(AiRagDocQueryParam queryParam){
         AuthServiceHelper.logRef(AiRagDoc.class);
         return dao.list(AiRagDoc.class, queryParam);
     }
@@ -65,7 +65,7 @@ public class AiRagDocController {
     @GetMapping("/liteList")
     @Operation(summary = "轻量级列表rag文档信息", description = "轻量级列表rag文档信息，一般用于select控件。")
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.USER, log = ActionLog.NONE)
-    public ResponseData<DataList<AiRagDoc>> liteList(AiRagDocQueryParam queryParam){
+    public ResponseData<PageList<AiRagDoc>> liteList(AiRagDocQueryParam queryParam){
         queryParam.SELECT_SQL( "SELECT id,saas_id,lib_id,doc_type,doc_name,doc_body_size,doc_content_size,create_date,modify_date,state from ai_rag_doc " );
         return dao.list(AiRagDoc.class, queryParam);
     }
@@ -81,7 +81,7 @@ public class AiRagDocController {
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.PERM, log = ActionLog.REQUEST)
     public ResponseData<AiRagDoc> load(@Parameter(description = "主键ID", required = true) @RequestParam long id)  {
         AuthServiceHelper.logRef(AiRagDoc.class,id);
-        return dao.queryForSingleObject(AiRagDoc.class, new AuthIdQueryParam(id));
+        return dao.queryForObject(AiRagDoc.class, new AuthIdQueryParam(id));
     }
 
     /**
@@ -93,7 +93,7 @@ public class AiRagDocController {
     @GetMapping("/listDataHistory")
     @Operation(summary = "查询数据历史", description = "查询数据历史")
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.PERM, log = ActionLog.REQUEST)
-    public ResponseData<DataList<SysDataHistory>> listDataHistory(SysDataHistoryQueryParam queryParam){
+    public ResponseData<PageList<SysDataHistory>> listDataHistory(SysDataHistoryQueryParam queryParam){
         AuthServiceHelper.logRef(AiRagDoc.class, queryParam.getEntityId());
         queryParam.setEntityClass(AiRagDoc.class);
         return dao.list(SysDataHistory.class, queryParam);
@@ -108,7 +108,7 @@ public class AiRagDocController {
     @GetMapping("/listCritLog")
     @Operation(summary = "查询操作日志", description = "查询操作日志")
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.PERM, log = ActionLog.REQUEST)
-    public ResponseData<DataList<SysCritLog>> listCritLog(SysCritLogQueryParam queryParam)  {
+    public ResponseData<PageList<SysCritLog>> listCritLog(SysCritLogQueryParam queryParam)  {
         AuthServiceHelper.logRef(AiRagDoc.class, queryParam.getBizId());
         queryParam.setBizTypeClass(AiRagDoc.class);
         return dao.list(SysCritLog.class, queryParam);

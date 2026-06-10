@@ -31,11 +31,11 @@ import uw.ai.center.vo.AiChatSentEvent;
 import uw.ai.center.vo.AiModelConfigData;
 import uw.ai.vo.AiToolCallInfo;
 import uw.common.app.constant.CommonState;
-import uw.common.dto.ResponseData;
+import uw.common.response.ResponseData;
 import uw.common.util.JsonUtils;
 import uw.common.util.SystemClock;
 import uw.dao.DaoManager;
-import uw.dao.DataList;
+import uw.common.data.PageList;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -362,7 +362,7 @@ public class AiChatService {
      * @return
      */
     public static ResponseData<AiSessionInfo> loadSession(Long saasId, Long userId, Integer sessionType, Long sessionId) {
-        return dao.queryForSingleObject(AiSessionInfo.class, new AiSessionInfoQueryParam(saasId).userId(userId).sessionType(sessionType).id(sessionId));
+        return dao.queryForObject(AiSessionInfo.class, new AiSessionInfoQueryParam(saasId).userId(userId).sessionType(sessionType).id(sessionId));
     }
 
     /**
@@ -526,7 +526,7 @@ public class AiChatService {
         return dao.save(sessionMsg).onSuccess(savedEntity -> {
             // 更新session会话
             String sql = "update ai_session_info set last_update=?, msg_num=msg_num+1,request_tokens=request_tokens+?,response_tokens=response_tokens+? where saas_id=? and id=?";
-            dao.executeCommand(sql, new Object[]{SystemClock.nowDate(), sessionMsg.getRequestTokens(), sessionMsg.getResponseTokens(), sessionMsg.getSaasId(), sessionMsg.getSessionId()});
+            dao.execute(sql, new Object[]{SystemClock.nowDate(), sessionMsg.getRequestTokens(), sessionMsg.getResponseTokens(), sessionMsg.getSaasId(), sessionMsg.getSessionId()});
         });
     }
 
@@ -724,7 +724,7 @@ public class AiChatService {
      *
      * @return
      */
-    public static ResponseData<DataList<AiSessionInfo>> listSessionInfo(AiSessionInfoQueryParam queryParam) {
+    public static ResponseData<PageList<AiSessionInfo>> listSessionInfo(AiSessionInfoQueryParam queryParam) {
         return dao.list(AiSessionInfo.class, queryParam);
     }
 
@@ -733,7 +733,7 @@ public class AiChatService {
      *
      * @return
      */
-    public static ResponseData<DataList<AiSessionMsg>> listSessionMsg(AiSessionMsgQueryParam queryParam) {
+    public static ResponseData<PageList<AiSessionMsg>> listSessionMsg(AiSessionMsgQueryParam queryParam) {
         return dao.list(AiSessionMsg.class, queryParam);
     }
 

@@ -12,7 +12,7 @@ import uw.ai.center.service.AiChatService;
 import uw.ai.vo.AiChatGenerateParam;
 import uw.auth.service.AuthServiceHelper;
 import uw.auth.service.annotation.ResponseAdviceIgnore;
-import uw.common.dto.ResponseData;
+import uw.common.response.ResponseData;
 
 /**
  * AiTest接口。

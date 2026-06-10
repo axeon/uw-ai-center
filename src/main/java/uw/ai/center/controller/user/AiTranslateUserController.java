@@ -17,7 +17,7 @@ import uw.auth.service.annotation.MscPermDeclare;
 import uw.auth.service.annotation.ResponseAdviceIgnore;
 import uw.auth.service.constant.ActionLog;
 import uw.auth.service.constant.AuthType;
-import uw.common.dto.ResponseData;
+import uw.common.response.ResponseData;
 
 /**
  * Ai翻译接口。
@@ -25,7 +25,6 @@ import uw.common.dto.ResponseData;
 @RestController
 @RequestMapping("/user/translate")
 @Tag(name = "Ai翻译接口")
-@ResponseAdviceIgnore
 public class AiTranslateUserController {
     private static final Logger log = LoggerFactory.getLogger( AiTranslateUserController.class );
 

@@ -16,10 +16,10 @@ import uw.common.app.constant.CommonState;
 import uw.common.app.dto.*;
 import uw.common.app.entity.*;
 import uw.common.app.helper.SysDataHistoryHelper;
-import uw.common.dto.ResponseData;
+import uw.common.response.ResponseData;
 import uw.common.util.SystemClock;
 import uw.dao.DaoManager;
-import uw.dao.DataList;
+import uw.common.data.PageList;
 
 /**
  * AI模型配置管理。
@@ -35,7 +35,7 @@ public class AiModelConfigController {
     @GetMapping("/list")
     @Operation(summary = "列表AI模型配置", description = "列表AI模型配置")
     @MscPermDeclare(user = UserType.OPS, auth = AuthType.PERM, log = ActionLog.REQUEST)
-    public ResponseData<DataList<AiModelConfig>> list(AiModelConfigQueryParam queryParam){
+    public ResponseData<PageList<AiModelConfig>> list(AiModelConfigQueryParam queryParam){
         AuthServiceHelper.logRef(AiModelConfig.class);
         return dao.list(AiModelConfig.class, queryParam);
     }
@@ -43,7 +43,7 @@ public class AiModelConfigController {
     @GetMapping("/liteList")
     @Operation(summary = "轻量级列表AI模型配置", description = "轻量级列表AI模型配置，一般用于select控件。")
     @MscPermDeclare(user = UserType.OPS, auth = AuthType.USER, log = ActionLog.NONE)
-    public ResponseData<DataList<AiModelConfig>> liteList(AiModelConfigQueryParam queryParam){
+    public ResponseData<PageList<AiModelConfig>> liteList(AiModelConfigQueryParam queryParam){
         queryParam.SELECT_SQL( "SELECT id,saas_id,mch_id,api_id,vendor_class,model_type,model_tag,config_code,config_name,model_name,state,create_date,modify_date from ai_model_config " );
         return dao.list(AiModelConfig.class, queryParam);
     }
@@ -53,13 +53,13 @@ public class AiModelConfigController {
     @MscPermDeclare(user = UserType.OPS, auth = AuthType.PERM, log = ActionLog.REQUEST)
     public ResponseData<AiModelConfig> load(@Parameter(description = "主键ID", required = true) @RequestParam long id)  {
         AuthServiceHelper.logRef(AiModelConfig.class,id);
-        return dao.queryForSingleObject(AiModelConfig.class, new AuthIdQueryParam(id));
+        return dao.queryForObject(AiModelConfig.class, new AuthIdQueryParam(id));
     }
 
     @GetMapping("/listDataHistory")
     @Operation(summary = "查询数据历史", description = "查询数据历史")
     @MscPermDeclare(user = UserType.OPS, auth = AuthType.PERM, log = ActionLog.REQUEST)
-    public ResponseData<DataList<SysDataHistory>> listDataHistory(SysDataHistoryQueryParam queryParam){
+    public ResponseData<PageList<SysDataHistory>> listDataHistory(SysDataHistoryQueryParam queryParam){
         AuthServiceHelper.logRef(AiModelConfig.class, queryParam.getEntityId());
         queryParam.setEntityClass(AiModelConfig.class);
         return dao.list(SysDataHistory.class, queryParam);
@@ -68,7 +68,7 @@ public class AiModelConfigController {
     @GetMapping("/listCritLog")
     @Operation(summary = "查询操作日志", description = "查询操作日志")
     @MscPermDeclare(user = UserType.OPS, auth = AuthType.PERM, log = ActionLog.REQUEST)
-    public ResponseData<DataList<SysCritLog>> listCritLog(SysCritLogQueryParam queryParam)  {
+    public ResponseData<PageList<SysCritLog>> listCritLog(SysCritLogQueryParam queryParam)  {
         AuthServiceHelper.logRef(AiModelConfig.class, queryParam.getBizId());
         queryParam.setBizTypeClass(AiModelConfig.class);
         return dao.list(SysCritLog.class, queryParam);
@@ -95,7 +95,7 @@ public class AiModelConfigController {
     @MscPermDeclare(user = UserType.OPS, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData<AiModelConfig> update(@RequestBody AiModelConfig aiModelConfig, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiModelConfig.class,aiModelConfig.getId(),remark);
-        return dao.queryForSingleObject( AiModelConfig.class,new AuthIdQueryParam(aiModelConfig.getId()) ).onSuccess(aiModelConfigDb-> {
+        return dao.queryForObject( AiModelConfig.class,new AuthIdQueryParam(aiModelConfig.getId()) ).onSuccess(aiModelConfigDb-> {
             aiModelConfigDb.setMchId(aiModelConfig.getMchId());
             aiModelConfigDb.setApiId(aiModelConfig.getApiId());
             aiModelConfigDb.setVendorClass(aiModelConfig.getVendorClass());

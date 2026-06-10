@@ -12,19 +12,20 @@ import uw.ai.center.tool.AiToolHelper;
 import uw.ai.rpc.AiToolRpc;
 import uw.ai.vo.AiToolMeta;
 import uw.auth.service.annotation.MscPermDeclare;
-import uw.auth.service.annotation.ResponseAdviceIgnore;
 import uw.auth.service.constant.UserType;
 import uw.common.app.constant.CommonState;
-import uw.common.dto.ResponseData;
+import uw.common.response.ResponseData;
 import uw.dao.DaoManager;
 
 import java.util.List;
 
+/**
+ * AI工具RPC接口。
+ */
 @RestController
 @Tag(name = "ToolRPC接口")
 @RequestMapping("/rpc/tool")
 @Primary
-@ResponseAdviceIgnore
 public class AiToolRpcController implements AiToolRpc {
 
     private static final Logger logger = LoggerFactory.getLogger(AiToolRpcController.class);
@@ -45,9 +46,9 @@ public class AiToolRpcController implements AiToolRpc {
     public ResponseData<List<AiToolMeta>> listToolMeta(@RequestParam String appName) {
         List<AiToolInfo> dataList = null;
         if (StringUtils.isNotBlank(appName)) {
-            dataList = dao.list(AiToolInfo.class, "select * from ai_tool_info where app_name=?", new Object[]{appName}).getData().results();
+            dataList = dao.list(AiToolInfo.class, "select * from ai_tool_info where app_name=?", new Object[]{appName}).getData().list();
         } else {
-            dataList = dao.list(AiToolInfo.class, "select * from ai_tool_info where state=?", new Object[]{CommonState.ENABLED.getValue()}).getData().results();
+            dataList = dao.list(AiToolInfo.class, "select * from ai_tool_info where state=?", new Object[]{CommonState.ENABLED.getValue()}).getData().list();
         }
         List<AiToolMeta> aiToolMetaList = dataList.stream().map(x -> new AiToolMeta(x.getId(), x.getAppName(), x.getToolClass(), x.getToolVersion(), x.getToolName(), x.getToolDesc(), x.getToolInput(), x.getToolOutput())).toList();
         return ResponseData.success(aiToolMetaList);
@@ -67,7 +68,7 @@ public class AiToolRpcController implements AiToolRpc {
         }
         try {
             if (aiToolMeta.getId() <= 0) {
-                long count = dao.queryForSingleValue(Long.class, "select count(*) from ai_tool_info where app_name=? and tool_class=? and state=?", new Object[]{aiToolMeta.getAppName(), aiToolMeta.getToolClass(), CommonState.ENABLED.getValue()}).getData();
+                long count = dao.queryForValue(Long.class, "select count(*) from ai_tool_info where app_name=? and tool_class=? and state=?", new Object[]{aiToolMeta.getAppName(), aiToolMeta.getToolClass(), CommonState.ENABLED.getValue()}).getData();
                 if (count > 0) {
                     return ResponseData.errorMsg("toolClass已经存在！请传递完整ID！");
                 }

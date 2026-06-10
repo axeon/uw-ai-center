@@ -20,10 +20,10 @@ import uw.common.app.dto.SysDataHistoryQueryParam;
 import uw.common.app.entity.SysCritLog;
 import uw.common.app.entity.SysDataHistory;
 import uw.common.app.helper.SysDataHistoryHelper;
-import uw.common.dto.ResponseData;
+import uw.common.response.ResponseData;
 import uw.common.util.SystemClock;
 import uw.dao.DaoManager;
-import uw.dao.DataList;
+import uw.common.data.PageList;
 
 
 /**
@@ -48,7 +48,7 @@ public class AiRagLibController {
     @GetMapping("/list")
     @Operation(summary = "列表rag文档库", description = "列表rag文档库")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.REQUEST)
-    public ResponseData<DataList<AiRagLib>> list(AiRagLibQueryParam queryParam){
+    public ResponseData<PageList<AiRagLib>> list(AiRagLibQueryParam queryParam){
         AuthServiceHelper.logRef(AiRagLib.class);
         return dao.list(AiRagLib.class, queryParam);
     }
@@ -61,7 +61,7 @@ public class AiRagLibController {
     @GetMapping("/liteList")
     @Operation(summary = "轻量级列表rag文档库", description = "轻量级列表rag文档库，一般用于select控件。")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.USER, log = ActionLog.NONE)
-    public ResponseData<DataList<AiRagLib>> liteList(AiRagLibQueryParam queryParam){
+    public ResponseData<PageList<AiRagLib>> liteList(AiRagLibQueryParam queryParam){
         queryParam.SELECT_SQL( "SELECT id,saas_id,lib_type,lib_name,embed_config_id,embed_model_name,create_date,modify_date,state from ai_rag_lib " );
         return dao.list(AiRagLib.class, queryParam);
     }
@@ -77,7 +77,7 @@ public class AiRagLibController {
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.REQUEST)
     public ResponseData<AiRagLib> load(@Parameter(description = "主键ID", required = true) @RequestParam long id)  {
         AuthServiceHelper.logRef(AiRagLib.class,id);
-        return dao.queryForSingleObject(AiRagLib.class, new AuthIdQueryParam(id));
+        return dao.queryForObject(AiRagLib.class, new AuthIdQueryParam(id));
     }
 
     /**
@@ -89,7 +89,7 @@ public class AiRagLibController {
     @GetMapping("/listDataHistory")
     @Operation(summary = "查询数据历史", description = "查询数据历史")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.REQUEST)
-    public ResponseData<DataList<SysDataHistory>> listDataHistory(SysDataHistoryQueryParam queryParam){
+    public ResponseData<PageList<SysDataHistory>> listDataHistory(SysDataHistoryQueryParam queryParam){
         AuthServiceHelper.logRef(AiRagLib.class, queryParam.getEntityId());
         queryParam.setEntityClass(AiRagLib.class);
         return dao.list(SysDataHistory.class, queryParam);
@@ -104,7 +104,7 @@ public class AiRagLibController {
     @GetMapping("/listCritLog")
     @Operation(summary = "查询操作日志", description = "查询操作日志")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.REQUEST)
-    public ResponseData<DataList<SysCritLog>> listCritLog(SysCritLogQueryParam queryParam)  {
+    public ResponseData<PageList<SysCritLog>> listCritLog(SysCritLogQueryParam queryParam)  {
         AuthServiceHelper.logRef(AiRagLib.class, queryParam.getBizId());
         queryParam.setBizTypeClass(AiRagLib.class);
         return dao.list(SysCritLog.class, queryParam);

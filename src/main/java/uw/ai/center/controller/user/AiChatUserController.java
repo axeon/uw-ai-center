@@ -21,8 +21,8 @@ import uw.auth.service.annotation.MscPermDeclare;
 import uw.auth.service.annotation.ResponseAdviceIgnore;
 import uw.auth.service.constant.ActionLog;
 import uw.auth.service.constant.AuthType;
-import uw.common.dto.ResponseData;
-import uw.dao.DataList;
+import uw.common.response.ResponseData;
+import uw.common.data.PageList;
 
 /**
  * ChatClient 接口
@@ -74,9 +74,8 @@ public class AiChatUserController {
      */
     @GetMapping("/listSessionInfo")
     @Operation(summary = "列出会话信息", description = "列出会话信息")
-    @MscPermDeclare(auth = AuthType.USER, log = ActionLog.BASE)
-    public ResponseData<DataList<AiSessionInfo>> listSessionInfo(AiSessionInfoQueryParam queryParam) {
-        queryParam.setUserId(AuthServiceHelper.getUserId());
+    @MscPermDeclare(auth = AuthType.NONE, log = ActionLog.BASE)
+    public ResponseData<PageList<AiSessionInfo>> listSessionInfo(AiSessionInfoQueryParam queryParam) {
         return AiChatService.listSessionInfo(queryParam);
     }
 
@@ -88,9 +87,8 @@ public class AiChatUserController {
      */
     @GetMapping("/listSessionMsg")
     @Operation(summary = "列出会话消息", description = "列出会话消息")
-    @MscPermDeclare(auth = AuthType.USER, log = ActionLog.BASE)
-    public ResponseData<DataList<AiSessionMsg>> listSessionMsg(AiSessionMsgQueryParam queryParam) {
-        queryParam.setUserId(AuthServiceHelper.getUserId());
+    @MscPermDeclare(auth = AuthType.NONE, log = ActionLog.BASE)
+    public ResponseData<PageList<AiSessionMsg>> listSessionMsg(AiSessionMsgQueryParam queryParam) {
         return AiChatService.listSessionMsg(queryParam);
     }
 
