@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import uw.common.app.dto.AuthPageQueryParam;
 import uw.dao.annotation.QueryMeta;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -21,18 +20,18 @@ public class AiApiConfigQueryParam extends AuthPageQueryParam {
         super(saasId);
     }
 
-    private static final Map<String, String> ALLOWED_SORT_PROPERTY = new HashMap<>() {{
-        put("id", "id");
-        put("saasId", "saas_id");
-        put("mchId", "mch_id");
-        put("apiCode", "api_code");
-        put("apiName", "api_name");
-        put("apiUrl", "api_url");
-        put("apiKey", "api_key");
-        put("state", "state");
-        put("createDate", "create_date");
-        put("modifyDate", "modify_date");
-    }};
+    private static final Map<String, String> ALLOWED_SORT_PROPERTY = Map.ofEntries(
+        Map.entry("id", "id"),
+        Map.entry("saasId", "saas_id"),
+        Map.entry("mchId", "mch_id"),
+        Map.entry("apiCode", "api_code"),
+        Map.entry("apiName", "api_name"),
+        Map.entry("apiUrl", "api_url"),
+        Map.entry("apiKey", "api_key"),
+        Map.entry("state", "state"),
+        Map.entry("createDate", "create_date"),
+        Map.entry("modifyDate", "modify_date")
+);
 
     /**
      * 允许的排序属性。

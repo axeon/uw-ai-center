@@ -5,7 +5,6 @@ import uw.common.app.dto.AuthPageQueryParam;
 import uw.dao.annotation.QueryMeta;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -22,24 +21,24 @@ public class AiSessionInfoQueryParam extends AuthPageQueryParam {
         super(saasId);
     }
 
-    private static final Map<String, String> ALLOWED_SORT_PROPERTY = new HashMap<>() {{
-        put("id", "id");
-        put("saasId", "saas_id");
-        put("userId", "user_id");
-        put("userType", "user_type");
-        put("userInfo", "user_info");
-        put("configId", "config_id");
-        put("sessionType", "session_type");
-        put("sessionName", "session_name");
-        put("msgNum", "msg_num");
-        put("windowSize", "window_size");
-        put("requestTokens", "request_tokens");
-        put("responseTokens", "response_tokens");
-        put("createDate", "create_date");
-        put("modifyDate", "modify_date");
-        put("lastUpdate", "last_update");
-        put("state", "state");
-    }};
+    private static final Map<String, String> ALLOWED_SORT_PROPERTY = Map.ofEntries(
+        Map.entry("id", "id"),
+        Map.entry("saasId", "saas_id"),
+        Map.entry("userId", "user_id"),
+        Map.entry("userType", "user_type"),
+        Map.entry("userInfo", "user_info"),
+        Map.entry("configId", "config_id"),
+        Map.entry("sessionType", "session_type"),
+        Map.entry("sessionName", "session_name"),
+        Map.entry("msgNum", "msg_num"),
+        Map.entry("windowSize", "window_size"),
+        Map.entry("requestTokens", "request_tokens"),
+        Map.entry("responseTokens", "response_tokens"),
+        Map.entry("createDate", "create_date"),
+        Map.entry("modifyDate", "modify_date"),
+        Map.entry("lastUpdate", "last_update"),
+        Map.entry("state", "state")
+);
 
     /**
      * 允许的排序属性。

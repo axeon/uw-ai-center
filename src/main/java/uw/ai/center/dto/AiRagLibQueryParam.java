@@ -5,7 +5,6 @@ import uw.common.app.dto.AuthPageQueryParam;
 import uw.dao.annotation.QueryMeta;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -22,17 +21,17 @@ public class AiRagLibQueryParam extends AuthPageQueryParam {
         super(saasId);
     }
 
-    private static final Map<String, String> ALLOWED_SORT_PROPERTY = new HashMap<>() {{
-        put("id", "id");
-        put("saasId", "saas_id");
-        put("libType", "lib_type");
-        put("libName", "lib_name");
-        put("embedConfigId", "embed_config_id");
-        put("embedModelName", "embed_model_name");
-        put("createDate", "create_date");
-        put("modifyDate", "modify_date");
-        put("state", "state");
-    }};
+    private static final Map<String, String> ALLOWED_SORT_PROPERTY = Map.ofEntries(
+        Map.entry("id", "id"),
+        Map.entry("saasId", "saas_id"),
+        Map.entry("libType", "lib_type"),
+        Map.entry("libName", "lib_name"),
+        Map.entry("embedConfigId", "embed_config_id"),
+        Map.entry("embedModelName", "embed_model_name"),
+        Map.entry("createDate", "create_date"),
+        Map.entry("modifyDate", "modify_date"),
+        Map.entry("state", "state")
+);
 
     /**
      * 允许的排序属性。
