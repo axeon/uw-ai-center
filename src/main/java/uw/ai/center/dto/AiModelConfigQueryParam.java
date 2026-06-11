@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import uw.common.app.dto.AuthPageQueryParam;
 import uw.dao.annotation.QueryMeta;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -21,21 +20,21 @@ public class AiModelConfigQueryParam extends AuthPageQueryParam {
         super(saasId);
     }
 
-    private static final Map<String, String> ALLOWED_SORT_PROPERTY = new HashMap<>() {{
-        put("id", "id");
-        put("saasId", "saas_id");
-        put("mchId", "mch_id");
-        put("apiId", "api_id");
-        put("vendorClass", "vendor_class");
-        put("modelType", "model_type");
-        put("modelTag", "model_tag");
-        put("configCode", "config_code");
-        put("configName", "config_name");
-        put("modelName", "model_name");
-        put("state", "state");
-        put("createDate", "create_date");
-        put("modifyDate", "modify_date");
-    }};
+    private static final Map<String, String> ALLOWED_SORT_PROPERTY = Map.ofEntries(
+        Map.entry("id", "id"),
+        Map.entry("saasId", "saas_id"),
+        Map.entry("mchId", "mch_id"),
+        Map.entry("apiId", "api_id"),
+        Map.entry("vendorClass", "vendor_class"),
+        Map.entry("modelType", "model_type"),
+        Map.entry("modelTag", "model_tag"),
+        Map.entry("configCode", "config_code"),
+        Map.entry("configName", "config_name"),
+        Map.entry("modelName", "model_name"),
+        Map.entry("state", "state"),
+        Map.entry("createDate", "create_date"),
+        Map.entry("modifyDate", "modify_date")
+);
 
     /**
      * 允许的排序属性。

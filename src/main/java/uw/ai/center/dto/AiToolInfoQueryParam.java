@@ -5,7 +5,6 @@ import uw.common.dto.PageQueryParam;
 import uw.dao.annotation.QueryMeta;
 
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -14,16 +13,16 @@ import java.util.Map;
 @Schema(title = "AI工具信息列表查询参数", description = "AI工具信息列表查询参数")
 public class AiToolInfoQueryParam extends PageQueryParam {
 
-    private static final Map<String, String> ALLOWED_SORT_PROPERTY = new HashMap<>() {{
-        put("id", "id");
-        put("appName", "app_name");
-        put("toolClass", "tool_class");
-        put("toolVersion", "tool_version");
-        put("toolName", "tool_name");
-        put("createDate", "create_date");
-        put("modifyDate", "modify_date");
-        put("state", "state");
-    }};
+    private static final Map<String, String> ALLOWED_SORT_PROPERTY = Map.ofEntries(
+        Map.entry("id", "id"),
+        Map.entry("appName", "app_name"),
+        Map.entry("toolClass", "tool_class"),
+        Map.entry("toolVersion", "tool_version"),
+        Map.entry("toolName", "tool_name"),
+        Map.entry("createDate", "create_date"),
+        Map.entry("modifyDate", "modify_date"),
+        Map.entry("state", "state")
+);
 
     /**
      * 允许的排序属性。
