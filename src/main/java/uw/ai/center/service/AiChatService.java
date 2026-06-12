@@ -378,17 +378,14 @@ public class AiChatService {
      * @return
      */
     public static ResponseData<AiSessionInfo> initSession(long saasId, long userId, int userType, String userInfo, long configId, int sessionType, String sessionName, Integer windowSize, String systemPrompt, List<AiToolCallInfo> toolList, long[] ragLibIds) {
-        AiVendorClientWrapper vendorWrapper;
+        AiModelConfigData configData = null;
         try {
-            vendorWrapper = AiVendorHelper.getClientWrapper(configId);
-        } catch (IllegalStateException e) {
-            return ResponseData.errorMsg("ChatClient获取失败: " + e.getMessage());
+            AiVendorClientWrapper vendorWrapper = AiVendorHelper.getClientWrapper(configId);
+            configData = vendorWrapper.getConfigData();
+        } catch (Exception e) {
+            logger.warn("获取模型配置失败, configId={}, 将使用默认值: {}", configId, e.getMessage());
         }
-        if (!vendorWrapper.isType(ModelType.CHAT)) {
-            return ResponseData.errorMsg("ChatClient获取失败!");
-        }
-        AiModelConfigData configData = vendorWrapper.getConfigData();
-        if (StringUtils.isBlank(systemPrompt)) {
+        if (configData != null && StringUtils.isBlank(systemPrompt)) {
             systemPrompt = configData.getConfigParamBox().getParam("systemPrompt", "");
         }
         long sessionId = dao.getSequenceId(AiSessionInfo.class);
@@ -600,10 +597,10 @@ public class AiChatService {
         }
         // 初始化会话消息
         AiSessionMsg sessionMsg = initSessionMsg(saasId, userId, userType, userInfo, configId, sessionInfo.getId(), systemPrompt, userPrompt, toolList, fileInfo, ragLibIds, contextData);
-        // 获取LangChain4j客户端
+        // 获取LangChain4j客户端（使用请求中的configId，而非会话中的，因为会话可能由图片生成创建而configId=0）
         AiVendorClientWrapper vendorWrapper;
         try {
-            vendorWrapper = AiVendorHelper.getClientWrapper(sessionInfo.getConfigId());
+            vendorWrapper = AiVendorHelper.getClientWrapper(configId);
         } catch (IllegalStateException e) {
             return Flux.just(ResponseData.errorMsg("ChatClient获取失败: " + e.getMessage()).toString());
         }

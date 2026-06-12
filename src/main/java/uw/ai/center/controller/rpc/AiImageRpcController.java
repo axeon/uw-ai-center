@@ -13,6 +13,8 @@ import uw.auth.service.constant.AuthType;
 import uw.auth.service.constant.UserType;
 import uw.common.response.ResponseData;
 
+import java.util.Map;
+
 /**
  * AI图片生成RPC接口。
  * 供uw-ai-project等客户端通过RPC调用，执行图片生成操作。
@@ -27,13 +29,14 @@ public class AiImageRpcController {
     @PostMapping("/generate")
     @Operation(summary = "生成图片", description = "根据文本提示词生成图片，返回图片URL")
     @MscPermDeclare(user = UserType.RPC, auth = AuthType.NONE, log = ActionLog.BASE)
-    public ResponseData<String> generate(
+    public ResponseData<Map<String, Object>> generate(
             @Parameter(description = "租户ID", required = true) @RequestParam long saasId,
             @Parameter(description = "用户ID", required = true) @RequestParam long userId,
             @Parameter(description = "用户类型", required = true) @RequestParam int userType,
             @Parameter(description = "用户信息") @RequestParam String userInfo,
             @Parameter(description = "AI模型配置ID", required = true) @RequestParam long configId,
+            @Parameter(description = "会话ID，若大于0则保存到指定会话，否则自动创建新会话") @RequestParam(defaultValue = "0") long sessionId,
             @Parameter(description = "图片提示词", required = true) @RequestParam String prompt) {
-        return AiImageService.generate(saasId, userId, userType, userInfo, configId, prompt);
+        return AiImageService.generate(saasId, userId, userType, userInfo, configId, sessionId, prompt);
     }
 }
