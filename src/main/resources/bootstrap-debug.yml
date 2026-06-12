@@ -18,3 +18,12 @@ spring:
         service: ${spring.application.name}
         ip: ${APP_HOST:}
 #        register-enabled: false
+  # Elasticsearch 配置（RAG向量检索用），AiEsConfiguration依赖此处自动配置的RestClient Bean
+  elasticsearch:
+    uris: http://192.168.88.21:9200
+    # 如ES开启了认证，取消下面注释填写账号密码
+    username: elastic
+    password: Few20Dk1zuSVZcdzxhOYMG1kp95XVzPj
+    connection-timeout: 30s
+    socket-timeout: 60s
+

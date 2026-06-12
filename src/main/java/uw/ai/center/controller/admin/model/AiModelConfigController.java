@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import uw.ai.center.dto.AiModelConfigQueryParam;
 import uw.ai.center.entity.AiModelConfig;
 import uw.ai.center.vendor.AiVendorHelper;
+import uw.ai.center.vo.AiVendorInfo;
 import uw.auth.service.AuthServiceHelper;
 import uw.auth.service.annotation.MscPermDeclare;
 import uw.auth.service.constant.ActionLog;
@@ -21,6 +22,8 @@ import uw.common.util.SystemClock;
 import uw.dao.DaoManager;
 import uw.common.data.PageList;
 
+import java.util.List;
+
 /**
  * AI模型配置管理。
  */
@@ -31,6 +34,22 @@ import uw.common.data.PageList;
 public class AiModelConfigController {
 
     private final DaoManager dao = DaoManager.getInstance();
+
+    @GetMapping("/listVendor")
+    @Operation(summary = "列表AI服务", description = "列表AI服务")
+    @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.USER, log = ActionLog.NONE)
+    public List<AiVendorInfo> listVendor() {
+        return AiVendorHelper.getVendorMap().values().stream().map(AiVendorInfo::new).toList();
+    }
+
+    @GetMapping("/listModel")
+    @Operation(summary = "列表模型列表", description = "列表模型列表")
+    @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.USER, log = ActionLog.NONE)
+    public List<String> listModel(@Parameter(description = "vendorClass", required = true) @RequestParam String vendorClass,
+                                  @Parameter(description = "apiUrl", required = true) @RequestParam String apiUrl,
+                                  @Parameter(description = "apiKey", required = false) @RequestParam(required = false) String apiKey) {
+        return AiVendorHelper.listModel(vendorClass, apiUrl, apiKey);
+    }
 
     @GetMapping("/list")
     @Operation(summary = "列表AI模型配置", description = "列表AI模型配置")

@@ -37,7 +37,7 @@ public class AiModelApiController {
      */
     @GetMapping("/list")
     @Operation(summary = "列表AI模型API配置", description = "列表AI模型API配置")
-    @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.PERM, log = ActionLog.REQUEST)
+    @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.USER, log = ActionLog.REQUEST)
     public ResponseData<PageList<AiModelApi>> list(AiApiConfigQueryParam queryParam){
         AuthServiceHelper.logRef(AiModelApi.class);
         return dao.list(AiModelApi.class, queryParam);
