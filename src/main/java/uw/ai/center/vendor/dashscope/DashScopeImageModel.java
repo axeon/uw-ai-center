@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -33,10 +34,23 @@ public class DashScopeImageModel implements ImageModel {
     @Override
     public Response<Image> generate(String prompt) {
         logger.info("DashScope图片生成: model={}, prompt={}", modelName, prompt);
-        String imageUrl = DashScopeApiClient.generateImage(baseUrl, apiKey, modelName, prompt, defaultParams);
+        List<String> imageUrls = DashScopeApiClient.generateImage(baseUrl, apiKey, modelName, prompt, defaultParams);
+        String firstUrl = imageUrls.isEmpty() ? null : imageUrls.get(0);
         Image image = Image.builder()
-                .url(URI.create(imageUrl))
+                .url(URI.create(firstUrl))
                 .build();
         return Response.from(image);
+    }
+
+    /**
+     * 生成多张图片，返回所有图片 URL。
+     * 不受 ImageModel 单图接口限制，返回 API 实际生成的全部图片。
+     *
+     * @param prompt 图片提示词
+     * @return 图片 URL 列表
+     */
+    public List<String> generateMultiple(String prompt) {
+        logger.info("DashScope多图生成: model={}, prompt={}", modelName, prompt);
+        return DashScopeApiClient.generateImage(baseUrl, apiKey, modelName, prompt, defaultParams);
     }
 }

@@ -717,12 +717,28 @@ public class AiChatService {
     }
 
     /**
-     * 列表SessionInfo.
+     * 列表SessionInfo，并填充modelType（从FusionCache获取，无额外DB查询）。
      *
      * @return
      */
     public static ResponseData<PageList<AiSessionInfo>> listSessionInfo(AiSessionInfoQueryParam queryParam) {
-        return dao.list(AiSessionInfo.class, queryParam);
+        ResponseData<PageList<AiSessionInfo>> result = dao.list(AiSessionInfo.class, queryParam);
+        if (result.isSuccess() && result.getData() != null) {
+            for (AiSessionInfo session : result.getData()) {
+                if (session.getConfigId() > 0) {
+                    try {
+                        AiModelConfigData configData = AiVendorHelper.getModelConfigData(session.getConfigId());
+                        if (configData != null) {
+                            session.setModelType(configData.getModelType());
+                        }
+                    } catch (Exception e) {
+                        // 配置不在缓存中（可能已禁用），忽略
+                        logger.debug("会话configId={}的模型配置未找到", session.getConfigId());
+                    }
+                }
+            }
+        }
+        return result;
     }
 
     /**

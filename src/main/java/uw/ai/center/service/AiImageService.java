@@ -1,5 +1,6 @@
 package uw.ai.center.service;
 
+import java.util.List;
 import java.util.Map;
 import dev.langchain4j.data.image.Image;
 import dev.langchain4j.model.output.Response;
@@ -11,6 +12,7 @@ import uw.ai.center.entity.AiSessionInfo;
 import uw.ai.center.entity.AiSessionMsg;
 import uw.ai.center.vendor.AiVendorClientWrapper;
 import uw.ai.center.vendor.AiVendorHelper;
+import uw.ai.center.vendor.dashscope.DashScopeImageModel;
 import uw.common.response.ResponseData;
 import uw.common.util.SystemClock;
 
@@ -60,12 +62,21 @@ public class AiImageService {
         sessionMsg.setResponseStartDate(SystemClock.nowDate());
 
         try {
-            Response<Image> response = wrapper.getImageModel().generate(prompt);
-            if (response == null) {
-                return ResponseData.errorMsg("图片生成返回结果为空");
+            // 优先使用 DashScopeImageModel 的多图生成能力
+            List<String> imageUrls;
+            if (wrapper.getImageModel() instanceof DashScopeImageModel dashScopeImageModel) {
+                imageUrls = dashScopeImageModel.generateMultiple(prompt);
+            } else {
+                // 其他 ImageModel 实现，回退到单图模式
+                Response<Image> response = wrapper.getImageModel().generate(prompt);
+                if (response == null) {
+                    return ResponseData.errorMsg("图片生成返回结果为空");
+                }
+                String url = response.content().url() != null ? response.content().url().toString() : null;
+                imageUrls = (url != null && !url.isEmpty()) ? List.of(url) : List.of();
             }
-            String imageUrl = response.content().url() != null ? response.content().url().toString() : null;
-            if (imageUrl == null || imageUrl.isEmpty()) {
+
+            if (imageUrls.isEmpty()) {
                 return ResponseData.errorMsg("图片生成返回的URL为空");
             }
 
@@ -73,10 +84,10 @@ public class AiImageService {
             sessionMsg.setRequestTokens(0);
             sessionMsg.setResponseTokens(0);
             sessionMsg.setResponseEndDate(SystemClock.nowDate());
-            sessionMsg.setResponseInfo(imageUrl);
+            sessionMsg.setResponseInfo(String.join(",", imageUrls));
             AiChatService.saveSessionMsg(sessionMsg);
 
-            return ResponseData.success(Map.of("imageUrl", imageUrl, "sessionId", sessionInfo.getId()));
+            return ResponseData.success(Map.of("imageUrls", imageUrls, "sessionId", sessionInfo.getId()));
         } catch (Exception e) {
             logger.error("图片生成失败, configId={}, prompt={}", configId, prompt, e);
             // 错误消息也保存到历史（与 Chat 的 [ERROR] 前缀格式一致）

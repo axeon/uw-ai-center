@@ -155,6 +155,13 @@ public class AiSessionInfo implements DataEntity, Serializable {
     private int state;
 
     /**
+     * 模型类型（非数据库字段，由Service层从模型配置填充）。
+     * 如 CHAT、IMAGE_GENERATION、EMBEDDING 等。
+     */
+    @Schema(title = "模型类型", description = "模型类型（CHAT/IMAGE_GENERATION/EMBEDDING等），由Service层填充", nullable = true)
+    private transient String modelType;
+
+    /**
      * 数据更新信息.
      */
     private transient DataUpdateInfo _UPDATED_INFO = null;
@@ -641,6 +648,20 @@ public class AiSessionInfo implements DataEntity, Serializable {
     public AiSessionInfo state(int state) {
         setState(state);
         return this;
+    }
+
+    /**
+     * 获取模型类型。
+     */
+    public String getModelType() {
+        return modelType;
+    }
+
+    /**
+     * 设置模型类型（非数据库字段，由Service层填充）。
+     */
+    public void setModelType(String modelType) {
+        this.modelType = modelType;
     }
 
     /**

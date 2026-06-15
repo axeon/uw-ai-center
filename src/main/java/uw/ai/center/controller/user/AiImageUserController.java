@@ -23,7 +23,7 @@ import uw.common.response.ResponseData;
 public class AiImageUserController {
 
     @PostMapping("/generate")
-    @Operation(summary = "生成图片", description = "根据文本提示词生成图片，返回图片URL")
+    @Operation(summary = "生成图片", description = "根据文本提示词生成图片，返回图片URL列表")
     @MscPermDeclare(auth = AuthType.NONE, log = ActionLog.BASE)
     public ResponseData<Map<String, Object>> generate(
             @Parameter(description = "AI模型配置ID", required = true) @RequestParam long configId,
