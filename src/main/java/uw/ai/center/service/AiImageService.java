@@ -1,7 +1,6 @@
 package uw.ai.center.service;
 
 import java.util.List;
-import java.util.Map;
 import dev.langchain4j.data.image.Image;
 import dev.langchain4j.model.output.Response;
 import org.slf4j.Logger;
@@ -13,6 +12,7 @@ import uw.ai.center.entity.AiSessionMsg;
 import uw.ai.center.vendor.AiVendorClientWrapper;
 import uw.ai.center.vendor.AiVendorHelper;
 import uw.ai.center.vendor.dashscope.DashScopeImageModel;
+import uw.ai.vo.AiImageResultData;
 import uw.common.response.ResponseData;
 import uw.common.util.SystemClock;
 
@@ -33,9 +33,9 @@ public class AiImageService {
      * @param configId  模型配置ID
      * @param sessionId 会话ID（可选，若大于0则保存到指定会话，否则自动创建新会话）
      * @param prompt    图片提示词
-     * @return 图片URL及会话ID
+     * @return 图片生成结果
      */
-    public static ResponseData<Map<String, Object>> generate(long saasId, long userId, int userType, String userInfo,
+    public static ResponseData<AiImageResultData> generate(long saasId, long userId, int userType, String userInfo,
                                                  long configId, long sessionId, String prompt) {
         AiVendorClientWrapper wrapper;
         try {
@@ -87,7 +87,10 @@ public class AiImageService {
             sessionMsg.setResponseInfo(String.join(",", imageUrls));
             AiChatService.saveSessionMsg(sessionMsg);
 
-            return ResponseData.success(Map.of("imageUrls", imageUrls, "sessionId", sessionInfo.getId()));
+            AiImageResultData resultData = new AiImageResultData();
+            resultData.setImageUrls(imageUrls);
+            resultData.setSessionId(sessionInfo.getId());
+            return ResponseData.success(resultData);
         } catch (Exception e) {
             logger.error("图片生成失败, configId={}, prompt={}", configId, prompt, e);
             // 错误消息也保存到历史（与 Chat 的 [ERROR] 前缀格式一致）

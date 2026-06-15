@@ -1,19 +1,18 @@
 package uw.ai.center.controller.rpc;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.context.annotation.Primary;
 import org.springframework.web.bind.annotation.*;
 import uw.ai.center.service.AiImageService;
+import uw.ai.vo.AiImageGenerateParam;
+import uw.ai.vo.AiImageResultData;
 import uw.auth.service.annotation.MscPermDeclare;
 import uw.auth.service.annotation.ResponseAdviceIgnore;
 import uw.auth.service.constant.ActionLog;
 import uw.auth.service.constant.AuthType;
 import uw.auth.service.constant.UserType;
 import uw.common.response.ResponseData;
-
-import java.util.Map;
 
 /**
  * AI图片生成RPC接口。
@@ -27,16 +26,11 @@ import java.util.Map;
 public class AiImageRpcController {
 
     @PostMapping("/generate")
-    @Operation(summary = "生成图片", description = "根据文本提示词生成图片，返回图片URL")
+    @Operation(summary = "生成图片", description = "根据文本提示词生成图片，返回图片URL列表及会话ID")
     @MscPermDeclare(user = UserType.RPC, auth = AuthType.NONE, log = ActionLog.BASE)
-    public ResponseData<Map<String, Object>> generate(
-            @Parameter(description = "租户ID", required = true) @RequestParam long saasId,
-            @Parameter(description = "用户ID", required = true) @RequestParam long userId,
-            @Parameter(description = "用户类型", required = true) @RequestParam int userType,
-            @Parameter(description = "用户信息") @RequestParam String userInfo,
-            @Parameter(description = "AI模型配置ID", required = true) @RequestParam long configId,
-            @Parameter(description = "会话ID，若大于0则保存到指定会话，否则自动创建新会话") @RequestParam(defaultValue = "0") long sessionId,
-            @Parameter(description = "图片提示词", required = true) @RequestParam String prompt) {
-        return AiImageService.generate(saasId, userId, userType, userInfo, configId, sessionId, prompt);
+    public ResponseData<AiImageResultData> generate(@ModelAttribute AiImageGenerateParam param) {
+        return AiImageService.generate(
+                param.getSaasId(), param.getUserId(), param.getUserType(), param.getUserInfo(),
+                param.getConfigId(), param.getSessionId(), param.getPrompt());
     }
 }
