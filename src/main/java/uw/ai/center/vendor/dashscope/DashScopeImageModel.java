@@ -50,7 +50,9 @@ public class DashScopeImageModel implements ImageModel {
      * @return 图片 URL 列表
      */
     public List<String> generateMultiple(String prompt) {
-        logger.info("DashScope多图生成: model={}, prompt={}", modelName, prompt);
-        return DashScopeApiClient.generateImage(baseUrl, apiKey, modelName, prompt, defaultParams);
+        logger.info("DashScope多图生成: model={}, defaultParams={}, prompt={}", modelName, defaultParams, prompt);
+        List<String> imageUrls = DashScopeApiClient.generateImage(baseUrl, apiKey, modelName, prompt, defaultParams);
+        logger.info("DashScope多图生成结果: imageCount={}, urls={}", imageUrls.size(), imageUrls);
+        return imageUrls;
     }
 }
