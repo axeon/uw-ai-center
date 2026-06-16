@@ -65,57 +65,54 @@ public class AiConfigRpcController implements AiConfigRpc {
     }
 
     /**
-     * 根据API配置ID获取模型配置列表。
+     * 根据API配置获取模型配置列表。
      */
     @Override
     @GetMapping("/listModelConfigByApi")
-    @Operation(summary = "根据API配置ID获取模型配置列表", description = "根据API配置ID获取模型配置列表")
+    @Operation(summary = "根据API配置获取模型配置列表", description = "根据API配置ID获取模型配置列表")
     @MscPermDeclare(user = UserType.RPC)
-    public ResponseData<List<AiModelInfoVo>> listModelConfigByApi(@RequestParam Long apiId) {
-        if (apiId == null || apiId < 0){
+    public ResponseData<List<AiModelInfoVo>> listModelConfigByApi(@RequestParam(required = false) Long apiId,
+                                                                  @RequestParam(required = false) String apiCode) {
+        if ((apiId == null || apiId <= 0) && StringUtils.isBlank(apiCode)) {
             return ResponseData.errorMsg("配置Id有误");
         }
-        List<AiModelConfig> configList = dao.list(AiModelConfig.class,
-                "select * from ai_model_config where api_id=? and state=?",
-                new Object[]{apiId, CommonState.ENABLED.getValue()}).getData().list();
+        List<AiModelConfig> configList;
+        if (apiId != null && apiId > 0) {
+            configList = dao.list(AiModelConfig.class,
+                    "select * from ai_model_config where api_id=? and state=?",
+                    new Object[]{apiId, CommonState.ENABLED.getValue()}).getData().list();
+        } else {
+            configList = dao.list(AiModelConfig.class,
+                    "select c.* from ai_model_config c left join ai_model_api a on c.api_id=a.id " +
+                            "where a.api_code=? and c.state=? and a.state=?",
+                    new Object[]{apiCode, CommonState.ENABLED.getValue(), CommonState.ENABLED.getValue()}).getData().list();
+        }
         List<AiModelInfoVo> result = configList.stream().map(this::toModelInfoVo).collect(Collectors.toList());
         return ResponseData.success(result);
     }
 
     /**
-     * 根据ID获取模型配置。
+     * 根据ID或配置代码获取模型配置
      */
     @Override
-    @GetMapping("/getModelConfigById")
-    @Operation(summary = "根据ID获取模型配置", description = "根据ID获取模型配置")
+    @GetMapping("/getModelConfig")
+    @Operation(summary = "根据ID或配置代码获取模型配置", description = "根据ID或配置代码获取模型配置")
     @MscPermDeclare(user = UserType.RPC)
-    public ResponseData<AiModelInfoVo> getModelConfigById(@RequestParam Long id) {
-        if (id == null || id < 0){
-            return ResponseData.errorMsg("模型配置Id输入有误");
+    public ResponseData<AiModelInfoVo> getModelConfig(@RequestParam(required = false) Long id,
+                                                      @RequestParam(required = false) String configCode) {
+        if ((id == null || id <= 0) && StringUtils.isBlank(configCode)) {
+            return ResponseData.errorMsg("id 和 configCode 不能同时为空");
         }
-        AiModelConfig config = dao.queryForObject(AiModelConfig.class,
-                "select * from ai_model_config where id=? and state=?",
-                new Object[]{id, CommonState.ENABLED.getValue()}).getData();
-        if (config == null) {
-            return ResponseData.errorMsg("模型配置不存在或未启用");
+        AiModelConfig config;
+        if (id != null && id > 0) {
+            config = dao.queryForObject(AiModelConfig.class,
+                    "select * from ai_model_config where id=? and state=?",
+                    new Object[]{id, CommonState.ENABLED.getValue()}).getData();
+        } else {
+            config = dao.queryForObject(AiModelConfig.class,
+                    "select * from ai_model_config where config_code=? and state=?",
+                    new Object[]{configCode, CommonState.ENABLED.getValue()}).getData();
         }
-        return ResponseData.success(toModelInfoVo(config));
-    }
-
-    /**
-     * 根据配置代码获取模型配置。
-     */
-    @Override
-    @GetMapping("/getModelConfigByCode")
-    @Operation(summary = "根据配置代码获取模型配置", description = "根据配置代码获取模型配置")
-    @MscPermDeclare(user = UserType.RPC)
-    public ResponseData<AiModelInfoVo> getModelConfigByCode(@RequestParam String configCode) {
-        if (StringUtils.isBlank(configCode)){
-            return ResponseData.errorMsg("配置代码输入有误");
-        }
-        AiModelConfig config = dao.queryForObject(AiModelConfig.class,
-                "select * from ai_model_config where config_code=? and state=?",
-                new Object[]{configCode, CommonState.ENABLED.getValue()}).getData();
         if (config == null) {
             return ResponseData.errorMsg("模型配置不存在或未启用");
         }
@@ -173,39 +170,27 @@ public class AiConfigRpcController implements AiConfigRpc {
     }
 
     /**
-     * 根据ID获取API连接配置。
+     * 根据ID或配置代码获取API连接配置
      */
     @Override
-    @GetMapping("/getApiConfigById")
-    @Operation(summary = "根据ID获取API连接配置", description = "根据ID获取API连接配置")
+    @GetMapping("/getApiConfig")
+    @Operation(summary = "根据ID或配置代码获取API连接配置", description = "根据ID或配置代码获取API连接配置")
     @MscPermDeclare(user = UserType.RPC)
-    public ResponseData<AiModelApiVo> getApiConfigById(@RequestParam Long id) {
-        if (id == null || id < 0){
-            return ResponseData.errorMsg("Id输入有误");
+    public ResponseData<AiModelApiVo> getApiConfig(@RequestParam(required = false) Long id,
+                                                   @RequestParam(required = false) String apiCode) {
+        if ((id == null || id <= 0) && StringUtils.isBlank(apiCode)) {
+            return ResponseData.errorMsg("id 和 apiCode 不能同时为空");
         }
-        AiModelApi api = dao.queryForObject(AiModelApi.class,
-                "select * from ai_model_api where id=? and state=?",
-                new Object[]{id, CommonState.ENABLED.getValue()}).getData();
-        if (api == null) {
-            return ResponseData.errorMsg("API配置不存在或未启用");
+        AiModelApi api;
+        if (id != null && id > 0) {
+            api = dao.queryForObject(AiModelApi.class,
+                    "select * from ai_model_api where id=? and state=?",
+                    new Object[]{id, CommonState.ENABLED.getValue()}).getData();
+        } else {
+            api = dao.queryForObject(AiModelApi.class,
+                    "select * from ai_model_api where api_code=? and state=?",
+                    new Object[]{apiCode, CommonState.ENABLED.getValue()}).getData();
         }
-        return ResponseData.success(toModelApiVo(api));
-    }
-
-    /**
-     * 根据配置代码获取API连接配置。
-     */
-    @Override
-    @GetMapping("/getApiConfigByCode")
-    @Operation(summary = "根据配置代码获取API连接配置", description = "根据配置代码获取API连接配置")
-    @MscPermDeclare(user = UserType.RPC)
-    public ResponseData<AiModelApiVo> getApiConfigByCode(@RequestParam String apiCode) {
-        if (StringUtils.isBlank(apiCode)){
-            return ResponseData.errorMsg("配置代码输入有误");
-        }
-        AiModelApi api = dao.queryForObject(AiModelApi.class,
-                "select * from ai_model_api where api_code=? and state=?",
-                new Object[]{apiCode, CommonState.ENABLED.getValue()}).getData();
         if (api == null) {
             return ResponseData.errorMsg("API配置不存在或未启用");
         }
