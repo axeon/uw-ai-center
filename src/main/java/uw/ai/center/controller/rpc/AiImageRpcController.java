@@ -31,6 +31,6 @@ public class AiImageRpcController {
     public ResponseData<AiImageResultData> generate(@ModelAttribute AiImageGenerateParam param) {
         return AiImageService.generate(
                 param.getSaasId(), param.getUserId(), param.getUserType(), param.getUserInfo(),
-                param.getConfigId(), param.getSessionId(), param.getPrompt());
+                param.getConfigId(), param.getSessionId(), param.getUserPrompt());
     }
 }

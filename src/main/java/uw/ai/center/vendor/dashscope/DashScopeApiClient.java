@@ -149,7 +149,9 @@ public class DashScopeApiClient {
             if ("200".equals(statusCode) && responseJson.has("output")) {
                 JsonNode outputNode = responseJson.path("output");
                 if ("SUCCEEDED".equals(outputNode.path("task_status").asText())) {
-                    return extractImageUrls(outputNode);
+                    List<String> urls = extractImageUrls(outputNode);
+                    logger.info("DashScope图片生成同步返回成功: imageCount={}, urls={}", urls.size(), urls);
+                    return urls;
                 }
             }
 
@@ -174,11 +176,13 @@ public class DashScopeApiClient {
                 JsonNode queryJson = OBJECT_MAPPER.readTree(queryData.getResponseData());
 
                 String taskStatus = queryJson.path("output").path("task_status").asText();
-                logger.debug("DashScope图片生成任务轮询({}/{}): taskId={}, status={}", i + 1, maxRetries, taskId, taskStatus);
+                logger.info("DashScope图片生成任务轮询({}/{}): taskId={}, status={}", i + 1, maxRetries, taskId, taskStatus);
 
                 switch (taskStatus) {
                     case "SUCCEEDED":
-                        return extractImageUrls(queryJson.path("output"));
+                        List<String> urls = extractImageUrls(queryJson.path("output"));
+                        logger.info("DashScope图片生成异步返回成功: imageCount={}, urls={}", urls.size(), urls);
+                        return urls;
                     case "FAILED":
                         String failMsg = queryJson.path("output").path("message").asText("未知错误");
                         throw new RuntimeException("DashScope图片生成任务失败: " + failMsg);

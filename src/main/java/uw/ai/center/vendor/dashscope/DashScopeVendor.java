@@ -82,10 +82,16 @@ public class DashScopeVendor implements AiVendor {
         if (configParamBox != null) {
             String size = configParamBox.getParam("image.size", null);
             String style = configParamBox.getParam("image.style", null);
-            Integer n = configParamBox.getIntParam("image.n", 0);
-            if (size != null) params.put("size", size);
-            if (style != null) params.put("style", style);
-            if (n > 0) params.put("n", n);
+            int n = configParamBox.getIntParam("image.n", 0);
+            if (size != null) {
+                params.put("size", size);
+            }
+            if (style != null) {
+                params.put("style", style);
+            }
+            if (n > 0) {
+                params.put("n", n);
+            }
         }
 
         var imageModel = new DashScopeImageModel(

@@ -384,6 +384,7 @@ public class AiChatService {
             configData = vendorWrapper.getConfigData();
         } catch (Exception e) {
             logger.warn("获取模型配置失败, configId={}, 将使用默认值: {}", configId, e.getMessage());
+            return ResponseData.errorMsg("模型不可用，请稍后再试");
         }
         if (configData != null && StringUtils.isBlank(systemPrompt)) {
             systemPrompt = configData.getConfigParamBox().getParam("systemPrompt", "");
