@@ -3,6 +3,7 @@ package uw.ai.center.controller.admin.model;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import uw.ai.center.dto.AiApiConfigQueryParam;
 import uw.ai.center.entity.AiModelApi;
@@ -100,6 +101,12 @@ public class AiModelApiController {
     @Operation(summary = "新增AI模型API配置", description = "新增AI模型API配置")
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData<AiModelApi> save(@RequestBody AiModelApi aiModelApi){
+        if (StringUtils.isNotBlank(aiModelApi.getApiCode())) {
+            long count = dao.queryForValue(Long.class, "select count(*) from ai_model_api where api_code=? and state=?", new Object[]{aiModelApi.getApiCode(), CommonState.ENABLED.getValue()}).getData();
+            if (count > 0) {
+                return ResponseData.errorMsg("配置代码[" + aiModelApi.getApiCode() + "]已存在！");
+            }
+        }
         long id = dao.getSequenceId(AiModelApi.class);
         AuthServiceHelper.logRef(AiModelApi.class,id);
         aiModelApi.setId(id);
@@ -108,6 +115,7 @@ public class AiModelApiController {
         aiModelApi.setModifyDate(null);
         aiModelApi.setState(CommonState.ENABLED.getValue());
         return dao.save( aiModelApi ).onSuccess(savedEntity -> {
+            AiVendorHelper.invalidateModelApiListCache();
             SysDataHistoryHelper.saveHistory(aiModelApi);
         });
     }
@@ -120,6 +128,12 @@ public class AiModelApiController {
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData<AiModelApi> update(@RequestBody AiModelApi aiModelApi, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiModelApi.class,aiModelApi.getId(),remark);
+        if (StringUtils.isNotBlank(aiModelApi.getApiCode())) {
+            long count = dao.queryForValue(Long.class, "select count(*) from ai_model_api where api_code=? and state=?", new Object[]{aiModelApi.getApiCode() , CommonState.ENABLED.getValue()}).getData();
+            if (count > 0) {
+                return ResponseData.errorMsg("配置代码[" + aiModelApi.getApiCode() + "]已存在！");
+            }
+        }
         return dao.queryForObject( AiModelApi.class,new AuthIdQueryParam(aiModelApi.getId()) ).onSuccess(aiModelApiDb-> {
             aiModelApiDb.setMchId(aiModelApi.getMchId());
             aiModelApiDb.setApiCode(aiModelApi.getApiCode());

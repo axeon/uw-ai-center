@@ -3,6 +3,7 @@ package uw.ai.center.controller.admin.model;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import uw.ai.center.dto.AiModelConfigQueryParam;
 import uw.ai.center.entity.AiModelConfig;
@@ -97,6 +98,12 @@ public class AiModelConfigController {
     @Operation(summary = "新增AI模型配置", description = "新增AI模型配置")
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData<AiModelConfig> save(@RequestBody AiModelConfig aiModelConfig){
+        if (StringUtils.isNotBlank(aiModelConfig.getConfigCode())) {
+            long count = dao.queryForValue(Long.class, "select count(*) from ai_model_config where config_code=? and state=?", new Object[]{aiModelConfig.getConfigCode(), CommonState.ENABLED.getValue()}).getData();
+            if (count > 0) {
+                return ResponseData.errorMsg("配置代码[" + aiModelConfig.getConfigCode() + "]已存在！");
+            }
+        }
         long id = dao.getSequenceId(AiModelConfig.class);
         AuthServiceHelper.logRef(AiModelConfig.class,id);
         aiModelConfig.setId(id);
@@ -105,6 +112,7 @@ public class AiModelConfigController {
         aiModelConfig.setModifyDate(null);
         aiModelConfig.setState(CommonState.ENABLED.getValue());
         return dao.save( aiModelConfig ).onSuccess(savedEntity -> {
+            AiVendorHelper.invalidateModelConfigListCache();
             SysDataHistoryHelper.saveHistory(aiModelConfig);
         });
     }
@@ -114,6 +122,13 @@ public class AiModelConfigController {
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData<AiModelConfig> update(@RequestBody AiModelConfig aiModelConfig, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiModelConfig.class,aiModelConfig.getId(),remark);
+        // 判重：配置代码在未删除记录中必须全局唯一（排除自身）
+        if (StringUtils.isNotBlank(aiModelConfig.getConfigCode())) {
+            long count = dao.queryForValue(Long.class, "select count(*) from ai_model_config where config_code=? and state=?", new Object[]{aiModelConfig.getConfigCode(), CommonState.ENABLED.getValue()}).getData();
+            if (count > 0) {
+                return ResponseData.errorMsg("配置代码[" + aiModelConfig.getConfigCode() + "]已存在！");
+            }
+        }
         return dao.queryForObject( AiModelConfig.class,new AuthIdQueryParam(aiModelConfig.getId()) ).onSuccess(aiModelConfigDb-> {
             aiModelConfigDb.setMchId(aiModelConfig.getMchId());
             aiModelConfigDb.setApiId(aiModelConfig.getApiId());
