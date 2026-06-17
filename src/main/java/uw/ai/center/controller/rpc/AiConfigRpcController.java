@@ -12,17 +12,17 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import uw.ai.center.entity.AiModelApi;
 import uw.ai.center.entity.AiModelConfig;
+import uw.ai.center.vendor.AiVendorHelper;
 import uw.ai.rpc.AiConfigRpc;
 import uw.ai.vo.AiModelApiVo;
 import uw.ai.vo.AiModelInfoVo;
 import uw.auth.service.annotation.MscPermDeclare;
 import uw.auth.service.annotation.ResponseAdviceIgnore;
 import uw.auth.service.constant.UserType;
-import uw.common.app.constant.CommonState;
 import uw.common.response.ResponseData;
-import uw.dao.DaoManager;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -37,8 +37,6 @@ public class AiConfigRpcController implements AiConfigRpc {
 
     private static final Logger log = LoggerFactory.getLogger(AiConfigRpcController.class);
 
-    private final DaoManager dao = DaoManager.getInstance();
-
     /**
      * 根据saas信息获取模型配置列表。
      */
@@ -46,21 +44,19 @@ public class AiConfigRpcController implements AiConfigRpc {
     @GetMapping("/listModelConfigBySaas")
     @Operation(summary = "根据saas信息获取模型配置列表", description = "根据saas信息获取模型配置列表")
     @MscPermDeclare(user = UserType.RPC)
-    public ResponseData<List<AiModelInfoVo>> listModelConfigBySaas(@RequestParam Long saasId, @RequestParam Long mchId) {
+    public ResponseData<List<AiModelInfoVo>> listModelConfigBySaas(@RequestParam Long saasId, @RequestParam(required = false) Long mchId) {
         if(saasId == null || saasId < 0){
             return ResponseData.errorMsg("租户Id有误");
         }
-        List<AiModelConfig> configList;
-        if (mchId != null && mchId > 0) {
-            configList = dao.list(AiModelConfig.class,
-                    "select * from ai_model_config where saas_id=? and mch_id=? and state=?",
-                    new Object[]{saasId, mchId, CommonState.ENABLED.getValue()}).getData().list();
-        } else {
-            configList = dao.list(AiModelConfig.class,
-                    "select * from ai_model_config where saas_id=? and state=?",
-                    new Object[]{saasId, CommonState.ENABLED.getValue()}).getData().list();
+        Map<Long, AiModelConfig> configMap = AiVendorHelper.getEnabledModelConfigMap();
+        if (configMap == null) {
+            return ResponseData.success(List.of());
         }
-        List<AiModelInfoVo> result = configList.stream().map(this::toModelInfoVo).collect(Collectors.toList());
+        List<AiModelInfoVo> result = configMap.values().stream()
+                .filter(c -> saasId.equals(c.getSaasId()))
+                .filter(c -> mchId == null || mchId <= 0 || mchId.equals(c.getMchId()))
+                .map(this::toModelInfoVo)
+                .collect(Collectors.toList());
         return ResponseData.success(result);
     }
 
@@ -76,18 +72,27 @@ public class AiConfigRpcController implements AiConfigRpc {
         if ((apiId == null || apiId <= 0) && StringUtils.isBlank(apiCode)) {
             return ResponseData.errorMsg("配置Id有误");
         }
-        List<AiModelConfig> configList;
-        if (apiId != null && apiId > 0) {
-            configList = dao.list(AiModelConfig.class,
-                    "select * from ai_model_config where api_id=? and state=?",
-                    new Object[]{apiId, CommonState.ENABLED.getValue()}).getData().list();
-        } else {
-            configList = dao.list(AiModelConfig.class,
-                    "select c.* from ai_model_config c left join ai_model_api a on c.api_id=a.id " +
-                            "where a.api_code=? and c.state=? and a.state=?",
-                    new Object[]{apiCode, CommonState.ENABLED.getValue(), CommonState.ENABLED.getValue()}).getData().list();
+        Map<Long, AiModelConfig> configMap = AiVendorHelper.getEnabledModelConfigMap();
+        if (configMap == null) {
+            return ResponseData.success(List.of());
         }
-        List<AiModelInfoVo> result = configList.stream().map(this::toModelInfoVo).collect(Collectors.toList());
+        // 按apiCode查询时，先从API缓存中找出对应的apiId（API需为启用状态）
+        Long targetApiId = apiId;
+        if ((targetApiId == null || targetApiId <= 0) && StringUtils.isNotBlank(apiCode)) {
+            Map<Long, AiModelApi> apiMap = AiVendorHelper.getEnabledModelApiMap();
+            if (apiMap != null) {
+                targetApiId = apiMap.values().stream()
+                        .filter(a -> apiCode.equals(a.getApiCode()))
+                        .map(AiModelApi::getId)
+                        .findFirst()
+                        .orElse(null);
+            }
+        }
+        final Long finalApiId = targetApiId;
+        List<AiModelInfoVo> result = configMap.values().stream()
+                .filter(c -> finalApiId != null && finalApiId.equals(c.getApiId()))
+                .map(this::toModelInfoVo)
+                .collect(Collectors.toList());
         return ResponseData.success(result);
     }
 
@@ -103,15 +108,17 @@ public class AiConfigRpcController implements AiConfigRpc {
         if ((id == null || id <= 0) && StringUtils.isBlank(configCode)) {
             return ResponseData.errorMsg("id 和 configCode 不能同时为空");
         }
-        AiModelConfig config;
-        if (id != null && id > 0) {
-            config = dao.queryForObject(AiModelConfig.class,
-                    "select * from ai_model_config where id=? and state=?",
-                    new Object[]{id, CommonState.ENABLED.getValue()}).getData();
-        } else {
-            config = dao.queryForObject(AiModelConfig.class,
-                    "select * from ai_model_config where config_code=? and state=?",
-                    new Object[]{configCode, CommonState.ENABLED.getValue()}).getData();
+        Map<Long, AiModelConfig> configMap = AiVendorHelper.getEnabledModelConfigMap();
+        AiModelConfig config = null;
+        if (configMap != null) {
+            if (id != null && id > 0) {
+                config = configMap.get(id);
+            } else {
+                config = configMap.values().stream()
+                        .filter(c -> configCode.equals(c.getConfigCode()))
+                        .findFirst()
+                        .orElse(null);
+            }
         }
         if (config == null) {
             return ResponseData.errorMsg("模型配置不存在或未启用");
@@ -130,17 +137,15 @@ public class AiConfigRpcController implements AiConfigRpc {
         if (StringUtils.isBlank(modelType)){
             return ResponseData.errorMsg("模型类型输入有误");
         }
-        List<AiModelConfig> configList;
-        if (StringUtils.isNotBlank(modelTag)) {
-            configList = dao.list(AiModelConfig.class,
-                    "select * from ai_model_config where model_type=? and model_tag=? and state=?",
-                    new Object[]{modelType, modelTag, CommonState.ENABLED.getValue()}).getData().list();
-        } else {
-            configList = dao.list(AiModelConfig.class,
-                    "select * from ai_model_config where model_type=? and state=?",
-                    new Object[]{modelType, CommonState.ENABLED.getValue()}).getData().list();
+        Map<Long, AiModelConfig> configMap = AiVendorHelper.getEnabledModelConfigMap();
+        if (configMap == null) {
+            return ResponseData.success(List.of());
         }
-        List<AiModelInfoVo> result = configList.stream().map(this::toModelInfoVo).collect(Collectors.toList());
+        List<AiModelInfoVo> result = configMap.values().stream()
+                .filter(c -> modelType.equals(c.getModelType()))
+                .filter(c -> StringUtils.isBlank(modelTag) || modelTag.equals(c.getModelTag()))
+                .map(this::toModelInfoVo)
+                .collect(Collectors.toList());
         return ResponseData.success(result);
     }
 
@@ -155,17 +160,15 @@ public class AiConfigRpcController implements AiConfigRpc {
         if (saasId == null || saasId < 0){
             return ResponseData.errorMsg("租户Id输入有误");
         }
-        List<AiModelApi> apiList;
-        if (mchId != null && mchId > 0) {
-            apiList = dao.list(AiModelApi.class,
-                    "select * from ai_model_api where saas_id=? and mch_id=? and state=?",
-                    new Object[]{saasId, mchId, CommonState.ENABLED.getValue()}).getData().list();
-        } else {
-            apiList = dao.list(AiModelApi.class,
-                    "select * from ai_model_api where saas_id=? and state=?",
-                    new Object[]{saasId, CommonState.ENABLED.getValue()}).getData().list();
+        Map<Long, AiModelApi> apiMap = AiVendorHelper.getEnabledModelApiMap();
+        if (apiMap == null) {
+            return ResponseData.success(List.of());
         }
-        List<AiModelApiVo> result = apiList.stream().map(this::toModelApiVo).collect(Collectors.toList());
+        List<AiModelApiVo> result = apiMap.values().stream()
+                .filter(a -> saasId.equals(a.getSaasId()))
+                .filter(a -> mchId == null || mchId <= 0 || mchId.equals(a.getMchId()))
+                .map(this::toModelApiVo)
+                .collect(Collectors.toList());
         return ResponseData.success(result);
     }
 
@@ -181,15 +184,17 @@ public class AiConfigRpcController implements AiConfigRpc {
         if ((id == null || id <= 0) && StringUtils.isBlank(apiCode)) {
             return ResponseData.errorMsg("id 和 apiCode 不能同时为空");
         }
-        AiModelApi api;
-        if (id != null && id > 0) {
-            api = dao.queryForObject(AiModelApi.class,
-                    "select * from ai_model_api where id=? and state=?",
-                    new Object[]{id, CommonState.ENABLED.getValue()}).getData();
-        } else {
-            api = dao.queryForObject(AiModelApi.class,
-                    "select * from ai_model_api where api_code=? and state=?",
-                    new Object[]{apiCode, CommonState.ENABLED.getValue()}).getData();
+        Map<Long, AiModelApi> apiMap = AiVendorHelper.getEnabledModelApiMap();
+        AiModelApi api = null;
+        if (apiMap != null) {
+            if (id != null && id > 0) {
+                api = apiMap.get(id);
+            } else {
+                api = apiMap.values().stream()
+                        .filter(a -> apiCode.equals(a.getApiCode()))
+                        .findFirst()
+                        .orElse(null);
+            }
         }
         if (api == null) {
             return ResponseData.errorMsg("API配置不存在或未启用");

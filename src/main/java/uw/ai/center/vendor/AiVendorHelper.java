@@ -14,6 +14,7 @@ import uw.ai.center.vendor.openai.OpenAiVendor;
 import uw.cache.CacheChangeNotifyListener;
 import uw.cache.CacheDataLoader;
 import uw.cache.FusionCache;
+import uw.common.app.constant.CommonState;
 import uw.dao.DaoManager;
 import uw.common.data.PageList;
 
@@ -21,6 +22,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * AI Vendor 帮助类，管理 Vendors、AiModelConfigData 聚合缓存和 AiVendorClientWrapper 实例缓存。
@@ -35,15 +37,22 @@ public class AiVendorHelper {
     private static final Map<String, AiVendor> VENDOR_MAP = new ConcurrentHashMap<>();
 
     /**
-     * AiVendorClientWrapper 实例缓存（Caffeine本地缓存）。
+     * AiVendorClientWrapper 实例缓存
      */
     private static final LoadingCache<Long, AiVendorClientWrapper> CLIENT_WRAPPER_CACHE = Caffeine.newBuilder()
             .maximumSize(1000)
             .build(AiVendorHelper::buildClientWrapper);
 
+    /**
+     * 启用状态的模型配置全量列表缓存名
+     */
+    private static final String MODEL_CONFIG_CACHE = AiModelConfig.class.getSimpleName() + "List";
+    /**
+     * 启用状态的API配置全量列表缓存名
+     */
+    private static final String MODEL_API_CACHE = AiModelApi.class.getSimpleName() + "List";
+
     static {
-        // AiModelConfigData 聚合缓存（包含 ModelConfig + ApiConfig + 解析后的参数）
-        // 查询时一次性组装完整数据，用的时候直接拿来构建 ClientWrapper，不需要二次查询
         FusionCache.config(FusionCache.Config.builder()
                 .entityClass(AiModelConfigData.class)
                 .localCacheMaxNum(10000)
@@ -68,6 +77,48 @@ public class AiVendorHelper {
         }, (CacheChangeNotifyListener<Long, AiModelConfigData>) (key, oldValue, newValue) -> {
             // 缓存变更时级联失效 ClientWrapper
             invalidateClientWrapper(key);
+        });
+
+        FusionCache.config(FusionCache.Config.builder()
+                .cacheName(MODEL_CONFIG_CACHE)
+                .localCacheMaxNum(3)
+                .cacheExpireMillis(86400_000L)
+                .nullProtectMillis(10_000L)
+                .build(), new CacheDataLoader<String, Map<Long, AiModelConfig>>() {
+            @Override
+            public Map<Long, AiModelConfig> load(String key) throws Exception {
+                PageList<AiModelConfig> dataList = dao.list(AiModelConfig.class,
+                        "select * from ai_model_config where state=?", new Object[]{CommonState.ENABLED.getValue()}).getData();
+                if (dataList == null) {
+                    return null;
+                }
+                return dataList.
+                        stream().
+                        collect(Collectors.
+                                toMap(AiModelConfig::getId,
+                                        config -> config, (existingValue, newValue) -> existingValue));
+            }
+        });
+
+        FusionCache.config(FusionCache.Config.builder()
+                .cacheName(MODEL_API_CACHE)
+                .localCacheMaxNum(3)
+                .cacheExpireMillis(86400_000L)
+                .nullProtectMillis(10_000L)
+                .build(), new CacheDataLoader<String, Map<Long, AiModelApi>>() {
+            @Override
+            public Map<Long, AiModelApi> load(String key) throws Exception {
+                PageList<AiModelApi> dataList = dao.list(AiModelApi.class,
+                        "select * from ai_model_api where state=?", new Object[]{CommonState.ENABLED.getValue()}).getData();
+                if (dataList == null) {
+                    return null;
+                }
+                return dataList.
+                        stream().
+                        collect(Collectors.
+                                toMap(AiModelApi::getId,
+                                        api -> api, (existingValue, newValue) -> existingValue));
+            }
         });
 
         logger.info("AI模块FusionCache缓存配置初始化完成");
@@ -109,8 +160,7 @@ public class AiVendorHelper {
     }
 
     /**
-     * 获取 AiVendorClientWrapper（LangChain4j客户端封装）。
-     * 配置不存在或未启用时抛出IllegalStateException，避免调用方NPE。
+     * 获取 AiVendorClientWrapper。
      */
     public static AiVendorClientWrapper getClientWrapper(long configId) {
         AiVendorClientWrapper wrapper = CLIENT_WRAPPER_CACHE.get(configId);
@@ -135,6 +185,20 @@ public class AiVendorHelper {
     }
 
     /**
+     * 获取启用状态的模型配置全量Map
+     */
+    public static Map<Long, AiModelConfig> getEnabledModelConfigMap() {
+        return FusionCache.get(MODEL_CONFIG_CACHE, MODEL_CONFIG_CACHE);
+    }
+
+    /**
+     * 获取启用状态的API配置全量Map
+     */
+    public static Map<Long, AiModelApi> getEnabledModelApiMap() {
+        return FusionCache.get(MODEL_API_CACHE, MODEL_API_CACHE);
+    }
+
+    /**
      * 获取模型列表。
      */
     public static List<String> listModel(String vendorClass, String apiUrl, String apiKey) {
@@ -151,6 +215,7 @@ public class AiVendorHelper {
      */
     public static void invalidateConfig(long configId) {
         FusionCache.invalidate(AiModelConfigData.class, configId);
+        invalidateModelConfigListCache();
     }
 
     /**
@@ -164,6 +229,21 @@ public class AiVendorHelper {
                 invalidateConfig(config.getId());
             }
         }
+        invalidateModelApiListCache();
+    }
+
+    /**
+     * 失效模型配置列表缓存（全量）
+     */
+    public static void invalidateModelConfigListCache() {
+        FusionCache.invalidate(MODEL_CONFIG_CACHE, MODEL_CONFIG_CACHE);
+    }
+
+    /**
+     * 失效API配置列表缓存（全量）。
+     */
+    public static void invalidateModelApiListCache() {
+        FusionCache.invalidate(MODEL_API_CACHE, MODEL_API_CACHE);
     }
 
     /**

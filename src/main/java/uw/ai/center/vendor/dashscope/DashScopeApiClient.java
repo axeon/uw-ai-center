@@ -136,7 +136,7 @@ public class DashScopeApiClient {
             body.put("input", input);
             body.put("parameters", parameters);
 
-            logger.info("DashScope图片生成提交任务: url={}, model={}, prompt={}", taskUrl, model, prompt);
+            logger.info("DashScope图片生成提交任务: url={}, model={}, parameters={}, prompt={}", taskUrl, model, parameters, prompt);
 
             HttpData httpData = HTTP_HELPER.postBodyForData(taskUrl, headers, body);
             String responseBody = httpData.getResponseData();
@@ -260,5 +260,25 @@ public class DashScopeApiClient {
     public static byte[] synthesizeSpeech(String baseUrl, String apiKey, String model, String text, Map<String, Object> params) {
         // 语音合成将在功能点4中实现
         throw new UnsupportedOperationException("语音合成功能将在后续功能点中实现");
+    }
+
+    /**
+     * NLS Token 缓存条目。
+     */
+    private static class TokenEntry {
+        final String token;
+        final long expireTimeMillis;
+
+        TokenEntry(String token, long expireTimeMillis) {
+            this.token = token;
+            this.expireTimeMillis = expireTimeMillis;
+        }
+
+        /**
+         * 是否已过期（提前 5 分钟判定过期以触发刷新）。
+         */
+        boolean isExpired() {
+            return System.currentTimeMillis() >= (expireTimeMillis - TOKEN_REFRESH_AHEAD_MILLIS);
+        }
     }
 }
