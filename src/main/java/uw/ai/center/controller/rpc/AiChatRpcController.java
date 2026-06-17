@@ -16,6 +16,7 @@ import uw.ai.center.dto.AiSessionMsgQueryParam;
 import uw.ai.center.entity.AiSessionInfo;
 import uw.ai.center.entity.AiSessionMsg;
 import uw.ai.center.service.AiChatService;
+import uw.ai.center.vendor.AiVendorHelper;
 import uw.ai.rpc.AiChatRpc;
 import uw.ai.vo.AiChatGenerateParam;
 import uw.ai.vo.AiChatMsgParam;
@@ -43,7 +44,11 @@ public class AiChatRpcController implements AiChatRpc {
     @Operation(summary = "生成数据", description = "生成数据")
     @MscPermDeclare(user = UserType.RPC)
     public ResponseData<String> generate(@ModelAttribute AiChatGenerateParam param) {
-        return AiChatService.generate(param.getSaasId(), param.getUserId(), param.getUserType(), param.getUserInfo(), param.getConfigId(), param.getSystemPrompt(), param.getUserPrompt(), param.getToolList(), param.getToolContext(), param.getFileList(), param.getRagLibIds());
+        Long configId = AiVendorHelper.resolveConfigId(param.getConfigId(), param.getConfigCode());
+        if (configId == null) {
+            return ResponseData.errorMsg("configId 和 configCode 不能同时为空，或 configCode 无效");
+        }
+        return AiChatService.generate(param.getSaasId(), param.getUserId(), param.getUserType(), param.getUserInfo(), configId, param.getSystemPrompt(), param.getUserPrompt(), param.getToolList(), param.getToolContext(), param.getFileList(), param.getRagLibIds());
     }
 
     /**
@@ -54,7 +59,11 @@ public class AiChatRpcController implements AiChatRpc {
     @Operation(summary = "生成数据", description = "生成数据")
     @MscPermDeclare(user = UserType.RPC)
     public Flux<String> chatGenerate(@ModelAttribute AiChatGenerateParam param) {
-        return AiChatService.chatGenerate(param.getSaasId(), param.getUserId(), param.getUserType(), param.getUserInfo(), param.getConfigId(), param.getSystemPrompt(), param.getUserPrompt(), param.getToolList(), param.getToolContext(), param.getFileList(), param.getRagLibIds());
+        Long configId = AiVendorHelper.resolveConfigId(param.getConfigId(), param.getConfigCode());
+        if (configId == null) {
+            return Flux.just(ResponseData.errorMsg("configId 和 configCode 不能同时为空，或 configCode 无效").toString());
+        }
+        return AiChatService.chatGenerate(param.getSaasId(), param.getUserId(), param.getUserType(), param.getUserInfo(), configId, param.getSystemPrompt(), param.getUserPrompt(), param.getToolList(), param.getToolContext(), param.getFileList(), param.getRagLibIds());
     }
 
     /**
@@ -65,7 +74,11 @@ public class AiChatRpcController implements AiChatRpc {
     @MscPermDeclare(user = UserType.RPC)
     public Flux<ServerSentEvent<String>> chat(HttpServletResponse response, @ModelAttribute AiChatMsgParam param) {
         response.setCharacterEncoding("UTF-8");
-        return AiChatService.chat(param.getSaasId(), param.getUserId(), param.getUserType(), param.getUserInfo(), param.getConfigId(), param.getSessionId(), param.getSystemPrompt(), param.getUserPrompt(), param.getToolList(), param.getToolContext(), param.getFileList(), param.getRagLibIds()).map(s -> ServerSentEvent.builder(s == null ? "" : s).build());
+        Long configId = AiVendorHelper.resolveConfigId(param.getConfigId(), param.getConfigCode());
+        if (configId == null) {
+            return Flux.just(ServerSentEvent.builder(ResponseData.errorMsg("configId 和 configCode 不能同时为空，或 configCode 无效").toString()).build());
+        }
+        return AiChatService.chat(param.getSaasId(), param.getUserId(), param.getUserType(), param.getUserInfo(), configId, param.getSessionId(), param.getSystemPrompt(), param.getUserPrompt(), param.getToolList(), param.getToolContext(), param.getFileList(), param.getRagLibIds()).map(s -> ServerSentEvent.builder(s == null ? "" : s).build());
     }
 
     /**

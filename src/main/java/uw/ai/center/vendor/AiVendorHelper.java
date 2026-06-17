@@ -2,6 +2,7 @@ package uw.ai.center.vendor;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -196,6 +197,30 @@ public class AiVendorHelper {
      */
     public static Map<Long, AiModelApi> getEnabledModelApiMap() {
         return FusionCache.get(MODEL_API_CACHE, MODEL_API_CACHE);
+    }
+
+    /**
+     *
+     * @param configId   配置ID（<=0 表示未传）
+     * @param configCode 配置代码
+     * @return 解析出的 configId；若两者都为空或 configCode 未匹配到，返回 null
+     */
+    public static Long resolveConfigId(long configId, String configCode) {
+        if (configId > 0) {
+            return configId;
+        }
+        if (StringUtils.isBlank(configCode)) {
+            return null;
+        }
+        Map<Long, AiModelConfig> map = getEnabledModelConfigMap();
+        if (map == null) {
+            return null;
+        }
+        return map.values().stream()
+                .filter(c -> configCode.equals(c.getConfigCode()))
+                .map(AiModelConfig::getId)
+                .findFirst()
+                .orElse(null);
     }
 
     /**

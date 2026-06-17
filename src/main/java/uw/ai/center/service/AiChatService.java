@@ -43,6 +43,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 
 /**
@@ -316,8 +317,8 @@ public class AiChatService {
         return Flux.create(sink -> {
             sessionMsg.setResponseStartDate(SystemClock.nowDate());
             StringBuilder responseBuilder = new StringBuilder();
-            java.util.concurrent.atomic.AtomicReference<ChatResponse> lastResponseRef =
-                    new java.util.concurrent.atomic.AtomicReference<>();
+            AtomicReference<ChatResponse> lastResponseRef =
+                    new AtomicReference<>();
 
             vendorWrapper.getStreamingChatModel().chat(messages, new StreamingChatResponseHandler() {
                 @Override
@@ -378,7 +379,7 @@ public class AiChatService {
      * @return
      */
     public static ResponseData<AiSessionInfo> initSession(long saasId, long userId, int userType, String userInfo, long configId, int sessionType, String sessionName, Integer windowSize, String systemPrompt, List<AiToolCallInfo> toolList, long[] ragLibIds) {
-        AiModelConfigData configData = null;
+        AiModelConfigData configData;
         try {
             AiVendorClientWrapper vendorWrapper = AiVendorHelper.getClientWrapper(configId);
             configData = vendorWrapper.getConfigData();
@@ -691,8 +692,8 @@ public class AiChatService {
         return Flux.create(sink -> {
             sessionMsg.setResponseStartDate(SystemClock.nowDate());
             StringBuilder responseBuilder = new StringBuilder();
-            java.util.concurrent.atomic.AtomicReference<ChatResponse> lastResponseRef =
-                    new java.util.concurrent.atomic.AtomicReference<>();
+            AtomicReference<ChatResponse> lastResponseRef =
+                    new AtomicReference<>();
 
             vendorWrapper.getStreamingChatModel().chat(messages, new StreamingChatResponseHandler() {
                 @Override

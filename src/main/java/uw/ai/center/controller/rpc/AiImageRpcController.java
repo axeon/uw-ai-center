@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.context.annotation.Primary;
 import org.springframework.web.bind.annotation.*;
 import uw.ai.center.service.AiImageService;
+import uw.ai.center.vendor.AiVendorHelper;
 import uw.ai.vo.AiImageGenerateParam;
 import uw.ai.vo.AiImageResultData;
 import uw.auth.service.annotation.MscPermDeclare;
@@ -29,8 +30,12 @@ public class AiImageRpcController {
     @Operation(summary = "生成图片", description = "根据文本提示词生成图片，返回图片URL列表及会话ID")
     @MscPermDeclare(user = UserType.RPC, auth = AuthType.NONE, log = ActionLog.BASE)
     public ResponseData<AiImageResultData> generate(@ModelAttribute AiImageGenerateParam param) {
+        Long configId = AiVendorHelper.resolveConfigId(param.getConfigId(), param.getConfigCode());
+        if (configId == null) {
+            return ResponseData.errorMsg("configId 和 configCode 不能同时为空，或 configCode 无效");
+        }
         return AiImageService.generate(
                 param.getSaasId(), param.getUserId(), param.getUserType(), param.getUserInfo(),
-                param.getConfigId(), param.getSessionId(), param.getUserPrompt());
+                configId, param.getSessionId(), param.getUserPrompt());
     }
 }
