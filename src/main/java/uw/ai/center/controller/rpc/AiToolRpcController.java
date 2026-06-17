@@ -16,6 +16,7 @@ import uw.auth.service.constant.UserType;
 import uw.common.app.constant.CommonState;
 import uw.common.response.ResponseData;
 import uw.dao.DaoManager;
+import uw.common.data.PageList;
 
 import java.util.List;
 
@@ -44,13 +45,16 @@ public class AiToolRpcController implements AiToolRpc {
     @Operation(summary = "列出tool列表", description = "列出tool列表")
     @MscPermDeclare(user = UserType.RPC)
     public ResponseData<List<AiToolMeta>> listToolMeta(@RequestParam String appName) {
-        List<AiToolInfo> dataList = null;
+        PageList<AiToolInfo> dataPageList;
         if (StringUtils.isNotBlank(appName)) {
-            dataList = dao.list(AiToolInfo.class, "select * from ai_tool_info where app_name=?", new Object[]{appName}).getData().list();
+            dataPageList = dao.list(AiToolInfo.class, "select * from ai_tool_info where app_name=?", new Object[]{appName}).getData();
         } else {
-            dataList = dao.list(AiToolInfo.class, "select * from ai_tool_info where state=?", new Object[]{CommonState.ENABLED.getValue()}).getData().list();
+            dataPageList = dao.list(AiToolInfo.class, "select * from ai_tool_info where state=?", new Object[]{CommonState.ENABLED.getValue()}).getData();
         }
-        List<AiToolMeta> aiToolMetaList = dataList.stream().map(x -> new AiToolMeta(x.getId(), x.getAppName(), x.getToolClass(), x.getToolVersion(), x.getToolName(), x.getToolDesc(), x.getToolInput(), x.getToolOutput())).toList();
+        if (dataPageList == null || dataPageList.isEmpty()) {
+            return ResponseData.success(List.of());
+        }
+        List<AiToolMeta> aiToolMetaList = dataPageList.stream().map(x -> new AiToolMeta(x.getId(), x.getAppName(), x.getToolClass(), x.getToolVersion(), x.getToolName(), x.getToolDesc(), x.getToolInput(), x.getToolOutput())).toList();
         return ResponseData.success(aiToolMetaList);
     }
 

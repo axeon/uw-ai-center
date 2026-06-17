@@ -89,6 +89,10 @@ public class AiRagService {
      */
     public static Map<String, String> buildDocument(long ragLibId, MultipartFile docFile) {
         AiRagClientWrapper ragClientWrapper = getRagClientWrapper(ragLibId);
+        if (ragClientWrapper == null) {
+            logger.error("RAG客户端不存在, libId={}", ragLibId);
+            return null;
+        }
         try (InputStream inputStream = docFile.getInputStream()) {
             // 使用Tika解析文档为纯文本
             ApacheTikaDocumentParser parser = new ApacheTikaDocumentParser();
@@ -118,6 +122,10 @@ public class AiRagService {
      */
     public static Map<String, String> buildDocument(long ragLibId, String fileContent) {
         AiRagClientWrapper ragClientWrapper = getRagClientWrapper(ragLibId);
+        if (ragClientWrapper == null) {
+            logger.error("RAG客户端不存在, libId={}", ragLibId);
+            return null;
+        }
         // 使用AiDocumentSplitter分割（内含原生递归分割+UUID生成+最大数量限制）
         List<TextSegment> segments = ragClientWrapper.documentSplitter.split(fileContent);
         List<Embedding> embeddings = ragClientWrapper.embeddingModel.embedAll(segments).content();
@@ -232,6 +240,10 @@ public class AiRagService {
      */
     public static String query(long ragLibId, String query) {
         AiRagClientWrapper ragClientWrapper = getRagClientWrapper(ragLibId);
+        if (ragClientWrapper == null) {
+            logger.error("RAG客户端不存在, libId={}", ragLibId);
+            return "";
+        }
         // 向量检索
         Embedding queryEmbedding = ragClientWrapper.embeddingModel.embed(query).content();
         EmbeddingSearchRequest vectorRequest = EmbeddingSearchRequest.builder()

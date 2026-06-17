@@ -39,6 +39,7 @@ public class AiRagUserController {
     @MscPermDeclare(auth = AuthType.NONE, log = ActionLog.BASE)
     public ResponseData<PageList<AiRagLib>> list(UserRagLibQueryParam queryParam) {
         AuthServiceHelper.logRef( AiModelConfig.class );
+        queryParam.saasId(AuthServiceHelper.getSaasId());
         queryParam.SELECT_SQL( "select id, saas_id, lib_type, lib_name, lib_desc, embed_config_id, embed_model_name, create_date, modify_date, state FROM ai_rag_lib ");
         return dao.list( AiRagLib.class, queryParam );
     }

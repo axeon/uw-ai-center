@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import uw.ai.center.dto.AiRagDocQueryParam;
 import uw.ai.center.entity.AiRagDoc;
+import uw.ai.center.entity.AiRagLib;
 import uw.ai.center.service.AiRagService;
 import uw.auth.service.AuthServiceHelper;
 import uw.auth.service.annotation.MscPermDeclare;
@@ -54,6 +55,7 @@ public class AiRagDocController {
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.REQUEST)
     public ResponseData<PageList<AiRagDoc>> list(AiRagDocQueryParam queryParam){
         AuthServiceHelper.logRef(AiRagDoc.class);
+        queryParam.saasId(AuthServiceHelper.getSaasId());
         return dao.list(AiRagDoc.class, queryParam);
     }
 
@@ -66,6 +68,7 @@ public class AiRagDocController {
     @Operation(summary = "轻量级列表rag文档信息", description = "轻量级列表rag文档信息，一般用于select控件。")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.USER, log = ActionLog.NONE)
     public ResponseData<PageList<AiRagDoc>> liteList(AiRagDocQueryParam queryParam){
+        queryParam.saasId(AuthServiceHelper.getSaasId());
         queryParam.SELECT_SQL( "SELECT id,saas_id,lib_id,doc_type,doc_name,doc_body_size,doc_content_size,create_date,modify_date,state from ai_rag_doc " );
         return dao.list(AiRagDoc.class, queryParam);
     }
@@ -81,7 +84,7 @@ public class AiRagDocController {
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.REQUEST)
     public ResponseData<AiRagDoc> load(@Parameter(description = "主键ID", required = true) @RequestParam long id)  {
         AuthServiceHelper.logRef(AiRagDoc.class,id);
-        return dao.queryForObject(AiRagDoc.class, new AuthIdQueryParam(id));
+        return dao.queryForObject(AiRagDoc.class, new AuthIdQueryParam(AuthServiceHelper.getSaasId(), id));
     }
 
     /**
@@ -124,6 +127,11 @@ public class AiRagDocController {
     @Operation(summary = "新增rag文档信息", description = "新增rag文档信息")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData<AiRagDoc> save(@RequestParam long libId, @RequestParam String docDesc, @RequestParam MultipartFile docFile) {
+        AiRagLib ragLib = dao.queryForObject(AiRagLib.class,
+                "select id from ai_rag_lib where id=? and saas_id=? and state=?", new Object[]{libId, AuthServiceHelper.getSaasId(), CommonState.ENABLED.getValue()}).getData();
+        if (ragLib == null) {
+            return ResponseData.errorMsg("RAG库不存在或无权访问");
+        }
         long id = dao.getSequenceId( AiRagDoc.class );
         AuthServiceHelper.logRef( AiRagDoc.class, id );
         AiRagDoc aiRagDoc = new AiRagDoc();
@@ -160,7 +168,7 @@ public class AiRagDocController {
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData enable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiRagDoc.class,id,remark);
-        return dao.update(new AiRagDoc().modifyDate(SystemClock.nowDate()).state(CommonState.ENABLED.getValue()), new AuthIdStateQueryParam(id, CommonState.DISABLED.getValue())).onSuccess(updatedEntity -> {
+        return dao.update(new AiRagDoc().modifyDate(SystemClock.nowDate()).state(CommonState.ENABLED.getValue()), new AuthIdStateQueryParam(AuthServiceHelper.getSaasId(), id, CommonState.DISABLED.getValue())).onSuccess(updatedEntity -> {
             AiRagService.rebuildDocument( id );
 
         });
@@ -177,7 +185,7 @@ public class AiRagDocController {
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData disable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiRagDoc.class,id,remark);
-        return dao.update(new AiRagDoc().modifyDate(SystemClock.nowDate()).state(CommonState.DISABLED.getValue()), new AuthIdStateQueryParam(id, CommonState.ENABLED.getValue())).onSuccess(updatedEntity -> {
+        return dao.update(new AiRagDoc().modifyDate(SystemClock.nowDate()).state(CommonState.DISABLED.getValue()), new AuthIdStateQueryParam(AuthServiceHelper.getSaasId(), id, CommonState.ENABLED.getValue())).onSuccess(updatedEntity -> {
             AiRagService.deleteDocument( id );
         });
     }
@@ -193,7 +201,7 @@ public class AiRagDocController {
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData delete(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiRagDoc.class,id,remark);
-        return dao.update(new AiRagDoc().modifyDate(SystemClock.nowDate()).state(CommonState.DELETED.getValue()), new AuthIdStateQueryParam(id, CommonState.DISABLED.getValue()));
+        return dao.update(new AiRagDoc().modifyDate(SystemClock.nowDate()).state(CommonState.DELETED.getValue()), new AuthIdStateQueryParam(AuthServiceHelper.getSaasId(), id, CommonState.DISABLED.getValue()));
     }
 
 }

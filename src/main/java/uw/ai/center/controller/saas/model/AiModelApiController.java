@@ -41,7 +41,12 @@ public class AiModelApiController {
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.USER, log = ActionLog.REQUEST)
     public ResponseData<PageList<AiModelApi>> list(AiApiConfigQueryParam queryParam){
         AuthServiceHelper.logRef(AiModelApi.class);
-        return dao.list(AiModelApi.class, queryParam);
+        queryParam.saasId(AuthServiceHelper.getSaasId());
+        return dao.list(AiModelApi.class, queryParam).onSuccess(dataList -> {
+            for (AiModelApi item : dataList) {
+                item.setApiKey(AiModelApi.maskApiKey(item.getApiKey()));
+            }
+        });
     }
 
     /**
@@ -51,6 +56,7 @@ public class AiModelApiController {
     @Operation(summary = "轻量级列表AI模型API配置", description = "轻量级列表AI模型API配置，一般用于select控件。")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.USER, log = ActionLog.NONE)
     public ResponseData<PageList<AiModelApi>> liteList(AiApiConfigQueryParam queryParam){
+        queryParam.saasId(AuthServiceHelper.getSaasId());
         queryParam.SELECT_SQL( "SELECT id,saas_id,mch_id,api_code,api_name,api_url,api_key,state,create_date,modify_date from ai_model_api " );
         return dao.list(AiModelApi.class, queryParam).onSuccess(dataList -> {
             for (AiModelApi item : dataList) {
@@ -67,7 +73,11 @@ public class AiModelApiController {
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.REQUEST)
     public ResponseData<AiModelApi> load(@Parameter(description = "主键ID", required = true) @RequestParam long id)  {
         AuthServiceHelper.logRef(AiModelApi.class,id);
-        return dao.queryForObject(AiModelApi.class, new AuthIdQueryParam(id));
+        return dao.queryForObject(AiModelApi.class, new AuthIdQueryParam(AuthServiceHelper.getSaasId(), id)).onSuccess(item -> {
+            if (item != null) {
+                item.setApiKey(AiModelApi.maskApiKey(item.getApiKey()));
+            }
+        });
     }
 
     /**
@@ -128,7 +138,7 @@ public class AiModelApiController {
     public ResponseData<AiModelApi> update(@RequestBody AiModelApi aiModelApi, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiModelApi.class,aiModelApi.getId(),remark);
         if (StringUtils.isNotBlank(aiModelApi.getApiCode())) {
-            long count = dao.queryForValue(Long.class, "select count(*) from ai_model_api where api_code=? and state=?", new Object[]{aiModelApi.getApiCode(), CommonState.ENABLED.getValue()}).getData();
+            long count = dao.queryForValue(Long.class, "select count(*) from ai_model_api where api_code=? and state=? and id<>?", new Object[]{aiModelApi.getApiCode(), CommonState.ENABLED.getValue(), aiModelApi.getId()}).getData();
             if (count > 0) {
                 return ResponseData.errorMsg("配置代码[" + aiModelApi.getApiCode() + "]已存在！");
             }

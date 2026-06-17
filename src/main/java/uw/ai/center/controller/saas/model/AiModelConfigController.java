@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import uw.ai.center.dto.AiModelConfigQueryParam;
+import uw.ai.center.entity.AiModelApi;
 import uw.ai.center.entity.AiModelConfig;
 import uw.ai.center.vendor.AiVendorHelper;
 import uw.ai.center.vo.AiVendorInfo;
@@ -46,10 +47,15 @@ public class AiModelConfigController {
     @GetMapping("/listModel")
     @Operation(summary = "列表模型列表", description = "列表模型列表")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.USER, log = ActionLog.NONE)
-    public List<String> listModel(@Parameter(description = "vendorClass", required = true) @RequestParam String vendorClass,
-                                  @Parameter(description = "apiUrl", required = true) @RequestParam String apiUrl,
-                                  @Parameter(description = "apiKey", required = false) @RequestParam(required = false) String apiKey) {
-        return AiVendorHelper.listModel(vendorClass, apiUrl, apiKey);
+    public ResponseData<List<String>> listModel(@Parameter(description = "vendorClass", required = true) @RequestParam String vendorClass,
+                                                 @Parameter(description = "apiId", required = true) @RequestParam long apiId) {
+        // 通过 apiId 从库中取 apiUrl/apiKey（带 saasId 校验），避免 SSRF
+        AiModelApi apiConfig = dao.queryForObject(AiModelApi.class,
+                "select * from ai_model_api where id=? and saas_id=? and state=?", new Object[]{apiId, AuthServiceHelper.getSaasId(), CommonState.ENABLED.getValue()}).getData();
+        if (apiConfig == null) {
+            return ResponseData.errorMsg("API配置不存在或无权访问");
+        }
+        return ResponseData.success(AiVendorHelper.listModel(vendorClass, apiConfig.getApiUrl(), apiConfig.getApiKey()));
     }
 
     @GetMapping("/list")
@@ -122,7 +128,7 @@ public class AiModelConfigController {
     public ResponseData<AiModelConfig> update(@RequestBody AiModelConfig aiModelConfig, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiModelConfig.class,aiModelConfig.getId(),remark);
         if (StringUtils.isNotBlank(aiModelConfig.getConfigCode())) {
-            long count = dao.queryForValue(Long.class, "select count(*) from ai_model_config where config_code=? and state=?", new Object[]{aiModelConfig.getConfigCode(), CommonState.ENABLED.getValue()}).getData();
+            long count = dao.queryForValue(Long.class, "select count(*) from ai_model_config where config_code=? and state=? and id =?", new Object[]{aiModelConfig.getConfigCode(), CommonState.ENABLED.getValue(), aiModelConfig.getId()}).getData();
             if (count > 0) {
                 return ResponseData.errorMsg("配置代码[" + aiModelConfig.getConfigCode() + "]已存在！");
             }
