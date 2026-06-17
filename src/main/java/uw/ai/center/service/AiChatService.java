@@ -575,6 +575,10 @@ public class AiChatService {
         if (fileList != null) {
             ResponseData<String[]> readFileData = readFileData(fileList);
             if (readFileData.isNotSuccess()) {
+                AiSessionMsg errSessionMsg = initSessionMsg(saasId, userId, userType, userInfo, configId, sessionInfo.getId(), systemPrompt, userPrompt, toolList, null, ragLibIds, null);
+                errSessionMsg.setResponseEndDate(SystemClock.nowDate());
+                errSessionMsg.setResponseInfo("[ERROR] 文件读取失败: " + readFileData.getMsg());
+                saveSessionMsg(errSessionMsg);
                 return Flux.just(readFileData.toString());
             } else {
                 String[] fileData = readFileData.getData();
@@ -603,9 +607,15 @@ public class AiChatService {
         try {
             vendorWrapper = AiVendorHelper.getClientWrapper(configId);
         } catch (IllegalStateException e) {
+            sessionMsg.setResponseEndDate(SystemClock.nowDate());
+            sessionMsg.setResponseInfo("[ERROR] " + e.getMessage());
+            saveSessionMsg(sessionMsg);
             return Flux.just(ResponseData.errorMsg("ChatClient获取失败: " + e.getMessage()).toString());
         }
         if (!vendorWrapper.isType(ModelType.CHAT)) {
+            sessionMsg.setResponseEndDate(SystemClock.nowDate());
+            sessionMsg.setResponseInfo("[ERROR] ChatClient类型不支持CHAT模型");
+            saveSessionMsg(sessionMsg);
             return Flux.just(ResponseData.errorMsg("ChatClient获取失败！").toString());
         }
 
@@ -631,7 +641,7 @@ public class AiChatService {
                         .build();
                 ChatResponse response = vendorWrapper.getChatModel().chat(chatRequest);
                 AiMessage aiMessage = response.aiMessage();
-                // 工具调用循环（含最大迭代次数保护，防止AI模型反复请求工具调用导致无限循环）
+                // 工具调用循环
                 int iteration = 0;
                 while (aiMessage.hasToolExecutionRequests() && iteration < MAX_TOOL_ITERATIONS) {
                     iteration++;
