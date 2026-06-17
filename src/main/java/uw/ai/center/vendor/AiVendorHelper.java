@@ -49,6 +49,10 @@ public class AiVendorHelper {
      */
     private static final String MODEL_CONFIG_CACHE = AiModelConfig.class.getSimpleName() + "List";
     /**
+     * 启用状态的模型配置
+     */
+    private static final String MODEL_CONFIG_CODE_CACHE = AiModelConfig.class.getSimpleName() + "CodeIndex";
+    /**
      * 启用状态的API配置全量列表缓存名
      */
     private static final String MODEL_API_CACHE = AiModelApi.class.getSimpleName() + "List";
@@ -98,6 +102,26 @@ public class AiVendorHelper {
                         collect(Collectors.
                                 toMap(AiModelConfig::getId,
                                         config -> config, (existingValue, newValue) -> existingValue));
+            }
+        });
+
+        FusionCache.config(FusionCache.Config.builder()
+                .cacheName(MODEL_CONFIG_CODE_CACHE)
+                .localCacheMaxNum(3)
+                .cacheExpireMillis(86400_000L)
+                .nullProtectMillis(10_000L)
+                .build(), new CacheDataLoader<String, Map<String, Long>>() {
+            @Override
+            public Map<String, Long> load(String key) throws Exception {
+                Map<Long, AiModelConfig> configMap = getEnabledModelConfigMap();
+                if (configMap == null || configMap.isEmpty()) {
+                    return null;
+                }
+                return configMap.values().stream()
+                        .filter(c -> StringUtils.isNotBlank(c.getConfigCode()))
+                        .collect(Collectors.toMap(
+                                AiModelConfig::getConfigCode, AiModelConfig::getId,
+                                (a, b) -> a));
             }
         });
 
@@ -212,15 +236,8 @@ public class AiVendorHelper {
         if (StringUtils.isBlank(configCode)) {
             return null;
         }
-        Map<Long, AiModelConfig> map = getEnabledModelConfigMap();
-        if (map == null) {
-            return null;
-        }
-        return map.values().stream()
-                .filter(c -> configCode.equals(c.getConfigCode()))
-                .map(AiModelConfig::getId)
-                .findFirst()
-                .orElse(null);
+        Map<String, Long> codeIndex = FusionCache.get(MODEL_CONFIG_CODE_CACHE, MODEL_CONFIG_CODE_CACHE);
+        return codeIndex == null ? null : codeIndex.get(configCode);
     }
 
     /**
@@ -262,6 +279,7 @@ public class AiVendorHelper {
      */
     public static void invalidateModelConfigListCache() {
         FusionCache.invalidate(MODEL_CONFIG_CACHE, MODEL_CONFIG_CACHE);
+        FusionCache.invalidate(MODEL_CONFIG_CODE_CACHE, MODEL_CONFIG_CODE_CACHE);
     }
 
     /**
