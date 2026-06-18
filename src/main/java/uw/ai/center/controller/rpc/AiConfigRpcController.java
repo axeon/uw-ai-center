@@ -15,7 +15,7 @@ import uw.ai.center.entity.AiModelConfig;
 import uw.ai.center.vendor.AiVendorHelper;
 import uw.ai.rpc.AiConfigRpc;
 import uw.ai.vo.AiModelApiVo;
-import uw.ai.vo.AiModelInfoVo;
+import uw.ai.vo.AiModelConfigVo;
 import uw.auth.service.annotation.MscPermDeclare;
 import uw.auth.service.annotation.ResponseAdviceIgnore;
 import uw.auth.service.constant.UserType;
@@ -44,7 +44,7 @@ public class AiConfigRpcController implements AiConfigRpc {
     @GetMapping("/listModelConfigBySaas")
     @Operation(summary = "根据saas信息获取模型配置列表", description = "根据saas信息获取模型配置列表")
     @MscPermDeclare(user = UserType.RPC)
-    public ResponseData<List<AiModelInfoVo>> listModelConfigBySaas(@RequestParam Long saasId, @RequestParam(required = false) Long mchId) {
+    public ResponseData<List<AiModelConfigVo>> listModelConfigBySaas(@RequestParam Long saasId, @RequestParam(required = false) Long mchId) {
         if(saasId == null || saasId < 0){
             return ResponseData.errorMsg("租户Id有误");
         }
@@ -52,7 +52,7 @@ public class AiConfigRpcController implements AiConfigRpc {
         if (configMap == null) {
             return ResponseData.success(List.of());
         }
-        List<AiModelInfoVo> result = configMap.values().stream()
+        List<AiModelConfigVo> result = configMap.values().stream()
                 .filter(c -> saasId.equals(c.getSaasId()))
                 .filter(c -> mchId == null || mchId <= 0 || mchId.equals(c.getMchId()))
                 .map(this::toModelInfoVo)
@@ -67,8 +67,8 @@ public class AiConfigRpcController implements AiConfigRpc {
     @GetMapping("/listModelConfigByApi")
     @Operation(summary = "根据API配置获取模型配置列表", description = "根据API配置ID获取模型配置列表")
     @MscPermDeclare(user = UserType.RPC)
-    public ResponseData<List<AiModelInfoVo>> listModelConfigByApi(@RequestParam(required = false) Long apiId,
-                                                                  @RequestParam(required = false) String apiCode) {
+    public ResponseData<List<AiModelConfigVo>> listModelConfigByApi(@RequestParam(required = false) Long apiId,
+                                                                    @RequestParam(required = false) String apiCode) {
         if ((apiId == null || apiId <= 0) && StringUtils.isBlank(apiCode)) {
             return ResponseData.errorMsg("配置Id有误");
         }
@@ -89,7 +89,7 @@ public class AiConfigRpcController implements AiConfigRpc {
             }
         }
         final Long finalApiId = targetApiId;
-        List<AiModelInfoVo> result = configMap.values().stream()
+        List<AiModelConfigVo> result = configMap.values().stream()
                 .filter(c -> finalApiId != null && finalApiId.equals(c.getApiId()))
                 .map(this::toModelInfoVo)
                 .collect(Collectors.toList());
@@ -103,8 +103,8 @@ public class AiConfigRpcController implements AiConfigRpc {
     @GetMapping("/getModelConfig")
     @Operation(summary = "根据ID或配置代码获取模型配置", description = "根据ID或配置代码获取模型配置")
     @MscPermDeclare(user = UserType.RPC)
-    public ResponseData<AiModelInfoVo> getModelConfig(@RequestParam(required = false) Long id,
-                                                      @RequestParam(required = false) String configCode) {
+    public ResponseData<AiModelConfigVo> getModelConfig(@RequestParam(required = false) Long id,
+                                                        @RequestParam(required = false) String configCode) {
         if ((id == null || id <= 0) && StringUtils.isBlank(configCode)) {
             return ResponseData.errorMsg("id 和 configCode 不能同时为空");
         }
@@ -133,7 +133,7 @@ public class AiConfigRpcController implements AiConfigRpc {
     @GetMapping("/listModelConfigByType")
     @Operation(summary = "根据模型类型和标签获取模型配置列表", description = "根据模型类型和标签获取模型配置列表")
     @MscPermDeclare(user = UserType.RPC)
-    public ResponseData<List<AiModelInfoVo>> listModelConfigByType(@RequestParam String modelType, @RequestParam(required = false) String modelTag) {
+    public ResponseData<List<AiModelConfigVo>> listModelConfigByType(@RequestParam String modelType, @RequestParam(required = false) String modelTag) {
         if (StringUtils.isBlank(modelType)){
             return ResponseData.errorMsg("模型类型输入有误");
         }
@@ -141,7 +141,7 @@ public class AiConfigRpcController implements AiConfigRpc {
         if (configMap == null) {
             return ResponseData.success(List.of());
         }
-        List<AiModelInfoVo> result = configMap.values().stream()
+        List<AiModelConfigVo> result = configMap.values().stream()
                 .filter(c -> modelType.equals(c.getModelType()))
                 .filter(c -> StringUtils.isBlank(modelTag) || modelTag.equals(c.getModelTag()))
                 .map(this::toModelInfoVo)
@@ -205,8 +205,8 @@ public class AiConfigRpcController implements AiConfigRpc {
     /**
      * AiModelConfig 实体 → AiModelInfoVo
      */
-    private AiModelInfoVo toModelInfoVo(AiModelConfig config) {
-        AiModelInfoVo vo = new AiModelInfoVo();
+    private AiModelConfigVo toModelInfoVo(AiModelConfig config) {
+        AiModelConfigVo vo = new AiModelConfigVo();
         vo.setId(config.getId());
         vo.setSaasId(config.getSaasId());
         vo.setMchId(config.getMchId());

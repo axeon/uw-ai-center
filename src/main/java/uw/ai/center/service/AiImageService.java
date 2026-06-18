@@ -88,7 +88,7 @@ public class AiImageService {
             AiChatService.saveSessionMsg(sessionMsg);
 
             AiImageResultData resultData = new AiImageResultData();
-            resultData.setImageUrls(imageUrls);
+            resultData.setImageUrlList(imageUrls);
             resultData.setSessionId(sessionInfo.getId());
             return ResponseData.success(resultData);
         } catch (Exception e) {
