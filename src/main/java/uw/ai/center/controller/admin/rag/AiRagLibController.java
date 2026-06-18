@@ -61,10 +61,10 @@ public class AiRagLibController {
      *
      * @return
      */
-    @GetMapping("/liteList")
+    @GetMapping("/listLite")
     @Operation(summary = "轻量级列表rag文档库", description = "轻量级列表rag文档库，一般用于select控件。")
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.USER, log = ActionLog.NONE)
-    public ResponseData<PageList<AiRagLib>> liteList(AiRagLibQueryParam queryParam){
+    public ResponseData<PageList<AiRagLib>> listLite(AiRagLibQueryParam queryParam){
         queryParam.SELECT_SQL( "SELECT id,saas_id,lib_type,lib_name,embed_config_id,embed_model_name,create_date,modify_date,state from ai_rag_lib " );
         return dao.list(AiRagLib.class, queryParam);
     }

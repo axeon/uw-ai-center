@@ -52,10 +52,10 @@ public class AiModelApiController {
     /**
      * 轻量级列表AI模型API配置，一般用于select控件。
      */
-    @GetMapping("/liteList")
+    @GetMapping("/listLite")
     @Operation(summary = "轻量级列表AI模型API配置", description = "轻量级列表AI模型API配置，一般用于select控件。")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.USER, log = ActionLog.NONE)
-    public ResponseData<PageList<AiModelApi>> liteList(AiApiConfigQueryParam queryParam){
+    public ResponseData<PageList<AiModelApi>> listLite(AiApiConfigQueryParam queryParam){
         queryParam.saasId(AuthServiceHelper.getSaasId());
         queryParam.SELECT_SQL( "SELECT id,saas_id,mch_id,api_code,api_name,api_url,api_key,state,create_date,modify_date from ai_model_api " );
         return dao.list(AiModelApi.class, queryParam).onSuccess(dataList -> {

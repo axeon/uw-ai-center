@@ -64,10 +64,10 @@ public class AiRagDocController {
      *
      * @return
      */
-    @GetMapping("/liteList")
+    @GetMapping("/listLite")
     @Operation(summary = "轻量级列表rag文档信息", description = "轻量级列表rag文档信息，一般用于select控件。")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.USER, log = ActionLog.NONE)
-    public ResponseData<PageList<AiRagDoc>> liteList(AiRagDocQueryParam queryParam){
+    public ResponseData<PageList<AiRagDoc>> listLite(AiRagDocQueryParam queryParam){
         queryParam.saasId(AuthServiceHelper.getSaasId());
         queryParam.SELECT_SQL( "SELECT id,saas_id,lib_id,doc_type,doc_name,doc_body_size,doc_content_size,create_date,modify_date,state from ai_rag_doc " );
         return dao.list(AiRagDoc.class, queryParam);

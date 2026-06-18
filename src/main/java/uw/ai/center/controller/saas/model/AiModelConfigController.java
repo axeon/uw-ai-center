@@ -66,10 +66,10 @@ public class AiModelConfigController {
         return dao.list(AiModelConfig.class, queryParam);
     }
 
-    @GetMapping("/liteList")
+    @GetMapping("/listLite")
     @Operation(summary = "轻量级列表AI模型配置", description = "轻量级列表AI模型配置，一般用于select控件。")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.USER, log = ActionLog.NONE)
-    public ResponseData<PageList<AiModelConfig>> liteList(AiModelConfigQueryParam queryParam){
+    public ResponseData<PageList<AiModelConfig>> listLite(AiModelConfigQueryParam queryParam){
         queryParam.SELECT_SQL( "SELECT id,saas_id,mch_id,api_id,vendor_class,model_type,model_tag,config_code,config_name,model_name,state,create_date,modify_date from ai_model_config " );
         return dao.list(AiModelConfig.class, queryParam);
     }
