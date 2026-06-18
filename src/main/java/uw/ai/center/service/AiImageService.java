@@ -11,7 +11,7 @@ import uw.ai.center.entity.AiSessionInfo;
 import uw.ai.center.entity.AiSessionMsg;
 import uw.ai.center.vendor.AiVendorClientWrapper;
 import uw.ai.center.vendor.AiVendorHelper;
-import uw.ai.center.vendor.dashscope.DashScopeImageModel;
+import uw.ai.center.vendor.dashscope.imageModel.DashScopeImageModel;
 import uw.ai.vo.AiImageResultData;
 import uw.common.response.ResponseData;
 import uw.common.util.SystemClock;

@@ -1,4 +1,4 @@
-package uw.ai.center.model;
+package uw.ai.center.vendor.dashscope.realtimeTranscriptionModel;
 
 /**
  * 实时转录模型接口。

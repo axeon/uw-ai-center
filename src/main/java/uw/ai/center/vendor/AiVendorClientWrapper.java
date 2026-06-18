@@ -8,8 +8,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uw.ai.center.constant.ModelType;
-import uw.ai.center.model.RealtimeTranscriptionModel;
-import uw.ai.center.model.TtsModel;
+import uw.ai.center.vendor.dashscope.realtimeTranscriptionModel.RealtimeTranscriptionModel;
+import uw.ai.center.vendor.dashscope.realtimeTranscriptionModel.TtsModel;
 import uw.ai.center.vo.AiModelConfigData;
 
 /**

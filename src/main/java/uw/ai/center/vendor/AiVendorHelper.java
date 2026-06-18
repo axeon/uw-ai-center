@@ -15,7 +15,6 @@ import uw.ai.center.vendor.openai.OpenAiVendor;
 import uw.cache.CacheChangeNotifyListener;
 import uw.cache.CacheDataLoader;
 import uw.cache.FusionCache;
-import uw.common.app.constant.CommonState;
 import uw.dao.DaoManager;
 import uw.common.data.PageList;
 
@@ -23,7 +22,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 /**
  * AI Vendor 帮助类，管理 Vendors、AiModelConfigData 聚合缓存和 AiVendorClientWrapper 实例缓存。
@@ -43,19 +41,6 @@ public class AiVendorHelper {
     private static final LoadingCache<Long, AiVendorClientWrapper> CLIENT_WRAPPER_CACHE = Caffeine.newBuilder()
             .maximumSize(1000)
             .build(AiVendorHelper::buildClientWrapper);
-
-    /**
-     * 启用状态的模型配置全量列表缓存名
-     */
-    private static final String MODEL_CONFIG_CACHE = AiModelConfig.class.getSimpleName() + "List";
-    /**
-     * 启用状态的模型配置
-     */
-    private static final String MODEL_CONFIG_CODE_CACHE = AiModelConfig.class.getSimpleName() + "CodeIndex";
-    /**
-     * 启用状态的API配置全量列表缓存名
-     */
-    private static final String MODEL_API_CACHE = AiModelApi.class.getSimpleName() + "List";
 
     static {
         FusionCache.config(FusionCache.Config.builder()
@@ -85,64 +70,15 @@ public class AiVendorHelper {
         });
 
         FusionCache.config(FusionCache.Config.builder()
-                .cacheName(MODEL_CONFIG_CACHE)
-                .localCacheMaxNum(3)
+                .entityClass(AiModelApi.class)
+                .localCacheMaxNum(10000)
                 .cacheExpireMillis(86400_000L)
-                .nullProtectMillis(10_000L)
-                .build(), new CacheDataLoader<String, Map<Long, AiModelConfig>>() {
+                .nullProtectMillis(86400_000L)
+                .build(), new CacheDataLoader<Long, AiModelApi>() {
             @Override
-            public Map<Long, AiModelConfig> load(String key) throws Exception {
-                PageList<AiModelConfig> dataList = dao.list(AiModelConfig.class,
-                        "select * from ai_model_config where state=?", new Object[]{CommonState.ENABLED.getValue()}).getData();
-                if (dataList == null) {
-                    return null;
-                }
-                return dataList.
-                        stream().
-                        collect(Collectors.
-                                toMap(AiModelConfig::getId,
-                                        config -> config, (existingValue, newValue) -> existingValue));
-            }
-        });
-
-        FusionCache.config(FusionCache.Config.builder()
-                .cacheName(MODEL_CONFIG_CODE_CACHE)
-                .localCacheMaxNum(3)
-                .cacheExpireMillis(86400_000L)
-                .nullProtectMillis(10_000L)
-                .build(), new CacheDataLoader<String, Map<String, Long>>() {
-            @Override
-            public Map<String, Long> load(String key) throws Exception {
-                Map<Long, AiModelConfig> configMap = getEnabledModelConfigMap();
-                if (configMap == null || configMap.isEmpty()) {
-                    return null;
-                }
-                return configMap.values().stream()
-                        .filter(c -> StringUtils.isNotBlank(c.getConfigCode()))
-                        .collect(Collectors.toMap(
-                                AiModelConfig::getConfigCode, AiModelConfig::getId,
-                                (a, b) -> a));
-            }
-        });
-
-        FusionCache.config(FusionCache.Config.builder()
-                .cacheName(MODEL_API_CACHE)
-                .localCacheMaxNum(3)
-                .cacheExpireMillis(86400_000L)
-                .nullProtectMillis(10_000L)
-                .build(), new CacheDataLoader<String, Map<Long, AiModelApi>>() {
-            @Override
-            public Map<Long, AiModelApi> load(String key) throws Exception {
-                PageList<AiModelApi> dataList = dao.list(AiModelApi.class,
-                        "select * from ai_model_api where state=?", new Object[]{CommonState.ENABLED.getValue()}).getData();
-                if (dataList == null) {
-                    return null;
-                }
-                return dataList.
-                        stream().
-                        collect(Collectors.
-                                toMap(AiModelApi::getId,
-                                        api -> api, (existingValue, newValue) -> existingValue));
+            public AiModelApi load(Long apiId) throws Exception {
+                return dao.queryForObject(AiModelApi.class,
+                        "select * from ai_model_api where id=? and state=1", new Object[]{apiId}).getData();
             }
         });
 
@@ -210,21 +146,13 @@ public class AiVendorHelper {
     }
 
     /**
-     * 获取启用状态的模型配置全量Map
+     * 根据API配置ID获取AI API配置数据（启用状态）。
      */
-    public static Map<Long, AiModelConfig> getEnabledModelConfigMap() {
-        return FusionCache.get(MODEL_CONFIG_CACHE, MODEL_CONFIG_CACHE);
+    public static AiModelApi getApiConfig(long apiId) {
+        return FusionCache.get(AiModelApi.class, apiId);
     }
 
     /**
-     * 获取启用状态的API配置全量Map
-     */
-    public static Map<Long, AiModelApi> getEnabledModelApiMap() {
-        return FusionCache.get(MODEL_API_CACHE, MODEL_API_CACHE);
-    }
-
-    /**
-     *
      * @param configId   配置ID（<=0 表示未传）
      * @param configCode 配置代码
      * @return 解析出的 configId；若两者都为空或 configCode 未匹配到，返回 null
@@ -236,8 +164,9 @@ public class AiVendorHelper {
         if (StringUtils.isBlank(configCode)) {
             return null;
         }
-        Map<String, Long> codeIndex = FusionCache.get(MODEL_CONFIG_CODE_CACHE, MODEL_CONFIG_CODE_CACHE);
-        return codeIndex == null ? null : codeIndex.get(configCode);
+        return dao.queryForObject(Long.class,
+                "select id from ai_model_config where config_code=? and state=1 limit 1",
+                new Object[]{configCode}).getData();
     }
 
     /**
@@ -257,7 +186,6 @@ public class AiVendorHelper {
      */
     public static void invalidateConfig(long configId) {
         FusionCache.invalidate(AiModelConfigData.class, configId);
-        invalidateModelConfigListCache();
     }
 
     /**
@@ -271,22 +199,7 @@ public class AiVendorHelper {
                 invalidateConfig(config.getId());
             }
         }
-        invalidateModelApiListCache();
-    }
-
-    /**
-     * 失效模型配置列表缓存（全量）
-     */
-    public static void invalidateModelConfigListCache() {
-        FusionCache.invalidate(MODEL_CONFIG_CACHE, MODEL_CONFIG_CACHE);
-        FusionCache.invalidate(MODEL_CONFIG_CODE_CACHE, MODEL_CONFIG_CODE_CACHE);
-    }
-
-    /**
-     * 失效API配置列表缓存（全量）。
-     */
-    public static void invalidateModelApiListCache() {
-        FusionCache.invalidate(MODEL_API_CACHE, MODEL_API_CACHE);
+        FusionCache.invalidate(AiModelApi.class, apiId);
     }
 
     /**

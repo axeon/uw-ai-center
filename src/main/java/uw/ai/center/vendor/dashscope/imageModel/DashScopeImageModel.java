@@ -1,10 +1,11 @@
-package uw.ai.center.vendor.dashscope;
+package uw.ai.center.vendor.dashscope.imageModel;
 
 import dev.langchain4j.data.image.Image;
 import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.model.output.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uw.ai.center.vendor.dashscope.DashScopeApiClient;
 
 import java.net.URI;
 import java.util.HashMap;

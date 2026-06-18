@@ -115,7 +115,6 @@ public class AiModelApiController {
         aiModelApi.setModifyDate(null);
         aiModelApi.setState(CommonState.ENABLED.getValue());
         return dao.save( aiModelApi ).onSuccess(savedEntity -> {
-            AiVendorHelper.invalidateModelApiListCache();
             SysDataHistoryHelper.saveHistory(aiModelApi);
         });
     }

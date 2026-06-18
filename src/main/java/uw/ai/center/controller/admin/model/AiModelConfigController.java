@@ -112,7 +112,6 @@ public class AiModelConfigController {
         aiModelConfig.setModifyDate(null);
         aiModelConfig.setState(CommonState.ENABLED.getValue());
         return dao.save( aiModelConfig ).onSuccess(savedEntity -> {
-            AiVendorHelper.invalidateModelConfigListCache();
             SysDataHistoryHelper.saveHistory(aiModelConfig);
         });
     }

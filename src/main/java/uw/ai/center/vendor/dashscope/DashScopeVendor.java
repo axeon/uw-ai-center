@@ -4,12 +4,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import uw.ai.center.constant.ModelType;
+import uw.ai.center.vendor.dashscope.imageModel.DashScopeImageModel;
+import uw.ai.center.vendor.dashscope.imageModel.DashScopeImageParam;
+import uw.ai.center.vendor.dashscope.realtimeTranscriptionModel.DashScopeAudioParam;
+import uw.ai.center.vendor.dashscope.realtimeTranscriptionModel.DashScopeRealtimeTranscriptionModel;
+import uw.ai.center.vendor.dashscope.ttsModel.DashScopeTtsParam;
 import uw.ai.center.vo.AiModelConfigData;
 import uw.ai.center.vendor.AiVendor;
 import uw.ai.center.vendor.AiVendorClientWrapper;
 import uw.common.app.vo.JsonConfigBox;
 import uw.common.app.vo.JsonConfigParam;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -46,7 +52,11 @@ public class DashScopeVendor implements AiVendor {
 
     @Override
     public List<JsonConfigParam> configParam() {
-        return Arrays.asList(DashScopeParam.Config.values());
+        List<JsonConfigParam> params = new ArrayList<>();
+        params.addAll(Arrays.asList(DashScopeImageParam.Config.values()));
+        params.addAll(Arrays.asList(DashScopeAudioParam.Config.values()));
+        params.addAll(Arrays.asList(DashScopeTtsParam.Config.values()));
+        return params;
     }
 
     @Override

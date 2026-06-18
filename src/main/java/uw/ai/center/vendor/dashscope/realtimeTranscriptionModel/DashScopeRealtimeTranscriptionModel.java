@@ -1,4 +1,4 @@
-package uw.ai.center.vendor.dashscope;
+package uw.ai.center.vendor.dashscope.realtimeTranscriptionModel;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -10,8 +10,7 @@ import okhttp3.WebSocketListener;
 import okio.ByteString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uw.ai.center.model.RealtimeTranscriptionModel;
-import uw.ai.center.model.TranscriptionResultListener;
+import uw.ai.center.vendor.dashscope.DashScopeApiClient;
 
 import java.util.HashMap;
 import java.util.Map;
