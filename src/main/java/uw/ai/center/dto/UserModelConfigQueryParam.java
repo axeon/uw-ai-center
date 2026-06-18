@@ -76,6 +76,13 @@ public class UserModelConfigQueryParam extends PageQueryParam {
     private String vendorClass;
 
     /**
+     * 模型类型（CHAT/EMBEDDING/RERANK/TTS/OCR/IMAGE_GENERATION/AUDIO_TRANSCRIPTION）。
+     */
+    @QueryMeta(expr = "model_type=?")
+    @Schema(title = "模型类型", description = "模型类型：CHAT/EMBEDDING/RERANK/TTS/OCR/IMAGE_GENERATION/AUDIO_TRANSCRIPTION")
+    private String modelType;
+
+    /**
      * 服务商代码。
      */
     @QueryMeta(expr = "config_code like ?")
@@ -254,6 +261,28 @@ public class UserModelConfigQueryParam extends PageQueryParam {
      */
     public UserModelConfigQueryParam vendorClass(String vendorClass) {
         setVendorClass(vendorClass);
+        return this;
+    }
+
+    /**
+     * 获取模型类型。
+     */
+    public String getModelType() {
+        return this.modelType;
+    }
+
+    /**
+     * 设置模型类型。
+     */
+    public void setModelType(String modelType) {
+        this.modelType = modelType;
+    }
+
+    /**
+     * 设置模型类型链式调用。
+     */
+    public UserModelConfigQueryParam modelType(String modelType) {
+        setModelType(modelType);
         return this;
     }
 

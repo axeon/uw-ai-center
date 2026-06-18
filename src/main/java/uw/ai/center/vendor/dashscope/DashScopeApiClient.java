@@ -10,16 +10,14 @@ import org.slf4j.LoggerFactory;
 import uw.httpclient.http.HttpData;
 import uw.httpclient.json.JsonInterfaceHelper;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
- * DashScope 原生 HTTP API 客户端。
- * 封装阿里云 DashScope 的图片生成、语音识别、语音合成等 API 调用。
+ * DashScope 原生 API 客户端。
+ * 封装阿里云百炼 DashScope 的图片生成、实时语音识别（Fun-ASR）等能力。
  * <p>
  * HTTP 通信使用 uw-base 的 JsonInterfaceHelper（OkHttp 封装），
  * WebSocket 通信使用 JsonInterfaceHelper 底层的 OkHttpClient 创建连接。
@@ -28,9 +26,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * - OpenAI 兼容模式：https://dashscope.aliyuncs.com/compatible-mode/v1（仅支持 Chat/Embedding）
  * - 原生 API：https://dashscope.aliyuncs.com/api/v1（支持图片生成等全部能力）
  * <p>
- * 阿里云智能语音服务（NLS）使用独立的 WebSocket 协议：
- * - 网关地址：wss://nls-gateway-cn-shanghai.aliyuncs.com/ws/v1
- * - 鉴权：AccessKey ID/Secret → Token（POP API 获取，24h 有效）
+ * 实时语音识别（Fun-ASR）使用独立的 WebSocket 端点：
+ * - 华北2：wss://dashscope.aliyuncs.com/api-ws/v1/inference
+ * - 鉴权：请求头 Authorization: Bearer &lt;api_key&gt;（握手阶段验证）
  */
 public class DashScopeApiClient {
 
@@ -39,44 +37,11 @@ public class DashScopeApiClient {
     private static final JsonInterfaceHelper HTTP_HELPER = new JsonInterfaceHelper();
 
     /**
-     * NLS Token 缓存，key = accessKeyId，value = TokenEntry。
-     * Token 有效期 24 小时，提前 5 分钟刷新。
+     * DashScope Fun-ASR WebSocket
      */
-    private static final ConcurrentHashMap<String, TokenEntry> TOKEN_CACHE = new ConcurrentHashMap<>();
-
-    /** Token 提前刷新时间（5分钟） */
-    private static final long TOKEN_REFRESH_AHEAD_MILLIS = 5 * 60 * 1000L;
+    public static final String DASHSCOPE_WS_URL = "wss://dashscope.aliyuncs.com/api-ws/v1/inference";
 
     // ==================== DashScope 图片生成 ====================
-
-    /**
-     * 将配置的 apiUrl 转换为 NLS WebSocket 网关地址。
-     * DashScope 的 HTTP API 地址会自动转换为对应的 NLS WebSocket 地址。
-     * <p>
-     * 转换规则：
-     * - https://dashscope.aliyuncs.com/compatible-mode/v1 → wss://nls-gateway-cn-shanghai.aliyuncs.com/ws/v1
-     * - https://dashscope.aliyuncs.com/api/v1 → wss://nls-gateway-cn-shanghai.aliyuncs.com/ws/v1
-     * - 已是 wss:// 地址则直接使用
-     * - 其他域名按区域推断（默认上海）
-     */
-    public static String resolveNlsGatewayUrl(String apiUrl) {
-        if (apiUrl == null || apiUrl.isEmpty()) {
-            return "wss://nls-gateway-cn-shanghai.aliyuncs.com/ws/v1";
-        }
-        // 已经是 WebSocket 地址，直接使用
-        if (apiUrl.startsWith("wss://") || apiUrl.startsWith("ws://")) {
-            return apiUrl;
-        }
-        // DashScope HTTP 地址转换为 NLS WebSocket 地址
-        if (apiUrl.contains("dashscope.aliyuncs.com")) {
-            String nlsUrl = "wss://nls-gateway-cn-shanghai.aliyuncs.com/ws/v1";
-            logger.info("DashScope apiUrl 自动转换为NLS网关地址: {} -> {}", apiUrl, nlsUrl);
-            return nlsUrl;
-        }
-        // 其他地址默认按上海区域转换
-        logger.warn("无法识别的apiUrl格式，使用默认NLS上海网关地址: {} -> wss://nls-gateway-cn-shanghai.aliyuncs.com/ws/v1", apiUrl);
-        return "wss://nls-gateway-cn-shanghai.aliyuncs.com/ws/v1";
-    }
 
     /**
      * 将配置的 apiUrl 转换为 DashScope 原生 API 的 base URL。
@@ -233,19 +198,29 @@ public class DashScopeApiClient {
     }
 
     /**
-     * 语音识别（Paraformer）。
+     * 创建 DashScope Fun-ASR WebSocket 连接。
+     * 鉴权通过请求头 Authorization: Bearer &lt;apiKey&gt; 在握手阶段验证。
      *
-     * @param baseUrl  DashScope API 基础 URL
-     * @param apiKey   API Key
-     * @param model    模型名（如 paraformer-v2）
-     * @param audioUrl 音频文件 URL
-     * @param params   额外参数
-     * @return 识别文本
+     * @param apiKey      DashScope API Key（必填）
+     * @param workspaceId 阿里云百炼业务空间ID（可选，传 null 则不设置 X-DashScope-WorkSpace 头）
+     * @param listener    OkHttp WebSocketListener 回调
+     * @return WebSocket 实例
      */
-    public static String transcribeAudio(String baseUrl, String apiKey, String model, String audioUrl, Map<String, Object> params) {
-        // 语音识别将在功能点3中实现
-        throw new UnsupportedOperationException("语音识别功能将在后续功能点中实现");
+    public static WebSocket createDashScopeWebSocket(String apiKey, String workspaceId, WebSocketListener listener) {
+        Request.Builder requestBuilder = new Request.Builder()
+                .url(DASHSCOPE_WS_URL)
+                .header("Authorization", "Bearer " + apiKey);
+
+        if (workspaceId != null && !workspaceId.isEmpty()) {
+            requestBuilder.header("X-DashScope-WorkSpace", workspaceId);
+        }
+
+        Request request = requestBuilder.build();
+        logger.info("创建DashScope Fun-ASR WebSocket连接: url={}, workspaceId={}", DASHSCOPE_WS_URL, workspaceId);
+        return HTTP_HELPER.getOkHttpClient().newWebSocket(request, listener);
     }
+
+    // ==================== 语音合成 ====================
 
     /**
      * 语音合成（CosyVoice/Sambert）。
@@ -260,25 +235,5 @@ public class DashScopeApiClient {
     public static byte[] synthesizeSpeech(String baseUrl, String apiKey, String model, String text, Map<String, Object> params) {
         // 语音合成将在功能点4中实现
         throw new UnsupportedOperationException("语音合成功能将在后续功能点中实现");
-    }
-
-    /**
-     * NLS Token 缓存条目。
-     */
-    private static class TokenEntry {
-        final String token;
-        final long expireTimeMillis;
-
-        TokenEntry(String token, long expireTimeMillis) {
-            this.token = token;
-            this.expireTimeMillis = expireTimeMillis;
-        }
-
-        /**
-         * 是否已过期（提前 5 分钟判定过期以触发刷新）。
-         */
-        boolean isExpired() {
-            return System.currentTimeMillis() >= (expireTimeMillis - TOKEN_REFRESH_AHEAD_MILLIS);
-        }
     }
 }

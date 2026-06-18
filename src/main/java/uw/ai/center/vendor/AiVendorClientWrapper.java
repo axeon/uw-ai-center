@@ -4,18 +4,18 @@ import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import dev.langchain4j.model.embedding.EmbeddingModel;
  import dev.langchain4j.model.image.ImageModel;
-import dev.langchain4j.model.audio.AudioTranscriptionModel;
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uw.ai.center.constant.ModelType;
+import uw.ai.center.model.RealtimeTranscriptionModel;
 import uw.ai.center.model.TtsModel;
 import uw.ai.center.vo.AiModelConfigData;
 
 /**
  * AI供应商客户端封装类（LangChain4j）。
  * 按modelType构建：CHAT类型提供ChatModel+StreamingChatModel，EMBEDDING类型提供EmbeddingModel，
- * IMAGE_GENERATION类型提供ImageModel，AUDIO_TRANSCRIPTION类型提供AudioTranscriptionModel，
+ * IMAGE_GENERATION类型提供ImageModel，AUDIO_TRANSCRIPTION类型提供RealtimeTranscriptionModel，
  * TTS类型提供TtsModel。
  * 实现AutoCloseable，在缓存失效时主动释放底层HTTP连接池等资源。
  */
@@ -39,8 +39,8 @@ public class AiVendorClientWrapper implements AutoCloseable {
     @Schema(title = "图片生成模型", description = "图片生成模型，IMAGE_GENERATION类型时可用")
     private final ImageModel imageModel;
 
-    @Schema(title = "语音识别模型", description = "语音识别模型，AUDIO_TRANSCRIPTION类型时可用")
-    private final AudioTranscriptionModel audioTranscriptionModel;
+    @Schema(title = "实时语音识别模型", description = "实时语音识别模型，AUDIO_TRANSCRIPTION类型时可用")
+    private final RealtimeTranscriptionModel audioTranscriptionModel;
 
     @Schema(title = "语音合成模型", description = "语音合成模型，TTS类型时可用")
     private final TtsModel ttsModel;
@@ -50,7 +50,7 @@ public class AiVendorClientWrapper implements AutoCloseable {
                                  StreamingChatModel streamingChatModel,
                                  EmbeddingModel embeddingModel,
                                  ImageModel imageModel,
-                                 AudioTranscriptionModel audioTranscriptionModel,
+                                 RealtimeTranscriptionModel audioTranscriptionModel,
                                  TtsModel ttsModel) {
         this.configData = configData;
         this.chatModel = chatModel;
@@ -81,7 +81,7 @@ public class AiVendorClientWrapper implements AutoCloseable {
         return imageModel;
     }
 
-    public AudioTranscriptionModel getAudioTranscriptionModel() {
+    public RealtimeTranscriptionModel getAudioTranscriptionModel() {
         return audioTranscriptionModel;
     }
 

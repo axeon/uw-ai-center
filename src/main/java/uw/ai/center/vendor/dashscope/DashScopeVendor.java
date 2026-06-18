@@ -58,10 +58,7 @@ public class DashScopeVendor implements AiVendor {
         }
         return switch (modelType) {
             case IMAGE_GENERATION -> buildImageGeneration(configData);
-            case AUDIO_TRANSCRIPTION -> {
-                logger.warn("DashScopeVendor暂不支持模型类型: {}，将在后续功能点中实现", modelType);
-                yield null;
-            }
+            case AUDIO_TRANSCRIPTION -> buildAudioTranscription(configData);
             case TTS -> {
                 logger.warn("DashScopeVendor暂不支持模型类型: {}，将在后续功能点中实现", modelType);
                 yield null;
@@ -102,6 +99,56 @@ public class DashScopeVendor implements AiVendor {
         );
 
         return new AiVendorClientWrapper(configData, null, null, null, imageModel, null, null);
+    }
+
+    /**
+     * 构建实时语音识别客户端（DashScope Fun-ASR 协议）。
+     * <p>
+     * 鉴权方式：使用 ai_model_api.api_key 作为 Bearer Token（请求头 Authorization）。
+     * 模型名：从 ai_model_config.model_name 读取（如 fun-asr-realtime）。
+     * 业务空间ID：可选，通过 configParam 的 dashscope.workspace_id 配置。
+     * 其他识别参数（format/sample_rate/language_hints 等）通过 configParam 的 audio.* 配置。
+     */
+    private AiVendorClientWrapper buildAudioTranscription(AiModelConfigData configData) {
+        JsonConfigBox configParamBox = configData.getConfigParamBox();
+        Map<String, Object> params = new HashMap<>();
+        String workspaceId = null;
+
+        if (configParamBox != null) {
+            // 业务空间ID（可选）
+            workspaceId = configParamBox.getParam("dashscope.workspace_id", "");
+
+            // 音频识别参数
+            String format = configParamBox.getParam("audio.format", null);
+            int sampleRate = configParamBox.getIntParam("audio.sample_rate", 0);
+            String languageHints = configParamBox.getParam("audio.language_hints", null);
+            boolean semanticPunctuation = configParamBox.getBooleanParam("audio.semantic_punctuation", false);
+            int maxSentenceSilence = configParamBox.getIntParam("audio.max_sentence_silence", 0);
+
+            if (format != null && !format.isEmpty()) params.put("format", format);
+            if (sampleRate > 0) params.put("sample_rate", sampleRate);
+            if (languageHints != null && !languageHints.isEmpty()) params.put("language_hints", languageHints);
+            params.put("semantic_punctuation_enabled", semanticPunctuation);
+            if (maxSentenceSilence > 0) params.put("max_sentence_silence", maxSentenceSilence);
+
+            // speech_noise_threshold 可选 float
+            String noiseThresholdStr = configParamBox.getParam("audio.speech_noise_threshold", null);
+            if (noiseThresholdStr != null && !noiseThresholdStr.isEmpty()) {
+                try {
+                    params.put("speech_noise_threshold", Double.parseDouble(noiseThresholdStr));
+                } catch (NumberFormatException ignored) {
+                }
+            }
+        }
+
+        var transcriptionModel = new DashScopeRealtimeTranscriptionModel(
+                configData.getApiKeyRaw(),
+                configData.getModelName(),
+                workspaceId,
+                params
+        );
+
+        return new AiVendorClientWrapper(configData, null, null, null, null, transcriptionModel, null);
     }
 
     @Override
