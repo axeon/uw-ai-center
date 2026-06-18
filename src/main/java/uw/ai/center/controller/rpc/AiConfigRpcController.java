@@ -59,11 +59,11 @@ public class AiConfigRpcController implements AiConfigRpc {
             sql.append(" and mch_id=?");
             args.add(mchId);
         }
-        PageList<AiModelConfig> page = dao.list(AiModelConfig.class, sql.toString(), args.toArray()).getData();
-        if (page == null || page.isEmpty()) {
+        PageList<AiModelConfig> pageList = dao.list(AiModelConfig.class, sql.toString(), args.toArray()).getData();
+        if (pageList == null || pageList.isEmpty()) {
             return ResponseData.success(List.of());
         }
-        return ResponseData.success(page.stream().
+        return ResponseData.success(pageList.stream().
                 map(this::toModelInfoVo).
                 collect(Collectors.toList()));
     }
@@ -80,22 +80,17 @@ public class AiConfigRpcController implements AiConfigRpc {
         if ((apiId == null || apiId <= 0) && StringUtils.isBlank(apiCode)) {
             return ResponseData.errorMsg("配置Id有误");
         }
-        Long targetApiId = apiId;
-        if ((targetApiId == null || targetApiId <= 0) && StringUtils.isNotBlank(apiCode)) {
-            targetApiId = dao.queryForObject(Long.class,
-                    "select id from ai_model_api where api_code=? and state=1 limit 1",
-                    new Object[]{apiCode}).getData();
-        }
+        Long targetApiId = AiVendorHelper.resolveApiId(apiId == null ? 0 : apiId, apiCode);
         if (targetApiId == null || targetApiId <= 0) {
             return ResponseData.errorMsg("API配置不存在或未启用");
         }
-        PageList<AiModelConfig> page = dao.list(AiModelConfig.class,
+        PageList<AiModelConfig> pageList = dao.list(AiModelConfig.class,
                 "select * from ai_model_config where state=1 and api_id=?",
                 new Object[]{targetApiId}).getData();
-        if (page == null || page.isEmpty()) {
+        if (pageList == null || pageList.isEmpty()) {
             return ResponseData.success(List.of());
         }
-        return ResponseData.success(page.stream().
+        return ResponseData.success(pageList.stream().
                 map(this::toModelInfoVo).
                 collect(Collectors.toList()));
     }
@@ -112,12 +107,7 @@ public class AiConfigRpcController implements AiConfigRpc {
         if ((id == null || id <= 0) && StringUtils.isBlank(configCode)) {
             return ResponseData.errorMsg("id 和 configCode 不能同时为空");
         }
-        Long configId = id;
-        if ((configId == null || configId <= 0) && StringUtils.isNotBlank(configCode)) {
-            configId = dao.queryForObject(Long.class,
-                    "select id from ai_model_config where config_code=? and state=1 limit 1",
-                    new Object[]{configCode}).getData();
-        }
+        Long configId = AiVendorHelper.resolveConfigId(id == null ? 0 : id, configCode);
         if (configId == null || configId <= 0) {
             return ResponseData.errorMsg("模型配置不存在或未启用");
         }
@@ -146,11 +136,11 @@ public class AiConfigRpcController implements AiConfigRpc {
             sql.append(" and model_tag=?");
             args.add(modelTag);
         }
-        PageList<AiModelConfig> page = dao.list(AiModelConfig.class, sql.toString(), args.toArray()).getData();
-        if (page == null || page.isEmpty()) {
+        PageList<AiModelConfig> pageList = dao.list(AiModelConfig.class, sql.toString(), args.toArray()).getData();
+        if (pageList == null || pageList.isEmpty()) {
             return ResponseData.success(List.of());
         }
-        return ResponseData.success(page.stream().
+        return ResponseData.success(pageList.stream().
                 map(this::toModelInfoVo).
                 collect(Collectors.toList()));
     }
@@ -173,11 +163,11 @@ public class AiConfigRpcController implements AiConfigRpc {
             sql.append(" and mch_id=?");
             args.add(mchId);
         }
-        PageList<AiModelApi> page = dao.list(AiModelApi.class, sql.toString(), args.toArray()).getData();
-        if (page == null || page.isEmpty()) {
+        PageList<AiModelApi> pageList = dao.list(AiModelApi.class, sql.toString(), args.toArray()).getData();
+        if (pageList == null || pageList.isEmpty()) {
             return ResponseData.success(List.of());
         }
-        return ResponseData.success(page.stream().
+        return ResponseData.success(pageList.stream().
                 map(this::toModelApiVo).
                 collect(Collectors.toList()));
     }
@@ -194,12 +184,7 @@ public class AiConfigRpcController implements AiConfigRpc {
         if ((id == null || id <= 0) && StringUtils.isBlank(apiCode)) {
             return ResponseData.errorMsg("id 和 apiCode 不能同时为空");
         }
-        Long apiId = id;
-        if ((apiId == null || apiId <= 0) && StringUtils.isNotBlank(apiCode)) {
-            apiId = dao.queryForObject(Long.class,
-                    "select id from ai_model_api where api_code=? and state=1 limit 1",
-                    new Object[]{apiCode}).getData();
-        }
+        Long apiId = AiVendorHelper.resolveApiId(id == null ? 0 : id, apiCode);
         if (apiId == null || apiId <= 0) {
             return ResponseData.errorMsg("API配置不存在或未启用");
         }

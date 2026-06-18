@@ -4,7 +4,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
-import uw.ai.center.websocket.AiAudioTranscriptionHandler;
+import uw.ai.center.vendor.dashscope.realtimeTranscriptionModel.AiAudioTranscriptionHandler;
 
 /**
  * Spring WebSocket 配置。

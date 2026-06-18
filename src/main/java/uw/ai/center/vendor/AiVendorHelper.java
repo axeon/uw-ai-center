@@ -42,6 +42,16 @@ public class AiVendorHelper {
             .maximumSize(1000)
             .build(AiVendorHelper::buildClientWrapper);
 
+    /**
+     * FusionCache cacheName：configCode → configId 映射（高频 RPC 查询场景）。
+     */
+    private static final String CACHE_CONFIG_CODE_TO_ID = "AiConfigCodeToIdMapping";
+
+    /**
+     * FusionCache cacheName：apiCode → apiId 映射（高频 RPC 查询场景）。
+     */
+    private static final String CACHE_API_CODE_TO_ID = "AiApiCodeToIdMapping";
+
     static {
         FusionCache.config(FusionCache.Config.builder()
                 .entityClass(AiModelConfigData.class)
@@ -79,6 +89,36 @@ public class AiVendorHelper {
             public AiModelApi load(Long apiId) throws Exception {
                 return dao.queryForObject(AiModelApi.class,
                         "select * from ai_model_api where id=? and state=1", new Object[]{apiId}).getData();
+            }
+        });
+
+        // configCode → configId 映射缓存（高频 RPC 查询场景，失效时由 invalidateConfig 双清）
+        FusionCache.config(FusionCache.Config.builder()
+                .cacheName(CACHE_CONFIG_CODE_TO_ID)
+                .localCacheMaxNum(1000)
+                .cacheExpireMillis(86400_000L)
+                .nullProtectMillis(86400_000L)
+                .build(), new CacheDataLoader<String, Long>() {
+            @Override
+            public Long load(String configCode) throws Exception {
+                return dao.queryForObject(Long.class,
+                        "select id from ai_model_config where config_code=? and state=1 limit 1",
+                        new Object[]{configCode}).getData();
+            }
+        });
+
+        // apiCode → apiId 映射缓存（高频 RPC 查询场景，失效时由 invalidateApiConfig 双清）
+        FusionCache.config(FusionCache.Config.builder()
+                .cacheName(CACHE_API_CODE_TO_ID)
+                .localCacheMaxNum(1000)
+                .cacheExpireMillis(86400_000L)
+                .nullProtectMillis(86400_000L)
+                .build(), new CacheDataLoader<String, Long>() {
+            @Override
+            public Long load(String apiCode) throws Exception {
+                return dao.queryForObject(Long.class,
+                        "select id from ai_model_api where api_code=? and state=1 limit 1",
+                        new Object[]{apiCode}).getData();
             }
         });
 
@@ -153,6 +193,8 @@ public class AiVendorHelper {
     }
 
     /**
+     * 解析 configId：优先使用入参 configId，否则按 configCode 走 FusionCache 映射（命中 uk_config_code 索引）。
+     *
      * @param configId   配置ID（<=0 表示未传）
      * @param configCode 配置代码
      * @return 解析出的 configId；若两者都为空或 configCode 未匹配到，返回 null
@@ -164,9 +206,24 @@ public class AiVendorHelper {
         if (StringUtils.isBlank(configCode)) {
             return null;
         }
-        return dao.queryForObject(Long.class,
-                "select id from ai_model_config where config_code=? and state=1 limit 1",
-                new Object[]{configCode}).getData();
+        return FusionCache.get(CACHE_CONFIG_CODE_TO_ID, configCode);
+    }
+
+    /**
+     * 解析 apiId：优先使用入参 apiId，否则按 apiCode 走 FusionCache 映射（命中 uk_api_code 索引）。
+     *
+     * @param apiId   API配置ID（<=0 表示未传）
+     * @param apiCode API配置代码
+     * @return 解析出的 apiId；若两者都为空或 apiCode 未匹配到，返回 null
+     */
+    public static Long resolveApiId(long apiId, String apiCode) {
+        if (apiId > 0) {
+            return apiId;
+        }
+        if (StringUtils.isBlank(apiCode)) {
+            return null;
+        }
+        return FusionCache.get(CACHE_API_CODE_TO_ID, apiCode);
     }
 
     /**
@@ -183,13 +240,21 @@ public class AiVendorHelper {
     /**
      * 刷新指定模型配置的缓存。
      * FusionCache 失效时自动触发 CacheChangeNotifyListener → invalidateClientWrapper。
+     * 同时双清 configCode → configId 映射缓存，避免脏数据。
      */
     public static void invalidateConfig(long configId) {
+        // 失效前先从主缓存拿出 configCode（失效后就没法拿了）
+        AiModelConfigData data = FusionCache.get(AiModelConfigData.class, configId);
         FusionCache.invalidate(AiModelConfigData.class, configId);
+        if (data != null && data.getAiModelConfig() != null
+                && StringUtils.isNotBlank(data.getAiModelConfig().getConfigCode())) {
+            FusionCache.invalidate(CACHE_CONFIG_CODE_TO_ID, data.getAiModelConfig().getConfigCode());
+        }
     }
 
     /**
      * API配置变更时，级联失效关联的模型配置缓存。
+     * 同时双清 apiCode → apiId 映射缓存，避免脏数据。
      */
     public static void invalidateApiConfig(long apiId) {
         PageList<AiModelConfig> configs = dao.list(AiModelConfig.class,
@@ -199,7 +264,12 @@ public class AiVendorHelper {
                 invalidateConfig(config.getId());
             }
         }
+        // 失效前先从主缓存拿出 apiCode（失效后就没法拿了）
+        AiModelApi api = FusionCache.get(AiModelApi.class, apiId);
         FusionCache.invalidate(AiModelApi.class, apiId);
+        if (api != null && StringUtils.isNotBlank(api.getApiCode())) {
+            FusionCache.invalidate(CACHE_API_CODE_TO_ID, api.getApiCode());
+        }
     }
 
     /**
