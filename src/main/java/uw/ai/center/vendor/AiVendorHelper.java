@@ -67,8 +67,8 @@ public class AiVendorHelper {
                 if (modelConfig == null) {
                     return null;
                 }
-                AiModelApi apiConfig = dao.queryForObject(AiModelApi.class,
-                        "select * from ai_model_api where id=? and state=1", new Object[]{modelConfig.getApiId()}).getData();
+                // 复用 AiModelApi.class 缓存，避免重复查 DB
+                AiModelApi apiConfig = FusionCache.get(AiModelApi.class, modelConfig.getApiId());
                 if (apiConfig == null) {
                     return null;
                 }
