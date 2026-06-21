@@ -43,7 +43,10 @@ public class AiMysqlChatMemory {
     }
 
     /**
-     * 软删除会话消息。
+     * 软删除会话消息（将启用状态的消息置为删除状态）。
+     * <p>清除历史后，load() 不再返回这些消息，相当于重置多轮对话上下文。
+     *
+     * @param sessionId 会话ID
      */
     public static void clear(long sessionId) {
         dao.execute("update ai_session_msg set state=? where session_id=? and state=?",

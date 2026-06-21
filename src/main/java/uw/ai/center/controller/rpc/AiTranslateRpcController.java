@@ -21,7 +21,8 @@ import uw.auth.service.constant.UserType;
 import uw.common.response.ResponseData;
 
 /**
- * AI翻译RPC接口。
+ * AI翻译 RPC 接口。
+ * <p>供其他微服务通过 RPC 调用，提供数组翻译与 Map 翻译能力，结果转为结构化对象返回。
  */
 @RestController
 @Tag(name = "TranslateRPC接口")

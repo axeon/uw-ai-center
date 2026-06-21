@@ -15,6 +15,8 @@ import uw.common.response.ResponseData;
 
 /**
  * AI图片生成用户接口。
+ * <p>面向 C 端用户，根据文本提示词生成图片，返回图片 URL 列表及会话 ID。
+ * 用户身份由 AuthServiceHelper 自动注入。
  */
 @RestController
 @RequestMapping("/user/image")

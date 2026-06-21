@@ -136,6 +136,9 @@ public class AiRagDocController {
         aiRagDoc.setDocBodySize( docFile.getSize() );
         //添加文档
         Map<String,String> fileContentMap = AiRagService.buildDocument( libId, docFile );
+        if (fileContentMap == null || fileContentMap.isEmpty()) {
+            return ResponseData.errorMsg("文档解析或向量化失败，请检查RAG库配置及文件内容是否为空");
+        }
         aiRagDoc.setDocContent( JsonUtils.toString( fileContentMap) );
         aiRagDoc.setDocContentSize( aiRagDoc.getDocContent().length() );
         aiRagDoc.setCreateDate( SystemClock.nowDate() );

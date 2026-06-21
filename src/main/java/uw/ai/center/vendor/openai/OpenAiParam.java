@@ -5,6 +5,11 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import uw.common.app.vo.JsonConfigParam;
 import uw.common.util.EnumUtils;
 
+/**
+ * OpenAI 供应商的配置参数定义。
+ * <p>内部 {@link Config} 枚举列举了 OpenAI 接口可调参数（采样温度、最大 token、工具、停止序列等），
+ * 作为 ai_model_config.model_data 的参数模板供管理端配置。
+ */
 public class OpenAiParam {
 
     @JsonFormat(shape = JsonFormat.Shape.OBJECT)

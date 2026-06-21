@@ -27,6 +27,11 @@ import uw.auth.service.constant.UserType;
 import uw.common.response.ResponseData;
 import uw.common.data.PageList;
 
+/**
+ * 聊天 RPC 接口（供其他微服务通过 RPC 调用 AI 对话能力）。
+ * <p>实现 {@link AiChatRpc}，提供同步生成、流式生成（SSE）、多轮聊天、会话初始化与历史查询。
+ * configId 与 configCode 二选一，通过 {@link AiVendorHelper#resolveConfigId} 解析。
+ */
 @RestController
 @Tag(name = "ChatRPC接口")
 @RequestMapping("/rpc/chat")

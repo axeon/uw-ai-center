@@ -128,7 +128,7 @@ public class AiModelApiController {
     public ResponseData<AiModelApi> update(@RequestBody AiModelApi aiModelApi, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiModelApi.class,aiModelApi.getId(),remark);
         if (StringUtils.isNotBlank(aiModelApi.getApiCode())) {
-            long count = dao.queryForValue(Long.class, "select count(*) from ai_model_api where api_code=? and state=? and id = ?", new Object[]{aiModelApi.getApiCode(), CommonState.ENABLED.getValue(), aiModelApi.getId()}).getData();
+            long count = dao.queryForValue(Long.class, "select count(*) from ai_model_api where api_code=? and state=? and id<>?", new Object[]{aiModelApi.getApiCode(), CommonState.ENABLED.getValue(), aiModelApi.getId()}).getData();
             if (count > 0) {
                 return ResponseData.errorMsg("配置代码[" + aiModelApi.getApiCode() + "]已存在！");
             }

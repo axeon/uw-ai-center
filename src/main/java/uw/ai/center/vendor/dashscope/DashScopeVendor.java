@@ -83,6 +83,13 @@ public class DashScopeVendor implements AiVendor {
     /**
      * 构建图片生成客户端。
      */
+    /**
+     * 构建图片生成客户端（通义万相）。
+     * <p>从 configParam 读取 image.size / image.style / image.n 参数，封装为 {@link DashScopeImageModel}。
+     *
+     * @param configData 模型配置数据
+     * @return 封装了图片生成模型的客户端
+     */
     private AiVendorClientWrapper buildImageGeneration(AiModelConfigData configData) {
         JsonConfigBox configParamBox = configData.getConfigParamBox();
         Map<String, Object> params = new HashMap<>();

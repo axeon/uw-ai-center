@@ -30,6 +30,11 @@ public class SwaggerConfig {
     @Value("${project.version}")
     private String appVersion;
 
+    /**
+     * 自定义 OpenAPI：统一注入 Bearer Token 鉴权方案和应用信息。
+     *
+     * @return OpenApiCustomizer 实例
+     */
     @Bean
     public OpenApiCustomizer customOpenAPI() {
         return openApi -> openApi

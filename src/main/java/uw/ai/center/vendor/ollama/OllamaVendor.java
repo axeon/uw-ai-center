@@ -67,6 +67,12 @@ public class OllamaVendor implements AiVendor {
         };
     }
 
+    /**
+     * 构建 CHAT 客户端：同时创建同步 OllamaChatModel 与流式 OllamaStreamingChatModel。
+     *
+     * @param configData 模型配置数据
+     * @return 封装了两个聊天模型的客户端
+     */
     private AiVendorClientWrapper buildChat(AiModelConfigData configData) {
         JsonConfigBox configParamBox = configData.getConfigParamBox();
         double temperature = configParamBox != null
@@ -89,6 +95,12 @@ public class OllamaVendor implements AiVendor {
         return new AiVendorClientWrapper(configData, syncModel, streamingModel, null, null, null, null);
     }
 
+    /**
+     * 构建 EMBEDDING 客户端，用于将文本转向量供 RAG 检索。
+     *
+     * @param configData 模型配置数据
+     * @return 封装了嵌入模型的客户端
+     */
     private AiVendorClientWrapper buildEmbedding(AiModelConfigData configData) {
         var embeddingModel = OllamaEmbeddingModel.builder()
                 .baseUrl(configData.getApiUrl())

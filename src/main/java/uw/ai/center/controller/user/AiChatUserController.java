@@ -25,7 +25,9 @@ import uw.common.response.ResponseData;
 import uw.common.data.PageList;
 
 /**
- * ChatClient 接口
+ * 普通用户聊天接口。
+ * <p>面向 C 端用户，提供同步生成、流式聊天（SSE）、会话初始化与历史查询能力。
+ * 用户身份（saasId/userId 等）由 AuthServiceHelper 自动注入，无需前端传递。
  */
 @RestController
 @Tag(name = "ChatUser接口")

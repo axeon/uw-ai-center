@@ -19,7 +19,8 @@ import uw.dao.TransactionException;
 
 
 /**
- * RagUserController
+ * 普通用户 RAG 知识库查询接口。
+ * <p>面向 C 端用户，只读列出当前租户下启用的 RAG 库，供前端在对话时选择挂载的知识库。
  */
 @RestController
 @Tag(name = "RagUser接口")

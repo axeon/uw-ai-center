@@ -51,12 +51,22 @@ public class AiToolHelper {
         });
     }
 
+    /**
+     * 构造方法，注入用于 RPC 转发工具调用的 RestClient。
+     *
+     * @param authRestClient 鉴权 RestClient（由 Spring 容器注入，带服务发现与鉴权）
+     */
     public AiToolHelper(RestClient authRestClient) {
         AiToolHelper.authRestClient = authRestClient;
     }
 
     /**
      * 获取 LangChain4j ToolSpecification 列表。
+     * <p>按调用方传入的 toolCode（appName/toolClass）从缓存匹配 AiToolInfo，转换为 ToolSpecification。
+     * 未匹配到的工具会被静默跳过。
+     *
+     * @param aiToolCallInfoList 工具调用信息列表
+     * @return ToolSpecification 列表（可能为空）
      */
     public static List<ToolSpecification> getToolSpecifications(List<AiToolCallInfo> aiToolCallInfoList) {
         List<ToolSpecification> specs = new ArrayList<>();
@@ -78,6 +88,12 @@ public class AiToolHelper {
 
     /**
      * 执行工具（通过 RPC 转发到外部微服务）。
+     * <p>按 toolName（appName/toolClass）匹配 AiToolInfo，转发到对应微服务的 /rpc/ai/tool/execute。
+     * 结果序列化为 JSON 字符串返回给 AI 模型作为工具执行结果。
+     *
+     * @param toolName  工具名（appName/toolClass）
+     * @param toolInput 工具入参 JSON
+     * @return 工具执行结果 JSON 字符串；工具未找到时返回错误信息
      */
     public static String executeTool(String toolName, String toolInput) {
         try {
@@ -95,7 +111,11 @@ public class AiToolHelper {
     }
 
     /**
-     * 执行工具回调。
+     * 执行工具回调：通过 authRestClient 把工具调用转发到外部微服务。
+     *
+     * @param aiToolInfo 工具信息（含 appName / toolClass / id）
+     * @param toolInput  工具入参 JSON
+     * @return 外部微服务返回的响应数据
      */
     public static ResponseData toolCallback(AiToolInfo aiToolInfo, String toolInput) {
         AiToolExecuteParam param = new AiToolExecuteParam();
@@ -112,7 +132,9 @@ public class AiToolHelper {
     }
 
     /**
-     * 刷新工具缓存。
+     * 刷新工具缓存（工具配置变更后调用，使下次请求重新加载）。
+     *
+     * @return true=失效成功
      */
     public static boolean invalidateToolCache() {
         return FusionCache.invalidate(AiToolInfo.class.getSimpleName(), AiToolInfo.class.getSimpleName());

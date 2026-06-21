@@ -6,6 +6,8 @@ import java.util.Date;
 
 /**
  * AiApiConfigData API连接配置数据对象。
+ * <p>包装 {@link AiModelApi} 实体，提供 getUrl/getApiKeyRaw 等便捷访问；
+ * {@link #getApiKey()} 返回掩码后的密钥用于前端展示，{@link #getApiKeyRaw()} 返回明文仅供服务端构建 Vendor 客户端。
  */
 public class AiApiConfigData {
 
@@ -14,9 +16,17 @@ public class AiApiConfigData {
      */
     private AiModelApi aiModelApi;
 
+    /**
+     * 默认构造（反序列化用）。
+     */
     public AiApiConfigData() {
     }
 
+    /**
+     * 构造 API 连接配置包装对象。
+     *
+     * @param aiModelApi API 配置实体
+     */
     public AiApiConfigData(AiModelApi aiModelApi) {
         this.aiModelApi = aiModelApi;
     }

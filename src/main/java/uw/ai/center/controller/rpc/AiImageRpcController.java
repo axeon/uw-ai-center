@@ -17,7 +17,7 @@ import uw.common.response.ResponseData;
 
 /**
  * AI图片生成RPC接口。
- * 供uw-ai-project等客户端通过RPC调用，执行图片生成操作。
+ * <p>供其他微服务通过 RPC 调用，根据文本提示词生成图片，返回图片 URL 列表及会话 ID。
  */
 @RestController
 @Tag(name = "ImageRPC接口")

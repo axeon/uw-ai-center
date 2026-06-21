@@ -17,7 +17,8 @@ import uw.common.data.PageList;
 import uw.dao.TransactionException;
 
 /**
- * ModelUserController.
+ * 普通用户模型配置查询接口。
+ * <p>面向 C 端用户，只读列出当前租户下启用的 AI 模型配置（脱敏，不含密钥），供前端选择模型。
  */
 @RestController
 @Tag(name = "ModelUser接口")

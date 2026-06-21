@@ -121,9 +121,9 @@ public class AiModelConfigController {
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData<AiModelConfig> update(@RequestBody AiModelConfig aiModelConfig, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiModelConfig.class,aiModelConfig.getId(),remark);
-        // 判重：配置代码在未删除记录中必须全局唯一（排除自身）
+        // 判重：配置代码在未删除记录中必须全局唯一（排除自身，避免修改自身时误判为重复）
         if (StringUtils.isNotBlank(aiModelConfig.getConfigCode())) {
-            long count = dao.queryForValue(Long.class, "select count(*) from ai_model_config where config_code=? and state=? and id =?", new Object[]{aiModelConfig.getConfigCode(), CommonState.ENABLED.getValue(), aiModelConfig.getId()}).getData();
+            long count = dao.queryForValue(Long.class, "select count(*) from ai_model_config where config_code=? and state=? and id<>?", new Object[]{aiModelConfig.getConfigCode(), CommonState.ENABLED.getValue(), aiModelConfig.getId()}).getData();
             if (count > 0) {
                 return ResponseData.errorMsg("配置代码[" + aiModelConfig.getConfigCode() + "]已存在！");
             }

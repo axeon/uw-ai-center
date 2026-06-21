@@ -15,8 +15,8 @@ import uw.auth.service.constant.UserType;
 import uw.common.response.ResponseData;
 
 /**
- * AI语音RPC接口。
- * 供uw-ai-project等客户端通过RPC调用，执行语音识别操作。
+ * AI语音 RPC 接口。
+ * <p>供其他微服务通过 RPC 调用，上传音频文件进行实时语音识别（ASR），返回识别文本。
  */
 @RestController
 @Tag(name = "AudioRPC接口")
