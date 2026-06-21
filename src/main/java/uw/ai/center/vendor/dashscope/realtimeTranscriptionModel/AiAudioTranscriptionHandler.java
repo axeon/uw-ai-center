@@ -120,7 +120,8 @@ public class AiAudioTranscriptionHandler implements WebSocketHandler {
             logger.error("启动转录会话失败: sessionId={}, configId={}", session.getId(), configId, e);
             sendMessage(session, buildErrorMessage("启动转录会话失败: " + e.getMessage()));
             try {
-                model.stop();
+                // 启动失败时实例未入 SESSION_MODELS，主动关闭释放资源
+                model.close();
             } catch (Exception ignored) {
             }
             session.close(CloseStatus.SERVER_ERROR);
@@ -188,10 +189,10 @@ public class AiAudioTranscriptionHandler implements WebSocketHandler {
         RealtimeTranscriptionModel model = SESSION_MODELS.remove(session.getId());
         if (model != null) {
             try {
-                // 仅停止当前会话，model 实例由 wrapper 缓存复用，不调用 close()（close 会永久报废实例）
-                model.stop();
+                // model 实例为本次会话独立创建，关闭以释放底层 WebSocket 连接
+                model.close();
             } catch (Exception e) {
-                logger.warn("停止转录会话失败: sessionId={}", session.getId(), e);
+                logger.warn("关闭转录会话失败: sessionId={}", session.getId(), e);
             }
         }
     }

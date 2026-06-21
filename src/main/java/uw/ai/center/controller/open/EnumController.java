@@ -21,6 +21,11 @@ public class EnumController {
 
     private static final String BASE_PACKAGE = "uw.ai";
 
+    /**
+     * 获取 {@code uw.ai} 包下所有枚举的 Map（枚举类名 → 枚举值 Map），供前端下拉选择使用。
+     *
+     * @return 枚举类名到枚举值映射的 Map
+     */
     @GetMapping("/getAllEnumMap")
     @Operation(summary = "获取所有枚举", description = "获取所有枚举")
     public Map<String, Map<String, Enum<?>>> getAllEnumMap() {

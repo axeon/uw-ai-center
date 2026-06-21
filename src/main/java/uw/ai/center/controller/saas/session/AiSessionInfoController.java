@@ -17,11 +17,11 @@ import uw.common.app.dto.AuthIdStateQueryParam;
 import uw.common.response.ResponseData;
 import uw.dao.DaoManager;
 import uw.common.data.PageList;
-import uw.dao.TransactionException;
 
 
 /**
  * session会话管理。
+ * <p>租户（SAAS）角色的会话查询/删除接口，路径前缀 {@code /saas/session/info}。
  */
 @RestController
 @RequestMapping("/saas/session/info")
@@ -32,11 +32,10 @@ public class AiSessionInfoController {
     private final DaoManager dao = DaoManager.getInstance();
 
     /**
-     * 列表session会话。
+     * 分页列表session会话。
      *
-     * @param queryParam
-     * @return
-     * @throws TransactionException
+     * @param queryParam 查询参数（自动绑定当前租户 saasId）
+     * @return 会话分页列表
      */
     @GetMapping("/list")
     @Operation(summary = "列表session会话", description = "列表session会话")
@@ -47,9 +46,10 @@ public class AiSessionInfoController {
     }
 
     /**
-     * 轻量级列表session会话，一般用于select控件。
+     * 轻量级列表session会话（仅关键列），一般用于前端 select 控件。
      *
-     * @return
+     * @param queryParam 查询参数（自动绑定当前租户 saasId）
+     * @return 会话分页列表（精简字段）
      */
     @GetMapping("/listLite")
     @Operation(summary = "轻量级列表session会话", description = "轻量级列表session会话，一般用于select控件。")
@@ -60,10 +60,10 @@ public class AiSessionInfoController {
     }
 
     /**
-     * 加载session会话。
+     * 按主键加载单条session会话。
      *
-     * @param id
-     * @throws TransactionException
+     * @param id 主键ID
+     * @return 会话信息
      */
     @GetMapping("/load")
     @Operation(summary = "加载session会话", description = "加载session会话")
@@ -74,10 +74,11 @@ public class AiSessionInfoController {
     }
 
     /**
-     * 删除session会话。
+     * 删除session会话（软删除：状态 → 已删除）。
      *
-     * @param id
-     * @throws TransactionException
+     * @param id     主键ID
+     * @param remark 操作备注
+     * @return 操作结果
      */
     @DeleteMapping("/delete")
     @Operation(summary = "删除session会话", description = "删除session会话")

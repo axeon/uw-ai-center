@@ -92,7 +92,7 @@ public class OllamaVendor implements AiVendor {
                 .timeout(Duration.ofSeconds(120))
                 .build();
 
-        return new AiVendorClientWrapper(configData, syncModel, streamingModel, null, null, null, null);
+        return new AiVendorClientWrapper(configData, this, syncModel, streamingModel, null, null, null, null);
     }
 
     /**
@@ -108,7 +108,7 @@ public class OllamaVendor implements AiVendor {
                 .timeout(Duration.ofSeconds(60))
                 .build();
 
-        return new AiVendorClientWrapper(configData, null, null, embeddingModel, null, null, null);
+        return new AiVendorClientWrapper(configData, this, null, null, embeddingModel, null, null, null);
     }
 
     @Override

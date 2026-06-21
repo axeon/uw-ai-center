@@ -20,6 +20,7 @@ import uw.dao.TransactionException;
 
 /**
  * 关键日志管理。
+ * <p>运维（OPS）角色的关键操作日志查询接口，路径前缀 {@code /ops/log/critLog}。
  */
 @RestController
 @RequestMapping("/ops/log/critLog")
@@ -30,11 +31,10 @@ public class SysCritLogController {
     private final DaoManager dao = DaoManager.getInstance();
 
     /**
-     * 列表OPS关键日志。
+     * 分页列表关键操作日志。
      *
-     * @param queryParam
-     * @return
-     * @throws TransactionException
+     * @param queryParam 日志查询参数（按 bizType / bizId 过滤）
+     * @return 关键日志分页列表
      */
     @GetMapping("/list")
     @Operation(summary = "关键日志查询", description = "列表关键日志")

@@ -33,9 +33,9 @@ controller/         接口层，按角色划分
 
 service/            业务服务（AiChatService / AiImageService / AiAudioService / AiRagService / AiTranslateService / AiRagSearcher）
 vendor/             供应商抽象与实现
-├── AiVendor             供应商接口
+├── AiVendor             供应商接口（含 createAudioTranscriptionModel 工厂方法，按需创建独立的有状态模型实例）
 ├── AiVendorHelper       供应商注册、配置聚合缓存（FusionCache）、客户端实例缓存（Caffeine）
-├── AiVendorClientWrapper 客户端封装（ChatModel/StreamingChatModel/EmbeddingModel/ImageModel/ASR/TTS），AutoCloseable
+├── AiVendorClientWrapper 客户端封装（ChatModel/StreamingChatModel/EmbeddingModel/ImageModel/ASR/TTS），AutoCloseable，持有 vendor 引用用于按需创建独立实例
 ├── openai/              OpenAI（LangChain4j）
 ├── ollama/              Ollama（LangChain4j）
 └── dashscope/           阿里云 DashScope 原生 API（图片生成、Fun-ASR 实时语音识别、TTS）
@@ -70,11 +70,12 @@ util/               AiDocumentSplitter（RAG 文档分割）/ SecurityUtils（SS
 
 ## 关键设计
 
-- **工具调用循环**：`AiChatService` 中工具调用迭代上限 `MAX_TOOL_ITERATIONS=10`，防止模型反复请求工具导致死循环；工具上下文（`toolContext`）会合并进每次工具入参。
+- **工具调用循环**：`AiChatService.executeToolLoop` 统一封装工具调用迭代逻辑（`generate` / `chatGenerate` / `chat` 三处共用），迭代上限 `MAX_TOOL_ITERATIONS=10`，防止模型反复请求工具导致死循环。工具上下文（`toolContext`）会合并进每次工具入参。**循环内逐轮累加 token 用量**（避免只取最后一轮导致计量丢失）；达到迭代上限仍有工具请求时返回固定提示而非落库 null。
 - **会话历史**：`AiMysqlChatMemory.load` 按时间序加载最近 50 条历史消息拼入上下文。
 - **RAG 双路召回**：向量（ES KNN）+ BM25（ES match）各路独立 Min-Max 归一化后按权重（默认向量 0.7 / BM25 0.3）加权融合，取 TopK；BM25 失败自动降级为纯向量检索。
-- **流式响应**：聊天以 `Flux<String>` + SSE 下发，每段包装为 `AiChatSentEvent`。
-- **语音识别**：`DashScopeRealtimeTranscriptionModel` 实例按 configId 复用，单次会话状态封装在 `Session` 内，每次 `start()` 创建新会话上下文。
+- **流式响应**：聊天以 `Flux<String>` + SSE 下发，每段包装为 `AiChatSentEvent`；流式异常对前端只回传固定文案，详细原因仅进服务端日志（不泄露上游厂商 URL/连接细节）。
+- **语音识别**：`DashScopeRealtimeTranscriptionModel` 会话状态封装在 `Session` 内部类中，每次 `start()` 创建新会话上下文。**文件转录与 WebSocket 实时识别均每次请求创建独立 model 实例**（通过 `AiVendor.createAudioTranscriptionModel` 工厂方法），避免共享实例导致并发会话冲突；实例用完 `close()` 释放底层 WebSocket。
+- **数据越权防护**：C 端用户接口（`controller/user`）在查询会话/消息列表时显式 `queryParam.saasId(...).userId(...)` 覆盖前端入参，防止篡改 `userId` 读取同租户其他用户的数据（水平越权）。
 
 ## 外部依赖
 
@@ -83,6 +84,20 @@ util/               AiDocumentSplitter（RAG 文档分割）/ SecurityUtils（SS
 - **Redis**：缓存
 - **Nacos**：服务注册与配置
 - **DashScope**：图片生成（通义万相）、实时语音识别（Fun-ASR）
+
+## 安全设计
+
+- **租户/用户隔离**：所有面向 C 端用户的查询接口（`controller/user/*`）通过 `AuthPageQueryParam` 自动绑定 `saasId` 实现租户隔离；涉及用户私有数据（会话、消息）的列表接口额外显式覆盖 `userId`，防止水平越权。
+- **API Key 保护**：`AiApiConfigData.getApiKey()` 返回掩码密钥供前端展示，`getApiKeyRaw()` 返回明文仅供服务端构建 Vendor 客户端，不参与 JSON 序列化。
+- **SSRF 防护**：`SecurityUtils.isValidServiceName` 校验服务名仅含字母/数字/连字符，阻止 IP、域名、路径遍历等攻击向量（用于按服务名拼接 RPC URL 的场景）。
+- **Prompt 注入缓解**：`AiTranslateService` 将用户额外指令用 `<user_instruction>` 分隔符隔离并限长 500 字符，防止覆盖翻译与输出格式要求。
+- **对外异常脱敏**：流式聊天异常对前端只回传固定文案，上游厂商连接细节仅写服务端日志。
+- **音频时长/字节上限**：`AiAudioService.transcribeFile` 限制单次文件转录约 60 秒，防止长音频阻塞请求线程。
+
+## 开发约定
+
+- 全局开发规范（Client SDK 设计、时间类型优先 `java.util.Date`、序列化异常信息泄露防护等）见仓库根目录 `CLAUDE.md`。
+- Javadoc 覆盖类 / 属性 / 方法三级，公共 API 必须有 `@param` / `@return`。
 
 ## 构建
 

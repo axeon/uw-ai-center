@@ -16,11 +16,11 @@ import uw.common.app.dto.IdStateQueryParam;
 import uw.common.response.ResponseData;
 import uw.dao.DaoManager;
 import uw.common.data.PageList;
-import uw.dao.TransactionException;
 
 
 /**
  * session消息管理。
+ * <p>平台管理（ADMIN）角色的会话消息查询/删除接口，路径前缀 {@code /admin/session/info/msg}。
  */
 @RestController
 @RequestMapping("/admin/session/info/msg")
@@ -31,11 +31,10 @@ public class AiSessionMsgController {
     private final DaoManager dao = DaoManager.getInstance();
 
     /**
-     * 列表session消息。
+     * 分页列表session消息。
      *
-     * @param queryParam
-     * @return
-     * @throws TransactionException
+     * @param queryParam 查询参数
+     * @return 会话消息分页列表
      */
     @GetMapping("/list")
     @Operation(summary = "列表session消息", description = "列表session消息")
@@ -46,9 +45,10 @@ public class AiSessionMsgController {
     }
 
     /**
-     * 轻量级列表session消息，一般用于select控件。
+     * 轻量级列表session消息（仅关键列），一般用于前端 select 控件。
      *
-     * @return
+     * @param queryParam 查询参数
+     * @return 会话消息分页列表（精简字段）
      */
     @GetMapping("/listLite")
     @Operation(summary = "轻量级列表session消息", description = "轻量级列表session消息，一般用于select控件。")
@@ -59,10 +59,10 @@ public class AiSessionMsgController {
     }
 
     /**
-     * 加载session消息。
+     * 按主键加载单条session消息。
      *
-     * @param id
-     * @throws TransactionException
+     * @param id 主键ID
+     * @return 会话消息
      */
     @GetMapping("/load")
     @Operation(summary = "加载session消息", description = "加载session消息")
@@ -73,16 +73,11 @@ public class AiSessionMsgController {
     }
 
     /**
-     * 删除session消息。
+     * 删除session消息（软删除：状态 → 已删除）。
      *
-     * @param id
-     * @throws TransactionException
-     */
-    /**
-     * 删除session消息。
-     *
-     * @param id
-     *
+     * @param id     主键ID
+     * @param remark 操作备注
+     * @return 操作结果
      */
     @DeleteMapping("/delete")
     @Operation(summary = "删除session消息", description = "删除session消息")

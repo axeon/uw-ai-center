@@ -43,6 +43,10 @@ public class AiConfigRpcController implements AiConfigRpc {
 
     /**
      * 根据saas信息获取模型配置列表。
+     *
+     * @param saasId 租户ID（必填）
+     * @param mchId  商户ID（可选，大于 0 时过滤）
+     * @return 模型配置 VO 列表（apiKey 不含）
      */
     @Override
     @GetMapping("/listModelConfigBySaas")
@@ -70,6 +74,10 @@ public class AiConfigRpcController implements AiConfigRpc {
 
     /**
      * 根据API配置获取模型配置列表。
+     *
+     * @param apiId   API 配置ID（与 apiCode 二选一）
+     * @param apiCode API 配置代码（与 apiId 二选一）
+     * @return 模型配置 VO 列表
      */
     @Override
     @GetMapping("/listModelConfigByApi")
@@ -96,7 +104,11 @@ public class AiConfigRpcController implements AiConfigRpc {
     }
 
     /**
-     * 根据ID或配置代码获取模型配置
+     * 根据ID或配置代码获取模型配置（走 FusionCache 缓存）。
+     *
+     * @param id         模型配置ID（与 configCode 二选一）
+     * @param configCode 模型配置代码（与 id 二选一）
+     * @return 模型配置 VO
      */
     @Override
     @GetMapping("/getModelConfig")
@@ -120,6 +132,10 @@ public class AiConfigRpcController implements AiConfigRpc {
 
     /**
      * 根据模型类型和标签获取模型配置列表。
+     *
+     * @param modelType 模型类型（必填，如 CHAT/EMBEDDING）
+     * @param modelTag  模型标签（可选）
+     * @return 模型配置 VO 列表
      */
     @Override
     @GetMapping("/listModelConfigByType")
@@ -147,6 +163,10 @@ public class AiConfigRpcController implements AiConfigRpc {
 
     /**
      * 根据saas信息获取API连接配置列表。
+     *
+     * @param saasId 租户ID（必填）
+     * @param mchId  商户ID（可选）
+     * @return API 配置 VO 列表（apiKey 已掩码）
      */
     @Override
     @GetMapping("/listApiConfigBySaas")
@@ -174,6 +194,10 @@ public class AiConfigRpcController implements AiConfigRpc {
 
     /**
      * 根据ID或配置代码获取API连接配置（走 FusionCache 单对象缓存）。
+     *
+     * @param id      API 配置ID（与 apiCode 二选一）
+     * @param apiCode API 配置代码（与 id 二选一）
+     * @return API 配置 VO（apiKey 已掩码）
      */
     @Override
     @GetMapping("/getApiConfig")

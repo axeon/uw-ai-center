@@ -25,6 +25,17 @@ import uw.common.response.ResponseData;
 @ResponseAdviceIgnore
 public class AiAudioRpcController {
 
+    /**
+     * 语音识别：上传音频文件，转为文本（内部走实时识别 API）。
+     *
+     * @param saasId    租户ID
+     * @param userId    用户ID
+     * @param userType  用户类型
+     * @param userInfo  用户信息
+     * @param configId  AI 模型配置ID（须为 AUDIO_TRANSCRIPTION 类型）
+     * @param audioFile 音频文件（单次约 60 秒上限）
+     * @return 识别出的文本
+     */
     @PostMapping("/transcribe")
     @Operation(summary = "语音识别", description = "上传音频文件，转为文本（内部使用实时识别API）")
     @MscPermDeclare(user = UserType.RPC, auth = AuthType.NONE, log = ActionLog.BASE)

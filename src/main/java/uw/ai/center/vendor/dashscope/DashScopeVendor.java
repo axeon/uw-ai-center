@@ -8,6 +8,7 @@ import uw.ai.center.vendor.dashscope.imageModel.DashScopeImageModel;
 import uw.ai.center.vendor.dashscope.imageModel.DashScopeImageParam;
 import uw.ai.center.vendor.dashscope.realtimeTranscriptionModel.DashScopeAudioParam;
 import uw.ai.center.vendor.dashscope.realtimeTranscriptionModel.DashScopeRealtimeTranscriptionModel;
+import uw.ai.center.vendor.dashscope.realtimeTranscriptionModel.RealtimeTranscriptionModel;
 import uw.ai.center.vendor.dashscope.ttsModel.DashScopeTtsParam;
 import uw.ai.center.vo.AiModelConfigData;
 import uw.ai.center.vendor.AiVendor;
@@ -115,7 +116,7 @@ public class DashScopeVendor implements AiVendor {
                 params
         );
 
-        return new AiVendorClientWrapper(configData, null, null, null, imageModel, null, null);
+        return new AiVendorClientWrapper(configData, this, null, null, null, imageModel, null, null);
     }
 
     /**
@@ -127,6 +128,17 @@ public class DashScopeVendor implements AiVendor {
      * 其他识别参数（format/sample_rate/language_hints 等）通过 configParam 的 audio.* 配置。
      */
     private AiVendorClientWrapper buildAudioTranscription(AiModelConfigData configData) {
+        return new AiVendorClientWrapper(configData, this, null, null, null, null,
+                createAudioTranscriptionModel(configData), null);
+    }
+
+    /**
+     * 按需创建独立的实时语音识别模型实例。
+     * 模型实例基于不可变配置，start() 时才建立 WebSocket，因此每次请求新建实例成本极低，
+     * 却可彻底避免多请求共享同一实例导致的会话冲突。
+     */
+    @Override
+    public RealtimeTranscriptionModel createAudioTranscriptionModel(AiModelConfigData configData) {
         JsonConfigBox configParamBox = configData.getConfigParamBox();
         Map<String, Object> params = new HashMap<>();
         String workspaceId = null;
@@ -158,14 +170,12 @@ public class DashScopeVendor implements AiVendor {
             }
         }
 
-        var transcriptionModel = new DashScopeRealtimeTranscriptionModel(
+        return new DashScopeRealtimeTranscriptionModel(
                 configData.getApiKeyRaw(),
                 configData.getModelName(),
                 workspaceId,
                 params
         );
-
-        return new AiVendorClientWrapper(configData, null, null, null, null, transcriptionModel, null);
     }
 
     @Override

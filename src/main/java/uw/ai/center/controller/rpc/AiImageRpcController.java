@@ -26,6 +26,13 @@ import uw.common.response.ResponseData;
 @ResponseAdviceIgnore
 public class AiImageRpcController {
 
+    /**
+     * 生成图片：根据文本提示词生成图片，返回图片 URL 列表及会话 ID。
+     * <p>configId 与 configCode 至少传一个，优先 configId；都为空时返回错误。
+     *
+     * @param param 图片生成参数（含身份、configId/configCode、sessionId、提示词）
+     * @return 图片生成结果（URL 列表 + 会话ID）
+     */
     @PostMapping("/generate")
     @Operation(summary = "生成图片", description = "根据文本提示词生成图片，返回图片URL列表及会话ID")
     @MscPermDeclare(user = UserType.RPC, auth = AuthType.NONE, log = ActionLog.BASE)

@@ -16,6 +16,7 @@ import uw.common.response.ResponseData;
 
 /**
  * AiTest接口。
+ * <p>开发联调用的测试接口（仅 dev/debug profile 启用），路径前缀 {@code /open/test}。
  */
 @RestController
 @RequestMapping("/open/test")
@@ -26,7 +27,10 @@ public class AiTestOpenController {
     private static final Logger logger = LoggerFactory.getLogger(AiTestOpenController.class);
 
     /**
-     * ChatClient 简单调用
+     * 同步生成测试入口（直接调 AiChatService）。
+     *
+     * @param param 聊天生成参数
+     * @return 生成的文本
      */
     @PostMapping("/generate")
     public ResponseData<String> generate(@ModelAttribute AiChatGenerateParam param) {
@@ -35,7 +39,11 @@ public class AiTestOpenController {
     }
 
     /**
-     * ChatClient 简单调用
+     * 直接调 AiChatService 的同步生成。
+     *
+     * @param configId 模型配置ID
+     * @param query    用户提示词
+     * @return 生成的文本
      */
     @GetMapping("/who")
     public ResponseData<String> who(int configId, String query) {
@@ -44,7 +52,11 @@ public class AiTestOpenController {
     }
 
     /**
-     * ChatClient 简单调用
+     * 经 AiClientHelper 客户端 SDK 的同步生成。
+     *
+     * @param configId 模型配置ID
+     * @param query    用户提示词
+     * @return 生成的文本
      */
     @GetMapping("/who1")
     public ResponseData<String> who1(int configId, String query) {
@@ -52,7 +64,12 @@ public class AiTestOpenController {
     }
 
     /**
-     * ChatClient 简单调用
+     * 直接调 AiChatService 的流式生成。
+     *
+     * @param response HTTP 响应（设置 UTF-8）
+     * @param configId 模型配置ID
+     * @param query    用户提示词
+     * @return SSE 事件流
      */
     @GetMapping("/who2")
     public Flux<String> who2(HttpServletResponse response, int configId, String query) {
@@ -62,7 +79,12 @@ public class AiTestOpenController {
     }
 
     /**
-     * ChatClient 简单调用
+     * 经 AiClientHelper 客户端 SDK 的流式生成。
+     *
+     * @param response HTTP 响应（设置 UTF-8）
+     * @param configId 模型配置ID
+     * @param query    用户提示词
+     * @return SSE 事件流
      */
     @GetMapping("/who3")
     public Flux<String> who3(HttpServletResponse response, int configId, String query) {

@@ -20,6 +20,7 @@ import uw.dao.TransactionException;
 
 /**
  * 数据历史管理。
+ * <p>平台管理（ADMIN）角色的数据变更历史查询接口，路径前缀 {@code /admin/log/dataHistory}。
  */
 @RestController
 @RequestMapping("/admin/log/dataHistory")
@@ -30,11 +31,10 @@ public class SysDataHistoryController {
     private final DaoManager dao = DaoManager.getInstance();
 
     /**
-     * 列表数据历史。
+     * 分页列表数据历史。
      *
-     * @param queryParam
-     * @return
-     * @throws TransactionException
+     * @param queryParam 历史查询参数（按 entityClass / entityId 过滤）
+     * @return 数据历史分页列表
      */
     @GetMapping("/list")
     @Operation(summary = "数据历史查询", description = "列表数据历史")

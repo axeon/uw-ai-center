@@ -27,6 +27,11 @@ public class AiVendorClientWrapper implements AutoCloseable {
     @Schema(title = "配置数据", description = "配置数据")
     private final AiModelConfigData configData;
 
+    /**
+     * 持有构建此 wrapper 的 vendor，用于按需创建独立的有状态模型实例（如实时语音识别）。
+     */
+    private final AiVendor vendor;
+
     @Schema(title = "同步聊天模型", description = "同步聊天模型，CHAT类型时可用")
     private final ChatModel chatModel;
 
@@ -46,6 +51,7 @@ public class AiVendorClientWrapper implements AutoCloseable {
     private final TtsModel ttsModel;
 
     public AiVendorClientWrapper(AiModelConfigData configData,
+                                 AiVendor vendor,
                                  ChatModel chatModel,
                                  StreamingChatModel streamingChatModel,
                                  EmbeddingModel embeddingModel,
@@ -53,6 +59,7 @@ public class AiVendorClientWrapper implements AutoCloseable {
                                  RealtimeTranscriptionModel audioTranscriptionModel,
                                  TtsModel ttsModel) {
         this.configData = configData;
+        this.vendor = vendor;
         this.chatModel = chatModel;
         this.streamingChatModel = streamingChatModel;
         this.embeddingModel = embeddingModel;
@@ -83,6 +90,22 @@ public class AiVendorClientWrapper implements AutoCloseable {
 
     public RealtimeTranscriptionModel getAudioTranscriptionModel() {
         return audioTranscriptionModel;
+    }
+
+    /**
+     * 按需创建一个独立的实时语音识别模型实例。
+     * <p>
+     * 实时语音识别模型在会话期间持有 WebSocket 等可变状态，缓存的共享实例不适合多请求并发复用
+     * （同一实例 start() 时若已有活动会话会拒绝）。文件转录等需要独立会话上下文的调用方应使用本方法，
+     * 每次请求获取全新实例，使用完毕后自行 close()。
+     *
+     * @return 独立的模型实例；vendor 不支持时返回 null
+     */
+    public RealtimeTranscriptionModel createAudioTranscriptionModel() {
+        if (vendor == null) {
+            return null;
+        }
+        return vendor.createAudioTranscriptionModel(configData);
     }
 
     public TtsModel getTtsModel() {

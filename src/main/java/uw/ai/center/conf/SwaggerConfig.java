@@ -46,9 +46,9 @@ public class SwaggerConfig {
     }
 
     /**
-     * ops API接口。
+     * ops 运维端 API 分组（扫描 controller.ops 包）。
      *
-     * @return
+     * @return ops API 分组配置
      */
     @Bean
     public GroupedOpenApi opsApi() {
@@ -60,9 +60,9 @@ public class SwaggerConfig {
     }
 
     /**
-     * adminAPI接口。
+     * admin 平台管理 API 分组（扫描 controller.admin 包）。
      *
-     * @return
+     * @return admin API 分组配置
      */
     @Bean
     public GroupedOpenApi adminApi() {
@@ -74,9 +74,9 @@ public class SwaggerConfig {
     }
 
     /**
-     * saasAPI接口。
+     * saas 租户管理 API 分组（扫描 controller.saas 包）。
      *
-     * @return
+     * @return saas API 分组配置
      */
     @Bean
     public GroupedOpenApi saasApi() {
@@ -88,9 +88,9 @@ public class SwaggerConfig {
     }
 
     /**
-     * user API接口。
+     * user C 端用户 API 分组（扫描 controller.user 包）。
      *
-     * @return
+     * @return user API 分组配置
      */
     @Bean
     public GroupedOpenApi userApi() {
@@ -102,9 +102,9 @@ public class SwaggerConfig {
     }
 
     /**
-     * open API接口。
+     * open 对外开放 API 分组（扫描 controller.open 包）。
      *
-     * @return
+     * @return open API 分组配置
      */
     @Bean
     public GroupedOpenApi openApi() {

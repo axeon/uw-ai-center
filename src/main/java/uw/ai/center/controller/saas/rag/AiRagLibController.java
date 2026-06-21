@@ -28,6 +28,7 @@ import uw.common.data.PageList;
 
 /**
  * rag文档库管理。
+ * <p>租户（SAAS）角色的 RAG 文档库增删改查接口，路径前缀 {@code /saas/rag/lib}。
  */
 @RestController
 @RequestMapping("/saas/rag/lib")
@@ -39,11 +40,10 @@ public class AiRagLibController {
 
 
     /**
-     * 列表rag文档库。
+     * 分页列表rag文档库。
      *
-     * @param queryParam
-     * @return
-     *
+     * @param queryParam 查询参数（自动绑定当前租户 saasId）
+     * @return RAG 文档库分页列表
      */
     @GetMapping("/list")
     @Operation(summary = "列表rag文档库", description = "列表rag文档库")
@@ -54,9 +54,10 @@ public class AiRagLibController {
     }
 
     /**
-     * 轻量级列表rag文档库，一般用于select控件。
+     * 轻量级列表rag文档库（仅关键列，不含 libConfig 等大字段），一般用于前端 select 控件。
      *
-     * @return
+     * @param queryParam 查询参数（自动绑定当前租户 saasId）
+     * @return RAG 文档库分页列表（精简字段）
      */
     @GetMapping("/listLite")
     @Operation(summary = "轻量级列表rag文档库", description = "轻量级列表rag文档库，一般用于select控件。")
@@ -67,10 +68,10 @@ public class AiRagLibController {
     }
 
     /**
-     * 加载rag文档库。
+     * 按主键加载单条rag文档库。
      *
-     * @param id
-     *
+     * @param id 主键ID
+     * @return RAG 文档库
      */
     @GetMapping("/load")
     @Operation(summary = "加载rag文档库", description = "加载rag文档库")
@@ -81,10 +82,10 @@ public class AiRagLibController {
     }
 
     /**
-     * 查询数据历史。
+     * 查询指定rag文档库的数据变更历史。
      *
-     * @param
-     * @return
+     * @param queryParam 历史查询参数（按 entityId 过滤）
+     * @return 数据历史分页列表
      */
     @GetMapping("/listDataHistory")
     @Operation(summary = "查询数据历史", description = "查询数据历史")
@@ -96,10 +97,10 @@ public class AiRagLibController {
     }
 
     /**
-     * 查询操作日志。
+     * 查询指定rag文档库的关键操作日志。
      *
-     * @param
-     * @return
+     * @param queryParam 日志查询参数（按 bizId 过滤）
+     * @return 操作日志分页列表
      */
     @GetMapping("/listCritLog")
     @Operation(summary = "查询操作日志", description = "查询操作日志")
@@ -112,10 +113,10 @@ public class AiRagLibController {
 
     /**
      * 新增rag文档库。
+     * <p>saasId 强制绑定当前租户；保存后记录数据历史。
      *
-     * @param aiRagLib
-     * @return
-     *
+     * @param aiRagLib RAG 文档库（libName/libType/embedConfigId/libConfig 等）
+     * @return 保存后的 RAG 文档库
      */
     @PostMapping("/save")
     @Operation(summary = "新增rag文档库", description = "新增rag文档库")
@@ -137,10 +138,11 @@ public class AiRagLibController {
 
     /**
      * 修改rag文档库。
+     * <p>更新后失效 RAG 客户端缓存，使下次请求按最新配置重建 AiRagClientWrapper。
      *
-     * @param aiRagLib
-     * @return
-     *
+     * @param aiRagLib 待更新的 RAG 文档库
+     * @param remark   操作备注（记入日志与历史）
+     * @return 更新后的 RAG 文档库
      */
     @PutMapping("/update")
     @Operation(summary = "修改rag文档库", description = "修改rag文档库")
@@ -164,10 +166,11 @@ public class AiRagLibController {
     }
 
     /**
-     * 启用rag文档库。
+     * 启用rag文档库（状态：禁用 → 启用），并失效 RAG 客户端缓存。
      *
-     * @param id
-     *
+     * @param id     主键ID
+     * @param remark 操作备注
+     * @return 操作结果
      */
     @PutMapping("/enable")
     @Operation(summary = "启用rag文档库", description = "启用rag文档库")
@@ -179,10 +182,11 @@ public class AiRagLibController {
     }
 
     /**
-     * 禁用rag文档库。
+     * 禁用rag文档库（状态：启用 → 禁用），并失效 RAG 客户端缓存。
      *
-     * @param id
-     *
+     * @param id     主键ID
+     * @param remark 操作备注
+     * @return 操作结果
      */
     @PutMapping("/disable")
     @Operation(summary = "禁用rag文档库", description = "禁用rag文档库")
@@ -194,10 +198,11 @@ public class AiRagLibController {
     }
 
     /**
-     * 删除rag文档库。
+     * 删除rag文档库（软删除：状态 → 已删除），并同步删除 ES 索引避免残留无用数据。
      *
-     * @param id
-     *
+     * @param id     主键ID
+     * @param remark 操作备注
+     * @return 操作结果
      */
     @DeleteMapping("/delete")
     @Operation(summary = "删除rag文档库", description = "删除rag文档库")

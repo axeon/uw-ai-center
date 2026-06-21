@@ -34,6 +34,7 @@ import java.util.Map;
 
 /**
  * rag文档信息管理。
+ * <p>租户（SAAS）角色的 RAG 文档增删改查接口，路径前缀 {@code /saas/rag/lib/doc}。
  */
 @RestController
 @RequestMapping("/saas/rag/lib/doc")
@@ -44,11 +45,10 @@ public class AiRagDocController {
     private final DaoManager dao = DaoManager.getInstance();
 
     /**
-     * 列表rag文档信息。
+     * 分页列表rag文档信息。
      *
-     * @param queryParam
-     * @return
-     *
+     * @param queryParam 查询参数（自动绑定当前租户 saasId）
+     * @return RAG 文档分页列表
      */
     @GetMapping("/list")
     @Operation(summary = "列表rag文档信息", description = "列表rag文档信息")
@@ -60,9 +60,10 @@ public class AiRagDocController {
     }
 
     /**
-     * 轻量级列表rag文档信息，一般用于select控件。
+     * 轻量级列表rag文档信息（仅关键列，不含 docContent 等大字段），一般用于前端 select 控件。
      *
-     * @return
+     * @param queryParam 查询参数（自动绑定当前租户 saasId）
+     * @return RAG 文档分页列表（精简字段）
      */
     @GetMapping("/listLite")
     @Operation(summary = "轻量级列表rag文档信息", description = "轻量级列表rag文档信息，一般用于select控件。")
@@ -74,10 +75,10 @@ public class AiRagDocController {
     }
 
     /**
-     * 加载rag文档信息。
+     * 按主键加载单条rag文档信息。
      *
-     * @param id
-     *
+     * @param id 主键ID
+     * @return RAG 文档
      */
     @GetMapping("/load")
     @Operation(summary = "加载rag文档信息", description = "加载rag文档信息")
@@ -88,10 +89,10 @@ public class AiRagDocController {
     }
 
     /**
-     * 查询数据历史。
+     * 查询指定rag文档的数据变更历史。
      *
-     * @param
-     * @return
+     * @param queryParam 历史查询参数（按 entityId 过滤）
+     * @return 数据历史分页列表
      */
     @GetMapping("/listDataHistory")
     @Operation(summary = "查询数据历史", description = "查询数据历史")
@@ -103,10 +104,10 @@ public class AiRagDocController {
     }
 
     /**
-     * 查询操作日志。
+     * 查询指定rag文档的关键操作日志。
      *
-     * @param
-     * @return
+     * @param queryParam 日志查询参数（按 bizId 过滤）
+     * @return 操作日志分页列表
      */
     @GetMapping("/listCritLog")
     @Operation(summary = "查询操作日志", description = "查询操作日志")
@@ -118,10 +119,13 @@ public class AiRagDocController {
     }
 
     /**
-     * 新增rag文档信息。
+     * 新增rag文档：解析上传文件、分割并向量化后入库（含 ES 向量写入）。
+     * <p>RAG 库须属于当前租户；文档解析或向量化失败时返回错误，不入库。
      *
-     * @return
-     *
+     * @param libId   所属 RAG 库ID（须属当前租户且启用）
+     * @param docDesc 文档描述
+     * @param docFile 上传的文档文件（由 Tika 解析）
+     * @return 保存后的 RAG 文档
      */
     @PostMapping("/save")
     @Operation(summary = "新增rag文档信息", description = "新增rag文档信息")
@@ -161,10 +165,11 @@ public class AiRagDocController {
 
 
     /**
-     * 启用rag文档信息。
+     * 启用rag文档（状态：禁用 → 启用），并重建 ES 向量数据。
      *
-     * @param id
-     *
+     * @param id     主键ID
+     * @param remark 操作备注
+     * @return 操作结果
      */
     @PutMapping("/enable")
     @Operation(summary = "启用rag文档信息", description = "启用rag文档信息")
@@ -178,10 +183,11 @@ public class AiRagDocController {
     }
 
     /**
-     * 禁用rag文档信息。
+     * 禁用rag文档（状态：启用 → 禁用），并从 ES 删除其向量数据。
      *
-     * @param id
-     *
+     * @param id     主键ID
+     * @param remark 操作备注
+     * @return 操作结果
      */
     @PutMapping("/disable")
     @Operation(summary = "禁用rag文档信息", description = "禁用rag文档信息")
@@ -194,10 +200,12 @@ public class AiRagDocController {
     }
 
     /**
-     * 删除rag文档信息。
+     * 删除rag文档（软删除：状态 → 已删除）。
+     * <p>注：向量数据不在此删除，禁用时已移除。
      *
-     * @param id
-     *
+     * @param id     主键ID
+     * @param remark 操作备注
+     * @return 操作结果
      */
     @DeleteMapping("/delete")
     @Operation(summary = "删除rag文档信息", description = "删除rag文档信息")

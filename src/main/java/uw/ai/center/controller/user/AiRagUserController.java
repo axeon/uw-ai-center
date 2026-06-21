@@ -29,11 +29,11 @@ public class AiRagUserController {
     private final DaoManager dao = DaoManager.getInstance();
 
     /**
-     * 列表RAG库。
+     * 列表RAG库（只读，供前端在对话时选择挂载的知识库）。
      *
-     * @param queryParam
-     * @return
-     * @throws TransactionException
+     * @param queryParam 查询参数（自动绑定当前租户 saasId）
+     * @return RAG 库分页列表（精简字段）
+     * @throws TransactionException 查询异常
      */
     @GetMapping("/list")
     @Operation(summary = "列表RAG库", description = "列表RAG库")

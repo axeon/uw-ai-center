@@ -27,6 +27,7 @@ import uw.common.data.PageList;
 
 /**
  * AI工具信息管理。
+ * <p>平台管理（ADMIN）角色的 AI 工具配置增删改查接口，路径前缀 {@code /admin/tool/info}。
  */
 @RestController
 @RequestMapping("/admin/tool/info")
@@ -38,11 +39,10 @@ public class AiToolInfoController {
 
 
     /**
-     * 列表AI工具信息。
+     * 分页列表AI工具信息。
      *
-     * @param queryParam
-     * @return
-     *
+     * @param queryParam 查询参数
+     * @return 工具信息分页列表
      */
     @GetMapping("/list")
     @Operation(summary = "列表AI工具信息", description = "列表AI工具信息")
@@ -53,9 +53,10 @@ public class AiToolInfoController {
     }
 
     /**
-     * 轻量级列表AI工具信息，一般用于select控件。
+     * 轻量级列表AI工具信息（仅关键列），一般用于前端 select 控件。
      *
-     * @return
+     * @param queryParam 查询参数
+     * @return 工具信息分页列表（精简字段）
      */
     @GetMapping("/listLite")
     @Operation(summary = "轻量级列表AI工具信息", description = "轻量级列表AI工具信息，一般用于select控件。")
@@ -66,10 +67,10 @@ public class AiToolInfoController {
     }
 
     /**
-     * 加载AI工具信息。
+     * 按主键加载单条AI工具信息。
      *
-     * @param id
-     *
+     * @param id 主键ID
+     * @return 工具信息
      */
     @GetMapping("/load")
     @Operation(summary = "加载AI工具信息", description = "加载AI工具信息")
@@ -80,10 +81,10 @@ public class AiToolInfoController {
     }
 
     /**
-     * 查询数据历史。
+     * 查询指定AI工具的数据变更历史。
      *
-     * @param
-     * @return
+     * @param queryParam 历史查询参数（按 entityId 过滤）
+     * @return 数据历史分页列表
      */
     @GetMapping("/listDataHistory")
     @Operation(summary = "查询数据历史", description = "查询数据历史")
@@ -95,10 +96,10 @@ public class AiToolInfoController {
     }
 
     /**
-     * 查询操作日志。
+     * 查询指定AI工具的关键操作日志。
      *
-     * @param
-     * @return
+     * @param queryParam 日志查询参数（按 bizId 过滤）
+     * @return 操作日志分页列表
      */
     @GetMapping("/listCritLog")
     @Operation(summary = "查询操作日志", description = "查询操作日志")
@@ -110,10 +111,11 @@ public class AiToolInfoController {
     }
     /**
      * 修改AI工具信息。
+     * <p>更新后失效工具缓存，使下次请求重新加载。
      *
-     * @param aiToolInfo
-     * @return
-     *
+     * @param aiToolInfo 待更新的工具信息
+     * @param remark     操作备注（记入日志与历史）
+     * @return 更新后的工具信息
      */
     @PutMapping("/update")
     @Operation(summary = "修改AI工具信息", description = "修改AI工具信息")
@@ -138,10 +140,11 @@ public class AiToolInfoController {
 
 
     /**
-     * 启用AI工具信息。
+     * 启用AI工具（状态：禁用 → 启用），并失效工具缓存。
      *
-     * @param id
-     *
+     * @param id     主键ID
+     * @param remark 操作备注
+     * @return 操作结果
      */
     @PutMapping("/enable")
     @Operation(summary = "启用AI工具信息", description = "启用AI工具信息")
@@ -154,10 +157,11 @@ public class AiToolInfoController {
     }
 
     /**
-     * 禁用AI工具信息。
+     * 禁用AI工具（状态：启用 → 禁用），并失效工具缓存。
      *
-     * @param id
-     *
+     * @param id     主键ID
+     * @param remark 操作备注
+     * @return 操作结果
      */
     @PutMapping("/disable")
     @Operation(summary = "禁用AI工具信息", description = "禁用AI工具信息")
@@ -170,10 +174,11 @@ public class AiToolInfoController {
     }
 
     /**
-     * 删除AI工具信息。
+     * 删除AI工具（软删除：状态 → 已删除）。
      *
-     * @param id
-     *
+     * @param id     主键ID
+     * @param remark 操作备注
+     * @return 操作结果
      */
     @DeleteMapping("/delete")
     @Operation(summary = "删除AI工具信息", description = "删除AI工具信息")

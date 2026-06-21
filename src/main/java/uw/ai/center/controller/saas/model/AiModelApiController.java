@@ -24,6 +24,7 @@ import uw.common.data.PageList;
 
 /**
  * AI模型API配置管理。
+ * <p>租户（SAAS）角色的 AI 模型 API 配置增删改查接口，路径前缀 {@code /saas/model/api}。
  */
 @RestController
 @RequestMapping("/saas/model/api")
@@ -34,7 +35,10 @@ public class AiModelApiController {
     private final DaoManager dao = DaoManager.getInstance();
 
     /**
-     * 列表AI模型API配置。
+     * 分页列表AI模型API配置（apiKey 掩码）。
+     *
+     * @param queryParam 查询参数（自动绑定当前租户 saasId）
+     * @return API 配置分页列表（apiKey 已掩码）
      */
     @GetMapping("/list")
     @Operation(summary = "列表AI模型API配置", description = "列表AI模型API配置")
@@ -50,7 +54,10 @@ public class AiModelApiController {
     }
 
     /**
-     * 轻量级列表AI模型API配置，一般用于select控件。
+     * 轻量级列表AI模型API配置（仅关键列，apiKey 掩码），一般用于前端 select 控件。
+     *
+     * @param queryParam 查询参数（自动绑定当前租户 saasId）
+     * @return API 配置分页列表（精简字段，apiKey 已掩码）
      */
     @GetMapping("/listLite")
     @Operation(summary = "轻量级列表AI模型API配置", description = "轻量级列表AI模型API配置，一般用于select控件。")
@@ -66,7 +73,10 @@ public class AiModelApiController {
     }
 
     /**
-     * 加载AI模型API配置。
+     * 按主键加载单条AI模型API配置（带租户校验，apiKey 掩码）。
+     *
+     * @param id 主键ID
+     * @return API 配置（apiKey 已掩码）
      */
     @GetMapping("/load")
     @Operation(summary = "加载AI模型API配置", description = "加载AI模型API配置")
@@ -81,7 +91,10 @@ public class AiModelApiController {
     }
 
     /**
-     * 查询数据历史。
+     * 查询指定AI模型API配置的数据变更历史。
+     *
+     * @param queryParam 历史查询参数（按 entityId 过滤）
+     * @return 数据历史分页列表
      */
     @GetMapping("/listDataHistory")
     @Operation(summary = "查询数据历史", description = "查询数据历史")
@@ -93,7 +106,10 @@ public class AiModelApiController {
     }
 
     /**
-     * 查询操作日志。
+     * 查询指定AI模型API配置的关键操作日志。
+     *
+     * @param queryParam 日志查询参数（按 bizId 过滤）
+     * @return 操作日志分页列表
      */
     @GetMapping("/listCritLog")
     @Operation(summary = "查询操作日志", description = "查询操作日志")
@@ -106,6 +122,10 @@ public class AiModelApiController {
 
     /**
      * 新增AI模型API配置。
+     * <p>apiCode 非空时做全局唯一性校验；saasId 绑定当前租户；保存后记录数据历史。
+     *
+     * @param aiModelApi API 配置（apiCode/apiName/apiUrl/apiKey 等）
+     * @return 保存后的 API 配置
      */
     @PostMapping("/save")
     @Operation(summary = "新增AI模型API配置", description = "新增AI模型API配置")
@@ -131,6 +151,11 @@ public class AiModelApiController {
 
     /**
      * 修改AI模型API配置。
+     * <p>apiCode 唯一性校验排除自身（id&lt;&gt;?）；更新后级联失效关联模型配置缓存并记录数据历史。
+     *
+     * @param aiModelApi 待更新的 API 配置
+     * @param remark     操作备注（记入日志与历史）
+     * @return 更新后的 API 配置
      */
     @PutMapping("/update")
     @Operation(summary = "修改AI模型API配置", description = "修改AI模型API配置")
@@ -159,7 +184,11 @@ public class AiModelApiController {
     }
 
     /**
-     * 启用AI模型API配置。
+     * 启用AI模型API配置（状态：禁用 → 启用），并级联失效关联模型配置缓存。
+     *
+     * @param id     主键ID
+     * @param remark 操作备注
+     * @return 操作结果
      */
     @PutMapping("/enable")
     @Operation(summary = "启用AI模型API配置", description = "启用AI模型API配置")
@@ -170,7 +199,11 @@ public class AiModelApiController {
     }
 
     /**
-     * 禁用AI模型API配置。
+     * 禁用AI模型API配置（状态：启用 → 禁用），并级联失效关联模型配置缓存。
+     *
+     * @param id     主键ID
+     * @param remark 操作备注
+     * @return 操作结果
      */
     @PutMapping("/disable")
     @Operation(summary = "禁用AI模型API配置", description = "禁用AI模型API配置")
@@ -181,7 +214,11 @@ public class AiModelApiController {
     }
 
     /**
-     * 删除AI模型API配置。
+     * 删除AI模型API配置（软删除：状态 → 已删除），并级联失效关联模型配置缓存。
+     *
+     * @param id     主键ID
+     * @param remark 操作备注
+     * @return 操作结果
      */
     @DeleteMapping("/delete")
     @Operation(summary = "删除AI模型API配置", description = "删除AI模型API配置")

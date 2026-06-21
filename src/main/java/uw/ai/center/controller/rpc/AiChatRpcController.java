@@ -42,7 +42,10 @@ public class AiChatRpcController implements AiChatRpc {
     private static final Logger log = LoggerFactory.getLogger(AiChatRpcController.class);
 
     /**
-     * ChatClient 简单调用
+     * 同步生成：单轮同步对话，支持工具调用/RAG/附件。
+     *
+     * @param param 聊天生成参数（含身份、configId/configCode、提示词、工具列表、文件、RAG库）
+     * @return 生成的文本
      */
     @Override
     @PostMapping("/generate")
@@ -57,7 +60,10 @@ public class AiChatRpcController implements AiChatRpc {
     }
 
     /**
-     * ChatClient 简单调用
+     * 流式生成：SSE 流式下发单轮对话结果。
+     *
+     * @param param 聊天生成参数
+     * @return SSE 事件流
      */
     @Override
     @PostMapping(value = "chatGenerate", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
@@ -72,7 +78,11 @@ public class AiChatRpcController implements AiChatRpc {
     }
 
     /**
-     * ChatClient 流式调用
+     * 多轮聊天：基于 sessionId 加载历史、流式返回（SSE）。
+     *
+     * @param response HTTP 响应（设置 UTF-8 编码）
+     * @param param    聊天参数（含 sessionId、提示词、工具列表、文件、RAG库）
+     * @return SSE 事件流
      */
     @PostMapping(value = "/chat", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     @Operation(summary = "聊天", description = "聊天")
@@ -87,9 +97,10 @@ public class AiChatRpcController implements AiChatRpc {
     }
 
     /**
-     * ChatClient 初始化会话.
+     * 初始化一个 CHAT 类型会话，返回 sessionId。
      *
-     * @return
+     * @param param 会话参数（含身份、configId、sessionName、windowSize、systemPrompt、工具、RAG库）
+     * @return 新建的会话信息
      */
     @PostMapping(value = "/initSession")
     @Operation(summary = "初始化会话", description = "初始化会话")
@@ -99,10 +110,10 @@ public class AiChatRpcController implements AiChatRpc {
     }
 
     /**
-     * ChatClient 列出会话信息.
+     * 列出会话信息（分页）。
      *
-     * @param queryParam
-     * @return
+     * @param queryParam 查询参数
+     * @return 会话分页列表
      */
     @GetMapping("/listSessionInfo")
     @Operation(summary = "列出会话信息", description = "列出会话信息")
@@ -112,10 +123,10 @@ public class AiChatRpcController implements AiChatRpc {
     }
 
     /**
-     * ChatClient 列出会话消息.
+     * 列出会话消息（分页）。
      *
-     * @param queryParam
-     * @return
+     * @param queryParam 查询参数
+     * @return 会话消息分页列表
      */
     @GetMapping("/listSessionMsg")
     @Operation(summary = "列出会话消息", description = "列出会话消息")

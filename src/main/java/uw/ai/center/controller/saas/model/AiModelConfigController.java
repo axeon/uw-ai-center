@@ -37,6 +37,11 @@ public class AiModelConfigController {
 
     private final DaoManager dao = DaoManager.getInstance();
 
+    /**
+     * 列表AI服务（供应商），返回所有已注册 Vendor 的名称/描述/版本/类名/配置参数模板。
+     *
+     * @return 供应商信息列表
+     */
     @GetMapping("/listVendor")
     @Operation(summary = "列表AI服务", description = "列表AI服务")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.USER, log = ActionLog.NONE)
@@ -44,6 +49,14 @@ public class AiModelConfigController {
         return AiVendorHelper.getVendorMap().values().stream().map(AiVendorInfo::new).toList();
     }
 
+    /**
+     * 列表指定供应商在当前 API 配置下可用的模型名。
+     * <p>apiId 必须属于当前租户（带 saasId 校验），避免 SSRF。
+     *
+     * @param vendorClass 供应商类名
+     * @param apiId       API 配置ID（须属当前租户）
+     * @return 模型名列表
+     */
     @GetMapping("/listModel")
     @Operation(summary = "列表模型列表", description = "列表模型列表")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.USER, log = ActionLog.NONE)
@@ -58,6 +71,12 @@ public class AiModelConfigController {
         return ResponseData.success(AiVendorHelper.listModel(vendorClass, apiConfig.getApiUrl(), apiConfig.getApiKey()));
     }
 
+    /**
+     * 分页列表AI模型配置。
+     *
+     * @param queryParam 查询参数（自动绑定当前租户 saasId）
+     * @return 模型配置分页列表
+     */
     @GetMapping("/list")
     @Operation(summary = "列表AI模型配置", description = "列表AI模型配置")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.REQUEST)
@@ -66,6 +85,12 @@ public class AiModelConfigController {
         return dao.list(AiModelConfig.class, queryParam);
     }
 
+    /**
+     * 轻量级列表AI模型配置（仅关键列，不含 modelData 等大字段），一般用于前端 select 控件。
+     *
+     * @param queryParam 查询参数（自动绑定当前租户 saasId）
+     * @return 模型配置分页列表（精简字段）
+     */
     @GetMapping("/listLite")
     @Operation(summary = "轻量级列表AI模型配置", description = "轻量级列表AI模型配置，一般用于select控件。")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.USER, log = ActionLog.NONE)
@@ -74,6 +99,12 @@ public class AiModelConfigController {
         return dao.list(AiModelConfig.class, queryParam);
     }
 
+    /**
+     * 按主键加载单条AI模型配置。
+     *
+     * @param id 主键ID
+     * @return 模型配置
+     */
     @GetMapping("/load")
     @Operation(summary = "加载AI模型配置", description = "加载AI模型配置")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.REQUEST)
@@ -82,6 +113,12 @@ public class AiModelConfigController {
         return dao.queryForObject(AiModelConfig.class, new AuthIdQueryParam(id));
     }
 
+    /**
+     * 查询指定AI模型配置的数据变更历史。
+     *
+     * @param queryParam 历史查询参数（按 entityId 过滤）
+     * @return 数据历史分页列表
+     */
     @GetMapping("/listDataHistory")
     @Operation(summary = "查询数据历史", description = "查询数据历史")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.REQUEST)
@@ -91,6 +128,12 @@ public class AiModelConfigController {
         return dao.list(SysDataHistory.class, queryParam);
     }
 
+    /**
+     * 查询指定AI模型配置的关键操作日志。
+     *
+     * @param queryParam 日志查询参数（按 bizId 过滤）
+     * @return 操作日志分页列表
+     */
     @GetMapping("/listCritLog")
     @Operation(summary = "查询操作日志", description = "查询操作日志")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.REQUEST)
@@ -100,6 +143,13 @@ public class AiModelConfigController {
         return dao.list(SysCritLog.class, queryParam);
     }
 
+    /**
+     * 新增AI模型配置。
+     * <p>configCode 非空时做全局唯一性校验；saasId 强制绑定当前租户；保存后记录数据历史。
+     *
+     * @param aiModelConfig 模型配置（configCode/configName/modelName/vendorClass/modelType 等）
+     * @return 保存后的模型配置
+     */
     @PostMapping("/save")
     @Operation(summary = "新增AI模型配置", description = "新增AI模型配置")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
@@ -122,6 +172,14 @@ public class AiModelConfigController {
         });
     }
 
+    /**
+     * 修改AI模型配置。
+     * <p>configCode 唯一性校验排除自身（id&lt;&gt;?）；更新后级联失效 Vendor 客户端缓存并记录数据历史。
+     *
+     * @param aiModelConfig 待更新的模型配置
+     * @param remark        操作备注（记入日志与历史）
+     * @return 更新后的模型配置
+     */
     @PutMapping("/update")
     @Operation(summary = "修改AI模型配置", description = "修改AI模型配置")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
@@ -153,6 +211,13 @@ public class AiModelConfigController {
         } );
     }
 
+    /**
+     * 启用AI模型配置（状态：禁用 → 启用），并失效 Vendor 客户端缓存。
+     *
+     * @param id     主键ID
+     * @param remark 操作备注
+     * @return 操作结果
+     */
     @PutMapping("/enable")
     @Operation(summary = "启用AI模型配置", description = "启用AI模型配置")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
@@ -161,6 +226,13 @@ public class AiModelConfigController {
         return dao.update(new AiModelConfig().modifyDate(SystemClock.nowDate()).state(CommonState.ENABLED.getValue()), new AuthIdStateQueryParam(id, CommonState.DISABLED.getValue())).onSuccess(() -> AiVendorHelper.invalidateConfig(id));
     }
 
+    /**
+     * 禁用AI模型配置（状态：启用 → 禁用），并失效 Vendor 客户端缓存。
+     *
+     * @param id     主键ID
+     * @param remark 操作备注
+     * @return 操作结果
+     */
     @PutMapping("/disable")
     @Operation(summary = "禁用AI模型配置", description = "禁用AI模型配置")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
@@ -169,6 +241,13 @@ public class AiModelConfigController {
         return dao.update(new AiModelConfig().modifyDate(SystemClock.nowDate()).state(CommonState.DISABLED.getValue()), new AuthIdStateQueryParam(id, CommonState.ENABLED.getValue())).onSuccess(() -> AiVendorHelper.invalidateConfig(id));
     }
 
+    /**
+     * 删除AI模型配置（软删除：状态 → 已删除），并失效 Vendor 客户端缓存。
+     *
+     * @param id     主键ID
+     * @param remark 操作备注
+     * @return 操作结果
+     */
     @DeleteMapping("/delete")
     @Operation(summary = "删除AI模型配置", description = "删除AI模型配置")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)

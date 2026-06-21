@@ -7,6 +7,7 @@ import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.ToolExecutionResultMessage;
 import dev.langchain4j.data.message.UserMessage;
+import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.request.ChatRequest;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.chat.response.StreamingChatResponseHandler;
@@ -58,6 +59,106 @@ public class AiChatService {
      * 工具调用最大迭代次数，防止AI模型反复请求工具调用导致无限循环。
      */
     private static final int MAX_TOOL_ITERATIONS = 10;
+
+    /**
+     * 工具调用循环结果。
+     * 持有最终 ChatResponse、累计的 token 用量，以及是否因达到最大迭代次数而中止。
+     */
+    private static final class ToolLoopResult {
+        final ChatResponse finalResponse;
+        /** 累计 input token（含历史/工具结果重放的每一轮） */
+        final int totalInputTokens;
+        /** 累计 output token */
+        final int totalOutputTokens;
+        final boolean maxIterationsReached;
+
+        ToolLoopResult(ChatResponse finalResponse, int totalInputTokens, int totalOutputTokens, boolean maxIterationsReached) {
+            this.finalResponse = finalResponse;
+            this.totalInputTokens = totalInputTokens;
+            this.totalOutputTokens = totalOutputTokens;
+            this.maxIterationsReached = maxIterationsReached;
+        }
+    }
+
+    /**
+     * 执行工具调用循环（generate/chatGenerate/chat 三处共用，避免逻辑重复）。
+     * <p>
+     * 每轮累加 token usage（修复原先只取最后一轮导致计量丢失的问题），达到 {@link #MAX_TOOL_ITERATIONS}
+     * 仍有工具请求时中止并返回标志，由调用方决定如何兜底。
+     *
+     * @param chatModel   同步聊天模型
+     * @param messages    可变消息列表（循环内会追加 AiMessage 与 ToolExecutionResultMessage）
+     * @param toolSpecs   工具规格（每轮都会带上）
+     * @param toolContext 工具上下文（合并到每个工具调用入参）
+     * @param logKey      日志定位用 key（configId 或 sessionId）
+     * @return {@link ToolLoopResult}
+     */
+    private static ToolLoopResult executeToolLoop(ChatModel chatModel, List<ChatMessage> messages,
+                                                  List<ToolSpecification> toolSpecs,
+                                                  Map<String, Object> toolContext, Object logKey) {
+        ChatRequest chatRequest = ChatRequest.builder()
+                .messages(messages)
+                .toolSpecifications(toolSpecs)
+                .build();
+        ChatResponse chatResponse = chatModel.chat(chatRequest);
+        AiMessage aiMessage = chatResponse.aiMessage();
+        int totalInputTokens = sumInputTokens(chatResponse.tokenUsage());
+        int totalOutputTokens = sumOutputTokens(chatResponse.tokenUsage());
+        int iteration = 0;
+        boolean maxReached = false;
+        while (aiMessage.hasToolExecutionRequests() && iteration < MAX_TOOL_ITERATIONS) {
+            iteration++;
+            for (ToolExecutionRequest req : aiMessage.toolExecutionRequests()) {
+                String toolInput = mergeToolContext(req.arguments(), toolContext);
+                String result = AiToolHelper.executeTool(req.name(), toolInput);
+                messages.add(aiMessage);
+                messages.add(new ToolExecutionResultMessage(req.id(), req.name(), result));
+            }
+            chatRequest = ChatRequest.builder()
+                    .messages(messages)
+                    .toolSpecifications(toolSpecs)
+                    .build();
+            chatResponse = chatModel.chat(chatRequest);
+            aiMessage = chatResponse.aiMessage();
+            totalInputTokens += sumInputTokens(chatResponse.tokenUsage());
+            totalOutputTokens += sumOutputTokens(chatResponse.tokenUsage());
+        }
+        if (iteration >= MAX_TOOL_ITERATIONS && aiMessage.hasToolExecutionRequests()) {
+            maxReached = true;
+            logger.warn("工具调用达到最大迭代次数 {}, key={}", MAX_TOOL_ITERATIONS, logKey);
+        }
+        return new ToolLoopResult(chatResponse, totalInputTokens, totalOutputTokens, maxReached);
+    }
+
+    /**
+     * 合并工具上下文到工具入参 JSON（返回新 JSON 字符串；context 为空或解析失败时原样返回）。
+     */
+    private static String mergeToolContext(String toolArguments, Map<String, Object> toolContext) {
+        if (toolContext == null || toolContext.isEmpty()) {
+            return toolArguments;
+        }
+        Map<String, Object> inputMap = JsonUtils.parse(toolArguments,
+                new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {});
+        if (inputMap == null) {
+            inputMap = new java.util.HashMap<>();
+        }
+        inputMap.putAll(toolContext);
+        return JsonUtils.toString(inputMap);
+    }
+
+    /**
+     * 安全提取 input token 数量（null 安全）。
+     */
+    private static int sumInputTokens(TokenUsage usage) {
+        return usage != null && usage.inputTokenCount() != null ? usage.inputTokenCount() : 0;
+    }
+
+    /**
+     * 安全提取 output token 数量（null 安全）。
+     */
+    private static int sumOutputTokens(TokenUsage usage) {
+        return usage != null && usage.outputTokenCount() != null ? usage.outputTokenCount() : 0;
+    }
 
     /**
      * ChatClient 简单调用。
@@ -131,44 +232,25 @@ public class AiChatService {
         ChatResponse chatResponse;
         try {
             if (toolSpecs != null && !toolSpecs.isEmpty()) {
-                ChatRequest chatRequest = ChatRequest.builder()
-                        .messages(messages)
-                        .toolSpecifications(toolSpecs)
-                        .build();
-                chatResponse = vendorWrapper.getChatModel().chat(chatRequest);
-                AiMessage aiMessage = chatResponse.aiMessage();
-                // 工具调用循环（含最大迭代次数保护，防止AI模型反复请求工具调用导致无限循环）
-                int iteration = 0;
-                while (aiMessage.hasToolExecutionRequests() && iteration < MAX_TOOL_ITERATIONS) {
-                    iteration++;
-                    for (ToolExecutionRequest req : aiMessage.toolExecutionRequests()) {
-                        // 合并工具上下文到 toolInput
-                        String toolInput = req.arguments();
-                        if (toolContext != null && !toolContext.isEmpty()) {
-                            Map<String, Object> inputMap = JsonUtils.parse(toolInput,
-                                    new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {});
-                            if (inputMap == null) {
-                                inputMap = new java.util.HashMap<>();
-                            }
-                            inputMap.putAll(toolContext);
-                            toolInput = JsonUtils.toString(inputMap);
-                        }
-                        String result = AiToolHelper.executeTool(req.name(), toolInput);
-                        messages.add(aiMessage);
-                        messages.add(new ToolExecutionResultMessage(req.id(), req.name(), result));
-                    }
-                    chatRequest = ChatRequest.builder()
-                            .messages(messages)
-                            .toolSpecifications(toolSpecs)
-                            .build();
-                    chatResponse = vendorWrapper.getChatModel().chat(chatRequest);
-                    aiMessage = chatResponse.aiMessage();
+                ToolLoopResult loopResult = executeToolLoop(vendorWrapper.getChatModel(), messages,
+                        toolSpecs, toolContext, configId);
+                chatResponse = loopResult.finalResponse;
+                // 达到最大迭代次数仍有工具请求：模型未产出有效文本，给固定提示而非落库 null
+                if (loopResult.maxIterationsReached && StringUtils.isBlank(chatResponse.aiMessage().text())) {
+                    sessionMsg.setRequestTokens(loopResult.totalInputTokens);
+                    sessionMsg.setResponseTokens(loopResult.totalOutputTokens);
+                    sessionMsg.setResponseEndDate(SystemClock.nowDate());
+                    sessionMsg.setResponseInfo("[ERROR] 工具调用次数超限，请重试或简化请求");
+                    saveSessionMsg(sessionMsg);
+                    return ResponseData.errorMsg("工具调用次数超限，请重试或简化请求");
                 }
-                if (iteration >= MAX_TOOL_ITERATIONS && aiMessage.hasToolExecutionRequests()) {
-                    logger.warn("工具调用达到最大迭代次数 {}, configId={}", MAX_TOOL_ITERATIONS, configId);
-                }
+                sessionMsg.setRequestTokens(loopResult.totalInputTokens);
+                sessionMsg.setResponseTokens(loopResult.totalOutputTokens);
             } else {
                 chatResponse = vendorWrapper.getChatModel().chat(messages);
+                TokenUsage tokenUsage = chatResponse.tokenUsage();
+                sessionMsg.setRequestTokens(sumInputTokens(tokenUsage));
+                sessionMsg.setResponseTokens(sumOutputTokens(tokenUsage));
             }
         } catch (Exception e) {
             logger.error("AI模型调用失败, configId={}", configId, e);
@@ -176,11 +258,6 @@ public class AiChatService {
         }
 
         String responseData = chatResponse.aiMessage().text();
-        TokenUsage tokenUsage = chatResponse.tokenUsage();
-        sessionMsg.setRequestTokens(tokenUsage != null && tokenUsage.inputTokenCount() != null
-                ? tokenUsage.inputTokenCount() : 0);
-        sessionMsg.setResponseTokens(tokenUsage != null && tokenUsage.outputTokenCount() != null
-                ? tokenUsage.outputTokenCount() : 0);
         sessionMsg.setResponseEndDate(SystemClock.nowDate());
         sessionMsg.setResponseInfo(responseData);
         saveSessionMsg(sessionMsg);
@@ -260,49 +337,23 @@ public class AiChatService {
         // 如果有工具，先同步执行工具调用循环，再流式返回最终结果
         if (hasTools) {
             try {
-                ChatRequest chatRequest = ChatRequest.builder()
-                        .messages(messages)
-                        .toolSpecifications(toolSpecs)
-                        .build();
-                ChatResponse response = vendorWrapper.getChatModel().chat(chatRequest);
-                AiMessage aiMessage = response.aiMessage();
-                // 工具调用循环（含最大迭代次数保护，防止AI模型反复请求工具调用导致无限循环）
-                int iteration = 0;
-                while (aiMessage.hasToolExecutionRequests() && iteration < MAX_TOOL_ITERATIONS) {
-                    iteration++;
-                    for (ToolExecutionRequest req : aiMessage.toolExecutionRequests()) {
-                        String toolInput = req.arguments();
-                        if (toolContext != null && !toolContext.isEmpty()) {
-                            Map<String, Object> inputMap = JsonUtils.parse(toolInput,
-                                    new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {});
-                            if (inputMap == null) {
-                                inputMap = new java.util.HashMap<>();
-                            }
-                            inputMap.putAll(toolContext);
-                            toolInput = JsonUtils.toString(inputMap);
-                        }
-                        String result = AiToolHelper.executeTool(req.name(), toolInput);
-                        messages.add(aiMessage);
-                        messages.add(new ToolExecutionResultMessage(req.id(), req.name(), result));
-                    }
-                    chatRequest = ChatRequest.builder()
-                            .messages(messages)
-                            .toolSpecifications(toolSpecs)
-                            .build();
-                    response = vendorWrapper.getChatModel().chat(chatRequest);
-                    aiMessage = response.aiMessage();
+                ToolLoopResult loopResult = executeToolLoop(vendorWrapper.getChatModel(), messages,
+                        toolSpecs, toolContext, configId);
+                ChatResponse response = loopResult.finalResponse;
+                String finalText = response.aiMessage().text();
+                // 达到最大迭代次数仍未产出文本：返回固定提示，避免落库 null
+                if (loopResult.maxIterationsReached && StringUtils.isBlank(finalText)) {
+                    sessionMsg.setResponseStartDate(SystemClock.nowDate());
+                    sessionMsg.setRequestTokens(loopResult.totalInputTokens);
+                    sessionMsg.setResponseTokens(loopResult.totalOutputTokens);
+                    sessionMsg.setResponseEndDate(SystemClock.nowDate());
+                    sessionMsg.setResponseInfo("[ERROR] 工具调用次数超限，请重试或简化请求");
+                    saveSessionMsg(sessionMsg);
+                    return Flux.just(ResponseData.errorMsg("工具调用次数超限，请重试或简化请求").toString());
                 }
-                if (iteration >= MAX_TOOL_ITERATIONS && aiMessage.hasToolExecutionRequests()) {
-                    logger.warn("工具调用达到最大迭代次数 {}, configId={}", MAX_TOOL_ITERATIONS, configId);
-                }
-                // 工具执行完毕后用流式返回最终文本
-                String finalText = aiMessage.text();
-                TokenUsage tokenUsage = response.tokenUsage();
                 sessionMsg.setResponseStartDate(SystemClock.nowDate());
-                sessionMsg.setRequestTokens(tokenUsage != null && tokenUsage.inputTokenCount() != null
-                        ? tokenUsage.inputTokenCount() : 0);
-                sessionMsg.setResponseTokens(tokenUsage != null && tokenUsage.outputTokenCount() != null
-                        ? tokenUsage.outputTokenCount() : 0);
+                sessionMsg.setRequestTokens(loopResult.totalInputTokens);
+                sessionMsg.setResponseTokens(loopResult.totalOutputTokens);
                 sessionMsg.setResponseEndDate(SystemClock.nowDate());
                 sessionMsg.setResponseInfo(finalText);
                 saveSessionMsg(sessionMsg);
@@ -343,11 +394,12 @@ public class AiChatService {
 
                 @Override
                 public void onError(Throwable error) {
-                    logger.error("流式聊天异常", error);
+                    // 详细原因只进日志（可能含上游厂商 URL/连接细节），对外用固定文案脱敏
+                    logger.error("流式聊天异常, configId={}", configId, error);
                     sessionMsg.setResponseEndDate(SystemClock.nowDate());
                     sessionMsg.setResponseInfo("[ERROR] " + error.getMessage());
                     saveSessionMsg(sessionMsg);
-                    sink.error(error);
+                    sink.error(new RuntimeException("AI流式响应失败，请稍后重试"));
                 }
             });
         });
@@ -636,48 +688,22 @@ public class AiChatService {
         // 如果有工具，先同步执行工具调用循环，再流式返回最终结果
         if (hasTools) {
             try {
-                ChatRequest chatRequest = ChatRequest.builder()
-                        .messages(messages)
-                        .toolSpecifications(toolSpecs)
-                        .build();
-                ChatResponse response = vendorWrapper.getChatModel().chat(chatRequest);
-                AiMessage aiMessage = response.aiMessage();
-                // 工具调用循环
-                int iteration = 0;
-                while (aiMessage.hasToolExecutionRequests() && iteration < MAX_TOOL_ITERATIONS) {
-                    iteration++;
-                    for (ToolExecutionRequest req : aiMessage.toolExecutionRequests()) {
-                        String toolInput = req.arguments();
-                        if (toolContext != null && !toolContext.isEmpty()) {
-                            Map<String, Object> inputMap = JsonUtils.parse(toolInput,
-                                    new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {});
-                            if (inputMap == null) {
-                                inputMap = new java.util.HashMap<>();
-                            }
-                            inputMap.putAll(toolContext);
-                            toolInput = JsonUtils.toString(inputMap);
-                        }
-                        String result = AiToolHelper.executeTool(req.name(), toolInput);
-                        messages.add(aiMessage);
-                        messages.add(new ToolExecutionResultMessage(req.id(), req.name(), result));
-                    }
-                    chatRequest = ChatRequest.builder()
-                            .messages(messages)
-                            .toolSpecifications(toolSpecs)
-                            .build();
-                    response = vendorWrapper.getChatModel().chat(chatRequest);
-                    aiMessage = response.aiMessage();
+                ToolLoopResult loopResult = executeToolLoop(vendorWrapper.getChatModel(), messages,
+                        toolSpecs, toolContext, sessionInfo.getId());
+                ChatResponse response = loopResult.finalResponse;
+                String finalText = response.aiMessage().text();
+                if (loopResult.maxIterationsReached && StringUtils.isBlank(finalText)) {
+                    sessionMsg.setResponseStartDate(SystemClock.nowDate());
+                    sessionMsg.setRequestTokens(loopResult.totalInputTokens);
+                    sessionMsg.setResponseTokens(loopResult.totalOutputTokens);
+                    sessionMsg.setResponseEndDate(SystemClock.nowDate());
+                    sessionMsg.setResponseInfo("[ERROR] 工具调用次数超限，请重试或简化请求");
+                    saveSessionMsg(sessionMsg);
+                    return Flux.just(ResponseData.errorMsg("工具调用次数超限，请重试或简化请求").toString());
                 }
-                if (iteration >= MAX_TOOL_ITERATIONS && aiMessage.hasToolExecutionRequests()) {
-                    logger.warn("工具调用达到最大迭代次数 {}, configId={}", MAX_TOOL_ITERATIONS, sessionInfo.getConfigId());
-                }
-                String finalText = aiMessage.text();
-                TokenUsage tokenUsage = response.tokenUsage();
                 sessionMsg.setResponseStartDate(SystemClock.nowDate());
-                sessionMsg.setRequestTokens(tokenUsage != null && tokenUsage.inputTokenCount() != null
-                        ? tokenUsage.inputTokenCount() : 0);
-                sessionMsg.setResponseTokens(tokenUsage != null && tokenUsage.outputTokenCount() != null
-                        ? tokenUsage.outputTokenCount() : 0);
+                sessionMsg.setRequestTokens(loopResult.totalInputTokens);
+                sessionMsg.setResponseTokens(loopResult.totalOutputTokens);
                 sessionMsg.setResponseEndDate(SystemClock.nowDate());
                 sessionMsg.setResponseInfo(finalText);
                 saveSessionMsg(sessionMsg);
@@ -718,11 +744,12 @@ public class AiChatService {
 
                 @Override
                 public void onError(Throwable error) {
-                    logger.error("流式聊天异常", error);
+                    // 详细原因只进日志（可能含上游厂商 URL/连接细节），对外用固定文案脱敏
+                    logger.error("流式聊天异常, sessionId={}", sessionInfo.getId(), error);
                     sessionMsg.setResponseEndDate(SystemClock.nowDate());
                     sessionMsg.setResponseInfo("[ERROR] " + error.getMessage());
                     saveSessionMsg(sessionMsg);
-                    sink.error(error);
+                    sink.error(new RuntimeException("AI流式响应失败，请稍后重试"));
                 }
             });
         });

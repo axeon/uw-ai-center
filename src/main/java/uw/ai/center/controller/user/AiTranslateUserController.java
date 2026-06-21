@@ -21,6 +21,7 @@ import uw.common.response.ResponseData;
 
 /**
  * Ai翻译接口。
+ * <p>面向 C 端用户的翻译接口，路径前缀 {@code /user/translate}，身份由 AuthServiceHelper 注入。
  */
 @RestController
 @RequestMapping("/user/translate")
@@ -29,7 +30,10 @@ public class AiTranslateUserController {
     private static final Logger log = LoggerFactory.getLogger( AiTranslateUserController.class );
 
     /**
-     * 翻译列表。
+     * 翻译列表：将 JSON 数组中的文本分别翻译为目标语言，结果转为结构化对象。
+     *
+     * @param param 翻译参数（含 configId、目标语言列表、待译文本列表）
+     * @return 翻译结果数组
      */
     @PostMapping("/translateList")
     @Operation(summary = "翻译列表", description = "翻译列表")
@@ -39,7 +43,10 @@ public class AiTranslateUserController {
     }
 
     /**
-     * 翻译Map。
+     * 翻译 Map：将 JSON Map 的 value 分别翻译为目标语言，结果转为结构化对象。
+     *
+     * @param param 翻译参数（含 configId、目标语言列表、待译文本 Map）
+     * @return 翻译结果数组
      */
     @PostMapping("/translateMap")
     @Operation(summary = "翻译Map", description = "翻译Map")

@@ -27,11 +27,11 @@ public class AiModelUserController {
     private final DaoManager dao = DaoManager.getInstance();
 
     /**
-     * 列表AI服务模型。
+     * 列表AI服务模型（只读，脱敏不含密钥，供前端选择模型）。
      *
-     * @param queryParam
-     * @return
-     * @throws TransactionException
+     * @param queryParam 查询参数（自动绑定当前租户 saasId）
+     * @return 模型配置分页列表（精简字段）
+     * @throws TransactionException 查询异常
      */
     @GetMapping("/list")
     @Operation(summary = "列表AI服务模型", description = "列表AI服务模型")

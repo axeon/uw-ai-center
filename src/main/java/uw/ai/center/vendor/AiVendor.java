@@ -3,6 +3,7 @@ package uw.ai.center.vendor;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import uw.ai.center.vo.AiModelConfigData;
+import uw.ai.center.vendor.dashscope.realtimeTranscriptionModel.RealtimeTranscriptionModel;
 import uw.common.app.vo.JsonConfigParam;
 
 import java.util.List;
@@ -67,5 +68,20 @@ public interface AiVendor {
      * 获取模型列表。
      */
     List<String> listModel(String apiUrl, String apiKey);
+
+    /**
+     * 按需创建一个独立的实时语音识别模型实例。
+     * <p>
+     * 实时语音识别模型在会话期间持有 WebSocket 等可变状态，不适合多请求共享。
+     * 调用方（如文件转录）应每次请求创建独立实例，避免并发会话互相冲突。
+     * <p>
+     * 默认不支持，由实现了 AUDIO_TRANSCRIPTION 类型的 vendor 覆写。
+     *
+     * @param configData 模型配置数据
+     * @return 独立的模型实例；不支持时返回 null
+     */
+    default RealtimeTranscriptionModel createAudioTranscriptionModel(AiModelConfigData configData) {
+        return null;
+    }
 
 }

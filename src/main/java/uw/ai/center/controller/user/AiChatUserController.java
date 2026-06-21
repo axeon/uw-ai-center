@@ -59,7 +59,8 @@ public class AiChatUserController {
     /**
      * ChatClient 初始化会话.
      *
-     * @return
+     * @param param 会话参数（含 configId、sessionName、windowSize、systemPrompt、工具、RAG库）
+     * @return 新建的会话信息
      */
     @PostMapping(value = "/initSession")
     @Operation(summary = "初始化会话", description = "初始化会话")
@@ -71,26 +72,30 @@ public class AiChatUserController {
     /**
      * ChatClient 列出会话信息.
      *
-     * @param queryParam
-     * @return
+     * @param queryParam 查询参数（自动绑定当前用户 saasId/userId，防越权）
+     * @return 会话分页列表
      */
     @GetMapping("/listSessionInfo")
     @Operation(summary = "列出会话信息", description = "列出会话信息")
     @MscPermDeclare(auth = AuthType.NONE, log = ActionLog.BASE)
     public ResponseData<PageList<AiSessionInfo>> listSessionInfo(AiSessionInfoQueryParam queryParam) {
+        // 显式覆盖身份字段，防止前端篡改 userId 读取同租户其他用户的会话（水平越权防护）
+        queryParam.saasId(AuthServiceHelper.getSaasId()).userId(AuthServiceHelper.getUserId());
         return AiChatService.listSessionInfo(queryParam);
     }
 
     /**
      * ChatClient 列出会话消息.
      *
-     * @param queryParam
-     * @return
+     * @param queryParam 查询参数（自动绑定当前用户 saasId/userId，防越权）
+     * @return 会话消息分页列表
      */
     @GetMapping("/listSessionMsg")
     @Operation(summary = "列出会话消息", description = "列出会话消息")
     @MscPermDeclare(auth = AuthType.NONE, log = ActionLog.BASE)
     public ResponseData<PageList<AiSessionMsg>> listSessionMsg(AiSessionMsgQueryParam queryParam) {
+        // 显式覆盖身份字段，防止前端篡改 userId 读取同租户其他用户的会话消息（水平越权防护）
+        queryParam.saasId(AuthServiceHelper.getSaasId()).userId(AuthServiceHelper.getUserId());
         return AiChatService.listSessionMsg(queryParam);
     }
 

@@ -37,7 +37,10 @@ public class AiToolRpcController implements AiToolRpc {
 
 
     /**
-     * 列出指定appName下的tool列表。
+     * 列出指定 appName 下的工具元数据；appName 为空时返回所有启用工具。
+     *
+     * @param appName 应用名（为空则查全部启用工具）
+     * @return 工具元数据列表
      */
 
     @Override
@@ -59,9 +62,10 @@ public class AiToolRpcController implements AiToolRpc {
     }
 
     /**
-     * 更新tool配置信息。
+     * 新增或更新 tool 配置（id&lt;=0 新增，否则更新），并失效工具缓存。
      *
-     * @return
+     * @param aiToolMeta 工具元数据
+     * @return 操作结果
      */
     @Override
     @PostMapping(value = "/updateToolMeta")

@@ -38,11 +38,12 @@ public class AiAudioService {
 
     /**
      * 创建实时转录会话（供 WebSocket Handler 使用）。
-     * 获取 wrapper 中的 RealtimeTranscriptionModel 实例。
-     * Model 实例本身可复用，每次 start() 内部创建新会话上下文。
+     * 每次返回独立的 RealtimeTranscriptionModel 实例（基于不可变配置，start() 时才建立 WebSocket，
+     * 创建成本极低），避免多个 WebSocket 会话共享同一实例导致 start() 冲突。
+     * 调用方在使用完毕后应自行 close() 释放资源。
      *
      * @param configId 模型配置ID
-     * @return RealtimeTranscriptionModel 实例
+     * @return 独立的 RealtimeTranscriptionModel 实例
      */
     public static RealtimeTranscriptionModel createTranscriptionSession(long configId) {
         AiVendorClientWrapper wrapper;
@@ -57,7 +58,7 @@ public class AiAudioService {
             throw new RuntimeException("语音识别模型配置错误，请检查configId和modelType");
         }
 
-        return wrapper.getAudioTranscriptionModel();
+        return wrapper.createAudioTranscriptionModel();
     }
 
     /**
@@ -137,7 +138,9 @@ public class AiAudioService {
         // 记录请求开始时间
         Date requestDate = SystemClock.nowDate();
 
-        RealtimeTranscriptionModel model = wrapper.getAudioTranscriptionModel();
+        // 每次请求创建独立的模型实例，避免与缓存中的共享实例（或其他并发请求）的会话状态冲突。
+        // 实例基于不可变配置，start() 时才建立 WebSocket，创建成本极低。
+        RealtimeTranscriptionModel model = wrapper.createAudioTranscriptionModel();
         if (model == null) {
             return ResponseData.errorMsg("语音识别模型实例为空，请检查模型配置");
         }
@@ -231,12 +234,12 @@ public class AiAudioService {
             logger.error("语音识别失败, configId={}, fileName={}", configId, fileName, e);
             return ResponseData.errorMsg("语音识别失败：" + e.getMessage());
         } finally {
-            // 仅停止当前会话（实例复用，不调用 close()，close() 只在 wrapper 缓存失效时由 AiVendorHelper 触发）
+            // 实例为本次请求独立创建，使用完毕后关闭，释放底层 WebSocket 连接
             if (model != null) {
                 try {
-                    model.stop();
+                    model.close();
                 } catch (Exception e) {
-                    logger.warn("停止语音识别会话失败", e);
+                    logger.warn("关闭语音识别模型实例失败", e);
                 }
             }
         }

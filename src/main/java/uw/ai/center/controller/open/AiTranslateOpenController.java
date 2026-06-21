@@ -31,7 +31,10 @@ public class AiTranslateOpenController {
 
 
     /**
-     * 翻译列表。
+     * 翻译列表：将 JSON 数组中的文本分别翻译为目标语言，结果转为结构化对象。
+     *
+     * @param param 翻译参数（含 configId、目标语言列表、待译文本列表）
+     * @return 翻译结果数组
      */
     @PostMapping("/translateList")
     public ResponseData<AiTranslateResultData[]> translateList(@RequestBody AiTranslateListParam param) {
@@ -40,7 +43,10 @@ public class AiTranslateOpenController {
     }
 
     /**
-     * 翻译Map。
+     * 翻译 Map：将 JSON Map 的 value 分别翻译为目标语言，结果转为结构化对象。
+     *
+     * @param param 翻译参数（含 configId、目标语言列表、待译文本 Map）
+     * @return 翻译结果数组
      */
     @PostMapping("/translateMap")
     public ResponseData<AiTranslateResultData[]> translateMap(@RequestBody AiTranslateMapParam param) {
