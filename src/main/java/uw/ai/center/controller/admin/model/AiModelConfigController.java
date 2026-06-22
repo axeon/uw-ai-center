@@ -188,6 +188,8 @@ public class AiModelConfigController {
             }
         }
         return dao.queryForObject( AiModelConfig.class,new AuthIdQueryParam(aiModelConfig.getId()) ).onSuccess(aiModelConfigDb-> {
+            // 失效缓存前先取 DB 中旧 configCode（避免 TOCTOU：失效期间若被改名，读缓存拿到的可能已是新值）
+            String previousConfigCode = aiModelConfigDb.getConfigCode();
             aiModelConfigDb.setMchId(aiModelConfig.getMchId());
             aiModelConfigDb.setApiId(aiModelConfig.getApiId());
             aiModelConfigDb.setVendorClass(aiModelConfig.getVendorClass());
@@ -200,7 +202,7 @@ public class AiModelConfigController {
             aiModelConfigDb.setModelData(aiModelConfig.getModelData());
             aiModelConfigDb.setModifyDate(SystemClock.nowDate());
             return dao.update( aiModelConfigDb ).onSuccess(updatedEntity -> {
-                AiVendorHelper.invalidateConfig(aiModelConfigDb.getId());
+                AiVendorHelper.invalidateConfig(aiModelConfigDb.getId(), previousConfigCode);
                 SysDataHistoryHelper.saveHistory( aiModelConfigDb,remark );
             } );
         } );

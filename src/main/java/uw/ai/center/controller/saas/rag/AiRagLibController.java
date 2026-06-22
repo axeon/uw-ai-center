@@ -78,7 +78,7 @@ public class AiRagLibController {
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.REQUEST)
     public ResponseData<AiRagLib> load(@Parameter(description = "主键ID", required = true) @RequestParam long id)  {
         AuthServiceHelper.logRef(AiRagLib.class,id);
-        return dao.queryForObject(AiRagLib.class, new AuthIdQueryParam(id));
+        return dao.queryForObject(AiRagLib.class, new AuthIdQueryParam(AuthServiceHelper.getSaasId(), id));
     }
 
     /**
@@ -149,7 +149,7 @@ public class AiRagLibController {
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData<AiRagLib> update(@RequestBody AiRagLib aiRagLib, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiRagLib.class,aiRagLib.getId(),remark);
-        return  dao.load( AiRagLib.class, aiRagLib.getId() ).onSuccess(aiRagLibDb-> {
+        return  dao.queryForObject( AiRagLib.class, new AuthIdQueryParam(AuthServiceHelper.getSaasId(), aiRagLib.getId()) ).onSuccess(aiRagLibDb-> {
             aiRagLibDb.setLibType(aiRagLib.getLibType());
             aiRagLibDb.setLibName(aiRagLib.getLibName());
             aiRagLibDb.setLibDesc(aiRagLib.getLibDesc());
@@ -177,7 +177,7 @@ public class AiRagLibController {
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData enable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiRagLib.class,id,remark);
-        return dao.update(new AiRagLib().modifyDate(SystemClock.nowDate()).state(CommonState.ENABLED.getValue()), new AuthIdStateQueryParam(id, CommonState.DISABLED.getValue()))
+        return dao.update(new AiRagLib().modifyDate(SystemClock.nowDate()).state(CommonState.ENABLED.getValue()), new AuthIdStateQueryParam(AuthServiceHelper.getSaasId(), id, CommonState.DISABLED.getValue()))
             .onSuccess(v -> { AiRagService.invalidateRagClientCache(id); });
     }
 
@@ -193,7 +193,7 @@ public class AiRagLibController {
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData disable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiRagLib.class,id,remark);
-        return dao.update(new AiRagLib().modifyDate(SystemClock.nowDate()).state(CommonState.DISABLED.getValue()), new AuthIdStateQueryParam(id, CommonState.ENABLED.getValue()))
+        return dao.update(new AiRagLib().modifyDate(SystemClock.nowDate()).state(CommonState.DISABLED.getValue()), new AuthIdStateQueryParam(AuthServiceHelper.getSaasId(), id, CommonState.ENABLED.getValue()))
             .onSuccess(v -> { AiRagService.invalidateRagClientCache(id); });
     }
 
@@ -209,7 +209,7 @@ public class AiRagLibController {
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData delete(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiRagLib.class,id,remark);
-        return dao.update(new AiRagLib().modifyDate(SystemClock.nowDate()).state(CommonState.DELETED.getValue()), new AuthIdStateQueryParam(id, CommonState.DISABLED.getValue()))
+        return dao.update(new AiRagLib().modifyDate(SystemClock.nowDate()).state(CommonState.DELETED.getValue()), new AuthIdStateQueryParam(AuthServiceHelper.getSaasId(), id, CommonState.DISABLED.getValue()))
             // 删除RAG库时同步删除ES索引，避免ES中残留无用数据
             .onSuccess(v -> { AiRagService.deleteLib(id); });
     }

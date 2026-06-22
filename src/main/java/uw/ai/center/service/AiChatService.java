@@ -1,5 +1,6 @@
 package uw.ai.center.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import dev.langchain4j.agent.tool.ToolExecutionRequest;
 import dev.langchain4j.agent.tool.ToolSpecification;
 import dev.langchain4j.data.message.AiMessage;
@@ -40,11 +41,9 @@ import uw.common.data.PageList;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 
 /**
@@ -59,6 +58,12 @@ public class AiChatService {
      * 工具调用最大迭代次数，防止AI模型反复请求工具调用导致无限循环。
      */
     private static final int MAX_TOOL_ITERATIONS = 10;
+
+    /**
+     * 单次请求 prompt 长度上限。
+     * 超出将直接拒绝，防止 token 滥用 / 内存爆炸 / 上游 context overflow。
+     */
+    private static final int MAX_PROMPT_LENGTH = 100_000;
 
     /**
      * 工具调用循环结果。
@@ -138,9 +143,10 @@ public class AiChatService {
             return toolArguments;
         }
         Map<String, Object> inputMap = JsonUtils.parse(toolArguments,
-                new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {});
+                new TypeReference<Map<String, Object>>() {});
         if (inputMap == null) {
-            inputMap = new java.util.HashMap<>();
+            // 解析失败时原样返回，避免丢弃 AI 给出的原始入参
+            return toolArguments;
         }
         inputMap.putAll(toolContext);
         return JsonUtils.toString(inputMap);
@@ -161,14 +167,45 @@ public class AiChatService {
     }
 
     /**
+     * 校验 prompt 长度。返回 null 表示通过，否则返回错误响应。
+     */
+    private static ResponseData validatePromptLength(String systemPrompt, String userPrompt) {
+        int sysLen = systemPrompt == null ? 0 : systemPrompt.length();
+        int userLen = userPrompt == null ? 0 : userPrompt.length();
+        if (sysLen > MAX_PROMPT_LENGTH) {
+            return ResponseData.errorMsg("系统提示词过长(" + sysLen + " > " + MAX_PROMPT_LENGTH + ")，请精简后重试");
+        }
+        if (userLen > MAX_PROMPT_LENGTH) {
+            return ResponseData.errorMsg("用户提示词过长(" + userLen + " > " + MAX_PROMPT_LENGTH + ")，请精简后重试");
+        }
+        return null;
+    }
+
+    /**
+     * 校验 prompt 长度（流式场景，返回 Flux 错误流）。返回 null 表示通过。
+     */
+    private static Flux<String> validatePromptLengthFlux(String systemPrompt, String userPrompt) {
+        ResponseData result = validatePromptLength(systemPrompt, userPrompt);
+        if (result == null) {
+            return null;
+        }
+        return Flux.just(result.toString());
+    }
+
+    /**
      * ChatClient 简单调用。
      */
     public static ResponseData<String> generate(long saasId, long userId, int userType, String userInfo, long configId, String systemPrompt, String userPrompt, List<AiToolCallInfo> toolList, Map<String, Object> toolContext, MultipartFile[] fileList, long[] ragLibIds) {
+        ResponseData promptCheck = validatePromptLength(systemPrompt, userPrompt);
+        if (promptCheck != null) {
+            return promptCheck;
+        }
         AiVendorClientWrapper vendorWrapper;
         try {
             vendorWrapper = AiVendorHelper.getClientWrapper(configId);
         } catch (IllegalStateException e) {
-            return ResponseData.errorMsg("ChatClient获取失败: " + e.getMessage());
+            logger.warn("generate 获取ChatClient失败, configId={}, errClass={}, msg={}", configId, e.getClass().getSimpleName(), e.getMessage());
+            return ResponseData.errorMsg("AI模型配置不存在或未启用，请联系管理员");
         }
         if (!vendorWrapper.isType(ModelType.CHAT)) {
             return ResponseData.errorMsg("ChatClient获取失败!");
@@ -180,7 +217,7 @@ public class AiChatService {
         // 初始化会话信息
         AiSessionInfo sessionInfo = loadSession(saasId, userId, SessionType.COMMON.getValue(), null).getData();
         if (sessionInfo == null) {
-            ResponseData<AiSessionInfo> responseData = initSession(saasId, userId, userType, userInfo, configId, SessionType.COMMON.getValue(), userPrompt, null, systemPrompt, toolList, ragLibIds);
+            ResponseData<AiSessionInfo> responseData = initSession(saasId, userId, userType, userInfo, configId, SessionType.COMMON.getValue(), null, null, systemPrompt, toolList, ragLibIds);
             if (responseData.isNotSuccess()) {
                 return responseData.raw();
             } else {
@@ -268,11 +305,16 @@ public class AiChatService {
      * ChatClient 流式调用
      */
     public static Flux<String> chatGenerate(long saasId, long userId, int userType, String userInfo, long configId, String systemPrompt, String userPrompt, List<AiToolCallInfo> toolList, Map<String, Object> toolContext, MultipartFile[] fileList, long[] ragLibIds) {
+        Flux<String> promptCheck = validatePromptLengthFlux(systemPrompt, userPrompt);
+        if (promptCheck != null) {
+            return promptCheck;
+        }
         AiVendorClientWrapper vendorWrapper;
         try {
             vendorWrapper = AiVendorHelper.getClientWrapper(configId);
         } catch (IllegalStateException e) {
-            return Flux.just(ResponseData.errorMsg("ChatClient获取失败: " + e.getMessage()).toString());
+            logger.warn("chatGenerate 获取ChatClient失败, configId={}, errClass={}, msg={}", configId, e.getClass().getSimpleName(), e.getMessage());
+            return Flux.just(ResponseData.errorMsg("AI模型配置不存在或未启用，请联系管理员").toString());
         }
         if (!vendorWrapper.isType(ModelType.CHAT)) {
             return Flux.just(ResponseData.errorMsg("ChatClient获取失败！").toString());
@@ -284,7 +326,7 @@ public class AiChatService {
         // 初始化会话信息
         AiSessionInfo sessionInfo = loadSession(saasId, userId, SessionType.COMMON.getValue(), null).getData();
         if (sessionInfo == null) {
-            ResponseData<AiSessionInfo> responseData = initSession(saasId, userId, userType, userInfo, configId, SessionType.COMMON.getValue(), userPrompt, null, systemPrompt, toolList, ragLibIds);
+            ResponseData<AiSessionInfo> responseData = initSession(saasId, userId, userType, userInfo, configId, SessionType.COMMON.getValue(), null, null, systemPrompt, toolList, ragLibIds);
             if (responseData.isNotSuccess()) {
                 return Flux.just(responseData.toString());
             } else {
@@ -335,6 +377,9 @@ public class AiChatService {
         boolean hasTools = toolSpecs != null && !toolSpecs.isEmpty();
 
         // 如果有工具，先同步执行工具调用循环，再流式返回最终结果
+        // 注：LangChain4j 的工具调用在同步 ChatModel 上完成，无法在工具决策阶段流式，
+        // 仅最终回答阶段可流式；当前实现为工具循环完成后一次性返回 finalText，并非真正的端到端流式。
+        // TODO: 后续接入 LangChain4j 流式 + 工具的整合 API 时，改为工具决策完成后流式产出回答文本
         if (hasTools) {
             try {
                 ToolLoopResult loopResult = executeToolLoop(vendorWrapper.getChatModel(), messages,
@@ -368,8 +413,8 @@ public class AiChatService {
         return Flux.create(sink -> {
             sessionMsg.setResponseStartDate(SystemClock.nowDate());
             StringBuilder responseBuilder = new StringBuilder();
-            AtomicReference<ChatResponse> lastResponseRef =
-                    new AtomicReference<>();
+            // 防御性：onComplete/onError 可能被同一上游重复触发或并发触发，保证 sessionMsg 只落库一次
+            AtomicBoolean saved = new AtomicBoolean(false);
 
             vendorWrapper.getStreamingChatModel().chat(messages, new StreamingChatResponseHandler() {
                 @Override
@@ -380,7 +425,9 @@ public class AiChatService {
 
                 @Override
                 public void onCompleteResponse(ChatResponse completeResponse) {
-                    lastResponseRef.set(completeResponse);
+                    if (!saved.compareAndSet(false, true)) {
+                        return;
+                    }
                     TokenUsage tokenUsage = completeResponse.tokenUsage();
                     sessionMsg.setRequestTokens(tokenUsage != null && tokenUsage.inputTokenCount() != null
                             ? tokenUsage.inputTokenCount() : 0);
@@ -394,10 +441,14 @@ public class AiChatService {
 
                 @Override
                 public void onError(Throwable error) {
-                    // 详细原因只进日志（可能含上游厂商 URL/连接细节），对外用固定文案脱敏
-                    logger.error("流式聊天异常, configId={}", configId, error);
+                    if (!saved.compareAndSet(false, true)) {
+                        return;
+                    }
+                    // 详细原因只进日志（可能含上游厂商 URL/连接细节/Key），DB 与对外都用固定文案脱敏
+                    logger.error("流式聊天异常, configId={}, errClass={}, msg={}", configId,
+                            error.getClass().getSimpleName(), error.getMessage());
                     sessionMsg.setResponseEndDate(SystemClock.nowDate());
-                    sessionMsg.setResponseInfo("[ERROR] " + error.getMessage());
+                    sessionMsg.setResponseInfo("[ERROR] AI流式响应失败");
                     saveSessionMsg(sessionMsg);
                     sink.error(new RuntimeException("AI流式响应失败，请稍后重试"));
                 }
@@ -415,7 +466,12 @@ public class AiChatService {
      * @return
      */
     public static ResponseData<AiSessionInfo> loadSession(Long saasId, Long userId, Integer sessionType, Long sessionId) {
-        return dao.queryForObject(AiSessionInfo.class, new AiSessionInfoQueryParam(saasId).userId(userId).sessionType(sessionType).id(sessionId));
+        // sessionId 为空时按 saasId+userId+sessionType 查询，多记录时按 id 倒序取最新一条
+        AiSessionInfoQueryParam queryParam = new AiSessionInfoQueryParam(saasId).userId(userId).sessionType(sessionType).id(sessionId);
+        if (sessionId == null) {
+            queryParam.ADD_SORT("id", uw.common.dto.QueryParam.SORT_DESC);
+        }
+        return dao.queryForObject(AiSessionInfo.class, queryParam);
     }
 
     /**
@@ -441,6 +497,10 @@ public class AiChatService {
         }
         if (configData != null && StringUtils.isBlank(systemPrompt)) {
             systemPrompt = configData.getConfigParamBox().getParam("systemPrompt", "");
+        }
+        // 调用方未显式传会话名时，使用"新会话+时间戳"兜底，避免会话名为 null 或误用 userPrompt
+        if (StringUtils.isBlank(sessionName)) {
+            sessionName = "新会话-" + new SimpleDateFormat("yyyy-MM-dd HH:mm").format(SystemClock.nowDate());
         }
         long sessionId = dao.getSequenceId(AiSessionInfo.class);
         AiSessionInfo sessionInfo = new AiSessionInfo();
@@ -468,6 +528,49 @@ public class AiChatService {
     }
 
     /**
+     * 单个文件大小上限：50MB（与 RAG 文档入库一致）。
+     */
+    private static final long MAX_UPLOAD_FILE_SIZE = 50L * 1024 * 1024;
+
+    /**
+     * 允许上传的文件扩展名白名单（与 Apache Tika 解析能力对齐：纯文本/文档/表格/演示/网页）。
+     */
+    private static final Set<String> ALLOWED_FILE_EXTENSIONS = Set.of(
+            "txt", "md", "csv", "log",
+            "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx",
+            "html", "htm", "xml", "json", "rtf");
+
+    /**
+     * 校验上传文件：非空、大小、扩展名白名单。校验失败返回错误响应。
+     */
+    private static ResponseData validateUploadFile(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            return ResponseData.errorMsg("文件为空!");
+        }
+        if (file.getSize() > MAX_UPLOAD_FILE_SIZE) {
+            return ResponseData.errorMsg("文件[" + file.getOriginalFilename() + "]超过大小限制(50MB)!");
+        }
+        String filename = file.getOriginalFilename();
+        if (filename == null || filename.isBlank()) {
+            return ResponseData.errorMsg("文件名为空!");
+        }
+        // 路径穿越/控制字符检查
+        if (filename.contains("..") || filename.contains("/") || filename.contains("\\")
+                || filename.chars().anyMatch(c -> c < 0x20)) {
+            return ResponseData.errorMsg("文件名[" + filename + "]包含非法字符!");
+        }
+        int dotIdx = filename.lastIndexOf('.');
+        if (dotIdx < 0 || dotIdx == filename.length() - 1) {
+            return ResponseData.errorMsg("文件[" + filename + "]缺少扩展名!");
+        }
+        String ext = filename.substring(dotIdx + 1).toLowerCase();
+        if (!ALLOWED_FILE_EXTENSIONS.contains(ext)) {
+            return ResponseData.errorMsg("文件[" + filename + "]类型不支持，允许: " + ALLOWED_FILE_EXTENSIONS);
+        }
+        return null;
+    }
+
+    /**
      * 读取文件内容。
      *
      * @param files
@@ -480,6 +583,10 @@ public class AiChatService {
         LinkedHashMap<String, Long> infoMap = new LinkedHashMap<>();
         StringBuilder content = new StringBuilder(8192);
         for (MultipartFile file : files) {
+            ResponseData validateResult = validateUploadFile(file);
+            if (validateResult != null) {
+                return validateResult;
+            }
             infoMap.put(file.getOriginalFilename(), file.getSize());
             content.append("文件名：").append(file.getOriginalFilename()).append("的内容：\n\n");
             try (InputStream inputStream = file.getInputStream()) {
@@ -493,7 +600,7 @@ public class AiChatService {
                 }
             } catch (IOException e) {
                 logger.error("处理文件[{}]时发生错误!{}", file.getOriginalFilename(), e.getMessage(), e);
-                return ResponseData.errorMsg("处理文件[" + file.getOriginalFilename() + "]时发生错误!" + e.getMessage());
+                return ResponseData.errorMsg("处理文件[" + file.getOriginalFilename() + "]时发生错误!");
             }
         }
         String fileInfo = JsonUtils.toString(infoMap);
@@ -509,6 +616,9 @@ public class AiChatService {
      */
     public static ResponseData<String> queryRagInfo(long[] ragLibIds, String userPrompt) {
         StringBuilder sb = new StringBuilder(1280);
+        if (ragLibIds == null || ragLibIds.length == 0) {
+            return ResponseData.success(sb.toString());
+        }
         for (int i = 0; i < ragLibIds.length; i++) {
             sb.append(AiRagService.query(ragLibIds[i], userPrompt));
         }
@@ -604,6 +714,10 @@ public class AiChatService {
      * ChatClient 流式调用
      */
     public static Flux<String> chat(long saasId, long userId, int userType, String userInfo, long configId, long sessionId, String systemPrompt, String userPrompt, List<AiToolCallInfo> toolList, Map<String, Object> toolContext, MultipartFile[] fileList, long[] ragLibIds) {
+        Flux<String> promptCheck = validatePromptLengthFlux(systemPrompt, userPrompt);
+        if (promptCheck != null) {
+            return promptCheck;
+        }
         // 初始化会话信息
         AiSessionInfo sessionInfo;
         if (sessionId > 0) {
@@ -660,10 +774,11 @@ public class AiChatService {
         try {
             vendorWrapper = AiVendorHelper.getClientWrapper(configId);
         } catch (IllegalStateException e) {
+            logger.warn("chat 获取ChatClient失败, configId={}, errClass={}, msg={}", configId, e.getClass().getSimpleName(), e.getMessage());
             sessionMsg.setResponseEndDate(SystemClock.nowDate());
-            sessionMsg.setResponseInfo("[ERROR] " + e.getMessage());
+            sessionMsg.setResponseInfo("[ERROR] AI模型配置不存在或未启用");
             saveSessionMsg(sessionMsg);
-            return Flux.just(ResponseData.errorMsg("ChatClient获取失败: " + e.getMessage()).toString());
+            return Flux.just(ResponseData.errorMsg("AI模型配置不存在或未启用，请联系管理员").toString());
         }
         if (!vendorWrapper.isType(ModelType.CHAT)) {
             sessionMsg.setResponseEndDate(SystemClock.nowDate());
@@ -673,7 +788,7 @@ public class AiChatService {
         }
 
         // === LangChain4j 流式调用（加载历史消息） ===
-        List<ChatMessage> messages = AiMysqlChatMemory.load(sessionInfo.getId());
+        List<ChatMessage> messages = AiMysqlChatMemory.load(sessionInfo.getId(), sessionInfo.getWindowSize());
         if (StringUtils.isNotBlank(systemPrompt)) {
             messages.add(new SystemMessage(systemPrompt));
         }
@@ -718,8 +833,8 @@ public class AiChatService {
         return Flux.create(sink -> {
             sessionMsg.setResponseStartDate(SystemClock.nowDate());
             StringBuilder responseBuilder = new StringBuilder();
-            AtomicReference<ChatResponse> lastResponseRef =
-                    new AtomicReference<>();
+            // 防御性：onComplete/onError 可能被同一上游重复触发或并发触发，保证 sessionMsg 只落库一次
+            AtomicBoolean saved = new AtomicBoolean(false);
 
             vendorWrapper.getStreamingChatModel().chat(messages, new StreamingChatResponseHandler() {
                 @Override
@@ -730,7 +845,9 @@ public class AiChatService {
 
                 @Override
                 public void onCompleteResponse(ChatResponse completeResponse) {
-                    lastResponseRef.set(completeResponse);
+                    if (!saved.compareAndSet(false, true)) {
+                        return;
+                    }
                     TokenUsage tokenUsage = completeResponse.tokenUsage();
                     sessionMsg.setRequestTokens(tokenUsage != null && tokenUsage.inputTokenCount() != null
                             ? tokenUsage.inputTokenCount() : 0);
@@ -744,10 +861,14 @@ public class AiChatService {
 
                 @Override
                 public void onError(Throwable error) {
-                    // 详细原因只进日志（可能含上游厂商 URL/连接细节），对外用固定文案脱敏
-                    logger.error("流式聊天异常, sessionId={}", sessionInfo.getId(), error);
+                    if (!saved.compareAndSet(false, true)) {
+                        return;
+                    }
+                    // 详细原因只进日志（可能含上游厂商 URL/连接细节/Key），DB 与对外都用固定文案脱敏
+                    logger.error("流式聊天异常, sessionId={}, errClass={}, msg={}", sessionInfo.getId(),
+                            error.getClass().getSimpleName(), error.getMessage());
                     sessionMsg.setResponseEndDate(SystemClock.nowDate());
-                    sessionMsg.setResponseInfo("[ERROR] " + error.getMessage());
+                    sessionMsg.setResponseInfo("[ERROR] AI流式响应失败");
                     saveSessionMsg(sessionMsg);
                     sink.error(new RuntimeException("AI流式响应失败，请稍后重试"));
                 }

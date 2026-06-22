@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import uw.ai.center.entity.AiModelApi;
 import uw.ai.center.entity.AiModelConfig;
+import uw.ai.center.entity.AiRagLib;
 import uw.ai.center.vo.AiApiConfigData;
 import uw.ai.center.vo.AiModelConfigData;
 import uw.ai.center.vendor.ollama.OllamaVendor;
@@ -240,48 +241,112 @@ public class AiVendorHelper {
     /**
      * 刷新指定模型配置的缓存。
      * FusionCache 失效时自动触发 CacheChangeNotifyListener → invalidateClientWrapper。
-     * 同时双清 configCode → configId 映射缓存，避免脏数据。
+     * <p>configCode 双清使用调用方传入的 {@code previousConfigCode}（推荐为 update 前读到的旧值），
+     * 避免"失效前再读缓存"导致的 TOCTOU：失效期间若缓存已被其他线程重建为新 code，
+     * 再读到的 code 就不是需要失效的那一份。
+     * <p>此外，级联失效所有以该 configId 作为 embedConfigId 的 RAG 库客户端缓存，
+     * 避免 RAG 侧 EmbeddingModel 引用脱节（换 Key/换维度后产生脏向量）。
+     *
+     * @param configId           要失效的模型配置ID
+     * @param previousConfigCode 调用方在 update 前读到的旧 configCode（可为 null，将退化为读缓存）
+     */
+    public static void invalidateConfig(long configId, String previousConfigCode) {
+        String oldCode = previousConfigCode;
+        if (oldCode == null) {
+            // 调用方未传旧 code：退化为失效前从主缓存拿
+            AiModelConfigData data = FusionCache.get(AiModelConfigData.class, configId);
+            if (data != null && data.getAiModelConfig() != null) {
+                oldCode = data.getAiModelConfig().getConfigCode();
+            }
+        }
+        FusionCache.invalidate(AiModelConfigData.class, configId);
+        if (StringUtils.isNotBlank(oldCode)) {
+            FusionCache.invalidate(CACHE_CONFIG_CODE_TO_ID, oldCode);
+        }
+        // 级联失效引用该 configId 的 RAG 库客户端缓存
+        cascadeInvalidateRagClients(configId);
+    }
+
+    /**
+     * 刷新指定模型配置的缓存（向后兼容）。
+     * 未传 previousConfigCode 时退化为失效前读缓存，存在 TOCTOU 风险，建议调用方传旧 code 版本。
      */
     public static void invalidateConfig(long configId) {
-        // 失效前先从主缓存拿出 configCode（失效后就没法拿了）
-        AiModelConfigData data = FusionCache.get(AiModelConfigData.class, configId);
-        FusionCache.invalidate(AiModelConfigData.class, configId);
-        if (data != null && data.getAiModelConfig() != null
-                && StringUtils.isNotBlank(data.getAiModelConfig().getConfigCode())) {
-            FusionCache.invalidate(CACHE_CONFIG_CODE_TO_ID, data.getAiModelConfig().getConfigCode());
+        invalidateConfig(configId, null);
+    }
+
+    /**
+     * 查询以指定 configId 作为 embed_config_id 的所有 RAG 库，逐个失效 RAG 客户端缓存。
+     * 查询失败仅记录日志，不阻断主缓存失效流程。
+     *
+     * @param configId 模型配置ID（可能是 chat/embedding 等任意类型，仅 EMBEDDING 关联的库会命中）
+     */
+    private static void cascadeInvalidateRagClients(long configId) {
+        try {
+            PageList<AiRagLib> ragLibs = dao.list(AiRagLib.class,
+                    "select id from ai_rag_lib where embed_config_id=? and state<>?",
+                    new Object[]{configId, uw.common.app.constant.CommonState.DELETED.getValue()}).getData();
+            if (ragLibs == null || ragLibs.isEmpty()) {
+                return;
+            }
+            for (AiRagLib lib : ragLibs) {
+                try {
+                    uw.ai.center.service.AiRagService.invalidateRagClientCache(lib.getId());
+                } catch (Exception e) {
+                    logger.warn("级联失效RAG客户端缓存失败, libId={}, configId={}", lib.getId(), configId, e);
+                }
+            }
+        } catch (Exception e) {
+            logger.warn("查询RAG库关联失败，跳过级联失效, configId={}", configId, e);
         }
     }
 
     /**
      * API配置变更时，级联失效关联的模型配置缓存。
-     * 同时双清 apiCode → apiId 映射缓存，避免脏数据。
+     * <p>apiCode 双清使用调用方传入的 {@code previousApiCode}（推荐为 update 前读到的旧值），
+     * 避免"失效前再读缓存"导致的 TOCTOU。
+     *
+     * @param apiId           要失效的 API 配置ID
+     * @param previousApiCode 调用方在 update 前读到的旧 apiCode（可为 null，将退化为读缓存）
      */
-    public static void invalidateApiConfig(long apiId) {
+    public static void invalidateApiConfig(long apiId, String previousApiCode) {
         PageList<AiModelConfig> configs = dao.list(AiModelConfig.class,
-                "select id from ai_model_config where api_id=?", new Object[]{apiId}).getData();
+                "select id from ai_model_config where api_id=? and state<>?",
+                new Object[]{apiId, uw.common.app.constant.CommonState.DELETED.getValue()}).getData();
         if (configs != null) {
             for (AiModelConfig config : configs) {
                 invalidateConfig(config.getId());
             }
         }
-        // 失效前先从主缓存拿出 apiCode（失效后就没法拿了）
-        AiModelApi api = FusionCache.get(AiModelApi.class, apiId);
+        String oldCode = previousApiCode;
+        if (oldCode == null) {
+            AiModelApi api = FusionCache.get(AiModelApi.class, apiId);
+            if (api != null) {
+                oldCode = api.getApiCode();
+            }
+        }
         FusionCache.invalidate(AiModelApi.class, apiId);
-        if (api != null && StringUtils.isNotBlank(api.getApiCode())) {
-            FusionCache.invalidate(CACHE_API_CODE_TO_ID, api.getApiCode());
+        if (StringUtils.isNotBlank(oldCode)) {
+            FusionCache.invalidate(CACHE_API_CODE_TO_ID, oldCode);
         }
     }
 
     /**
+     * API配置变更时失效关联缓存（向后兼容）。未传 previousApiCode 时退化为读缓存，存在 TOCTOU 风险。
+     */
+    public static void invalidateApiConfig(long apiId) {
+        invalidateApiConfig(apiId, null);
+    }
+
+    /**
      * 级联失效ClientWrapper实例缓存。
-     * 失效前先调用close()释放底层HTTP连接池等资源。
+     * 使用 asMap().remove() 原子移除，避免 getIfPresent → close → invalidate 期间其他线程重新加载新 wrapper 而被误删。
      * 由CacheChangeNotifyListener自动调用。
      */
     public static void invalidateClientWrapper(Long configId) {
-        AiVendorClientWrapper wrapper = CLIENT_WRAPPER_CACHE.getIfPresent(configId);
+        AiVendorClientWrapper wrapper = CLIENT_WRAPPER_CACHE.asMap().remove(configId);
         if (wrapper != null) {
             wrapper.close();
-            CLIENT_WRAPPER_CACHE.invalidate(configId);
         }
     }
 

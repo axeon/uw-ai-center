@@ -160,6 +160,7 @@ public class AiModelApiController {
             }
         }
         return dao.queryForObject( AiModelApi.class,new AuthIdQueryParam(aiModelApi.getId()) ).onSuccess(aiModelApiDb-> {
+            String previousApiCode = aiModelApiDb.getApiCode();
             aiModelApiDb.setMchId(aiModelApi.getMchId());
             aiModelApiDb.setApiCode(aiModelApi.getApiCode());
             aiModelApiDb.setApiName(aiModelApi.getApiName());
@@ -168,7 +169,7 @@ public class AiModelApiController {
             aiModelApiDb.setApiKey(aiModelApi.getApiKey());
             aiModelApiDb.setModifyDate(SystemClock.nowDate());
             return dao.update( aiModelApiDb ).onSuccess(updatedEntity -> {
-                AiVendorHelper.invalidateApiConfig(aiModelApiDb.getId());
+                AiVendorHelper.invalidateApiConfig(aiModelApiDb.getId(), previousApiCode);
                 SysDataHistoryHelper.saveHistory( aiModelApiDb,remark );
             } );
         } );

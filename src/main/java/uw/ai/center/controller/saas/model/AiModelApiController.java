@@ -132,7 +132,7 @@ public class AiModelApiController {
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData<AiModelApi> save(@RequestBody AiModelApi aiModelApi){
         if (StringUtils.isNotBlank(aiModelApi.getApiCode())) {
-            long count = dao.queryForValue(Long.class, "select count(*) from ai_model_api where api_code=? and state=?", new Object[]{aiModelApi.getApiCode(), CommonState.ENABLED.getValue()}).getData();
+            long count = dao.queryForValue(Long.class, "select count(*) from ai_model_api where api_code=? and state=? and saas_id=?", new Object[]{aiModelApi.getApiCode(), CommonState.ENABLED.getValue(), AuthServiceHelper.getSaasId()}).getData();
             if (count > 0) {
                 return ResponseData.errorMsg("配置代码[" + aiModelApi.getApiCode() + "]已存在！");
             }
@@ -163,21 +163,25 @@ public class AiModelApiController {
     public ResponseData<AiModelApi> update(@RequestBody AiModelApi aiModelApi, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiModelApi.class,aiModelApi.getId(),remark);
         if (StringUtils.isNotBlank(aiModelApi.getApiCode())) {
-            long count = dao.queryForValue(Long.class, "select count(*) from ai_model_api where api_code=? and state=? and id<>?", new Object[]{aiModelApi.getApiCode(), CommonState.ENABLED.getValue(), aiModelApi.getId()}).getData();
+            long count = dao.queryForValue(Long.class, "select count(*) from ai_model_api where api_code=? and state=? and id<>? and saas_id=?", new Object[]{aiModelApi.getApiCode(), CommonState.ENABLED.getValue(), aiModelApi.getId(), AuthServiceHelper.getSaasId()}).getData();
             if (count > 0) {
                 return ResponseData.errorMsg("配置代码[" + aiModelApi.getApiCode() + "]已存在！");
             }
         }
-        return dao.queryForObject( AiModelApi.class,new AuthIdQueryParam(aiModelApi.getId()) ).onSuccess(aiModelApiDb-> {
+        return dao.queryForObject( AiModelApi.class,new AuthIdQueryParam(AuthServiceHelper.getSaasId(), aiModelApi.getId()) ).onSuccess(aiModelApiDb-> {
+            String previousApiCode = aiModelApiDb.getApiCode();
             aiModelApiDb.setMchId(aiModelApi.getMchId());
             aiModelApiDb.setApiCode(aiModelApi.getApiCode());
             aiModelApiDb.setApiName(aiModelApi.getApiName());
             aiModelApiDb.setApiDesc(aiModelApi.getApiDesc());
             aiModelApiDb.setApiUrl(aiModelApi.getApiUrl());
-            aiModelApiDb.setApiKey(aiModelApi.getApiKey());
+            // 仅在前端显式传非空 apiKey 时才更新，避免部分更新场景下误清空密钥
+            if (StringUtils.isNotBlank(aiModelApi.getApiKey())) {
+                aiModelApiDb.setApiKey(aiModelApi.getApiKey());
+            }
             aiModelApiDb.setModifyDate(SystemClock.nowDate());
             return dao.update( aiModelApiDb ).onSuccess(updatedEntity -> {
-                AiVendorHelper.invalidateApiConfig(aiModelApiDb.getId());
+                AiVendorHelper.invalidateApiConfig(aiModelApiDb.getId(), previousApiCode);
                 SysDataHistoryHelper.saveHistory( aiModelApiDb,remark );
             } );
         } );
@@ -195,7 +199,7 @@ public class AiModelApiController {
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData enable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiModelApi.class,id,remark);
-        return dao.update(new AiModelApi().modifyDate(SystemClock.nowDate()).state(CommonState.ENABLED.getValue()), new AuthIdStateQueryParam(id, CommonState.DISABLED.getValue())).onSuccess(() -> AiVendorHelper.invalidateApiConfig(id));
+        return dao.update(new AiModelApi().modifyDate(SystemClock.nowDate()).state(CommonState.ENABLED.getValue()), new AuthIdStateQueryParam(AuthServiceHelper.getSaasId(), id, CommonState.DISABLED.getValue())).onSuccess(() -> AiVendorHelper.invalidateApiConfig(id));
     }
 
     /**
@@ -210,7 +214,7 @@ public class AiModelApiController {
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData disable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiModelApi.class,id,remark);
-        return dao.update(new AiModelApi().modifyDate(SystemClock.nowDate()).state(CommonState.DISABLED.getValue()), new AuthIdStateQueryParam(id, CommonState.ENABLED.getValue())).onSuccess(() -> AiVendorHelper.invalidateApiConfig(id));
+        return dao.update(new AiModelApi().modifyDate(SystemClock.nowDate()).state(CommonState.DISABLED.getValue()), new AuthIdStateQueryParam(AuthServiceHelper.getSaasId(), id, CommonState.ENABLED.getValue())).onSuccess(() -> AiVendorHelper.invalidateApiConfig(id));
     }
 
     /**
@@ -225,6 +229,6 @@ public class AiModelApiController {
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData delete(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiModelApi.class,id,remark);
-        return dao.update(new AiModelApi().modifyDate(SystemClock.nowDate()).state(CommonState.DELETED.getValue()), new AuthIdStateQueryParam(id, CommonState.DISABLED.getValue())).onSuccess(() -> AiVendorHelper.invalidateApiConfig(id));
+        return dao.update(new AiModelApi().modifyDate(SystemClock.nowDate()).state(CommonState.DELETED.getValue()), new AuthIdStateQueryParam(AuthServiceHelper.getSaasId(), id, CommonState.DISABLED.getValue())).onSuccess(() -> AiVendorHelper.invalidateApiConfig(id));
     }
 }

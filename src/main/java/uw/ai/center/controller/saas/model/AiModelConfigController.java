@@ -110,7 +110,7 @@ public class AiModelConfigController {
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.REQUEST)
     public ResponseData<AiModelConfig> load(@Parameter(description = "主键ID", required = true) @RequestParam long id)  {
         AuthServiceHelper.logRef(AiModelConfig.class,id);
-        return dao.queryForObject(AiModelConfig.class, new AuthIdQueryParam(id));
+        return dao.queryForObject(AiModelConfig.class, new AuthIdQueryParam(AuthServiceHelper.getSaasId(), id));
     }
 
     /**
@@ -155,7 +155,7 @@ public class AiModelConfigController {
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData<AiModelConfig> save(@RequestBody AiModelConfig aiModelConfig){
         if (StringUtils.isNotBlank(aiModelConfig.getConfigCode())) {
-            long count = dao.queryForValue(Long.class, "select count(*) from ai_model_config where config_code=? and state=?", new Object[]{aiModelConfig.getConfigCode(), CommonState.ENABLED.getValue()}).getData();
+            long count = dao.queryForValue(Long.class, "select count(*) from ai_model_config where config_code=? and state=? and saas_id=?", new Object[]{aiModelConfig.getConfigCode(), CommonState.ENABLED.getValue(), AuthServiceHelper.getSaasId()}).getData();
             if (count > 0) {
                 return ResponseData.errorMsg("配置代码[" + aiModelConfig.getConfigCode() + "]已存在！");
             }
@@ -185,14 +185,15 @@ public class AiModelConfigController {
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData<AiModelConfig> update(@RequestBody AiModelConfig aiModelConfig, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiModelConfig.class,aiModelConfig.getId(),remark);
-        // 判重：配置代码在未删除记录中必须全局唯一（排除自身，避免修改自身时误判为重复）
+        // 判重：配置代码在未删除记录中必须租户内唯一（排除自身，避免修改自身时误判为重复）
         if (StringUtils.isNotBlank(aiModelConfig.getConfigCode())) {
-            long count = dao.queryForValue(Long.class, "select count(*) from ai_model_config where config_code=? and state=? and id<>?", new Object[]{aiModelConfig.getConfigCode(), CommonState.ENABLED.getValue(), aiModelConfig.getId()}).getData();
+            long count = dao.queryForValue(Long.class, "select count(*) from ai_model_config where config_code=? and state=? and id<>? and saas_id=?", new Object[]{aiModelConfig.getConfigCode(), CommonState.ENABLED.getValue(), aiModelConfig.getId(), AuthServiceHelper.getSaasId()}).getData();
             if (count > 0) {
                 return ResponseData.errorMsg("配置代码[" + aiModelConfig.getConfigCode() + "]已存在！");
             }
         }
-        return dao.queryForObject( AiModelConfig.class,new AuthIdQueryParam(aiModelConfig.getId()) ).onSuccess(aiModelConfigDb-> {
+        return dao.queryForObject( AiModelConfig.class,new AuthIdQueryParam(AuthServiceHelper.getSaasId(), aiModelConfig.getId()) ).onSuccess(aiModelConfigDb-> {
+            String previousConfigCode = aiModelConfigDb.getConfigCode();
             aiModelConfigDb.setMchId(aiModelConfig.getMchId());
             aiModelConfigDb.setApiId(aiModelConfig.getApiId());
             aiModelConfigDb.setVendorClass(aiModelConfig.getVendorClass());
@@ -205,7 +206,7 @@ public class AiModelConfigController {
             aiModelConfigDb.setModelData(aiModelConfig.getModelData());
             aiModelConfigDb.setModifyDate(SystemClock.nowDate());
             return dao.update( aiModelConfigDb ).onSuccess(updatedEntity -> {
-                AiVendorHelper.invalidateConfig(aiModelConfigDb.getId());
+                AiVendorHelper.invalidateConfig(aiModelConfigDb.getId(), previousConfigCode);
                 SysDataHistoryHelper.saveHistory( aiModelConfigDb,remark );
             } );
         } );
@@ -223,7 +224,7 @@ public class AiModelConfigController {
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData enable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiModelConfig.class,id,remark);
-        return dao.update(new AiModelConfig().modifyDate(SystemClock.nowDate()).state(CommonState.ENABLED.getValue()), new AuthIdStateQueryParam(id, CommonState.DISABLED.getValue())).onSuccess(() -> AiVendorHelper.invalidateConfig(id));
+        return dao.update(new AiModelConfig().modifyDate(SystemClock.nowDate()).state(CommonState.ENABLED.getValue()), new AuthIdStateQueryParam(AuthServiceHelper.getSaasId(), id, CommonState.DISABLED.getValue())).onSuccess(() -> AiVendorHelper.invalidateConfig(id));
     }
 
     /**
@@ -238,7 +239,7 @@ public class AiModelConfigController {
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData disable(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiModelConfig.class,id,remark);
-        return dao.update(new AiModelConfig().modifyDate(SystemClock.nowDate()).state(CommonState.DISABLED.getValue()), new AuthIdStateQueryParam(id, CommonState.ENABLED.getValue())).onSuccess(() -> AiVendorHelper.invalidateConfig(id));
+        return dao.update(new AiModelConfig().modifyDate(SystemClock.nowDate()).state(CommonState.DISABLED.getValue()), new AuthIdStateQueryParam(AuthServiceHelper.getSaasId(), id, CommonState.ENABLED.getValue())).onSuccess(() -> AiVendorHelper.invalidateConfig(id));
     }
 
     /**
@@ -253,6 +254,6 @@ public class AiModelConfigController {
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData delete(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiModelConfig.class,id,remark);
-        return dao.update(new AiModelConfig().modifyDate(SystemClock.nowDate()).state(CommonState.DELETED.getValue()), new AuthIdStateQueryParam(id, CommonState.DISABLED.getValue())).onSuccess(() -> AiVendorHelper.invalidateConfig(id));
+        return dao.update(new AiModelConfig().modifyDate(SystemClock.nowDate()).state(CommonState.DELETED.getValue()), new AuthIdStateQueryParam(AuthServiceHelper.getSaasId(), id, CommonState.DISABLED.getValue())).onSuccess(() -> AiVendorHelper.invalidateConfig(id));
     }
 }

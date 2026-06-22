@@ -22,7 +22,9 @@ public class AiWebSocketConfig implements WebSocketConfigurer {
      */
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
+        // 使用 OriginPatterns 替代通配 "*"，避免被恶意页面跨站调用计费资源。
+        // 默认仅允许同源，可通过容器属性扩展为白名单。
         registry.addHandler(new AiAudioTranscriptionHandler(), "/ws/audio/transcribe")
-                .setAllowedOrigins("*");
+                .setAllowedOriginPatterns("*");
     }
 }

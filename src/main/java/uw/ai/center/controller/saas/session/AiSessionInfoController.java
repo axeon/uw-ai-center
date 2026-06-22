@@ -15,6 +15,7 @@ import uw.common.app.constant.CommonState;
 import uw.common.app.dto.AuthIdQueryParam;
 import uw.common.app.dto.AuthIdStateQueryParam;
 import uw.common.response.ResponseData;
+import uw.common.util.SystemClock;
 import uw.dao.DaoManager;
 import uw.common.data.PageList;
 
@@ -55,7 +56,7 @@ public class AiSessionInfoController {
     @Operation(summary = "轻量级列表session会话", description = "轻量级列表session会话，一般用于select控件。")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.USER, log = ActionLog.NONE)
     public ResponseData<PageList<AiSessionInfo>> listLite(AiSessionInfoQueryParam queryParam) {
-        queryParam.SELECT_SQL("SELECT id,saas_id,mch_id,user_id,user_type,group_id,user_name,nick_name,real_name,session_name,create_date,modify_date,state from ai_session_info ");
+        queryParam.SELECT_SQL("SELECT id,saas_id,user_id,user_type,user_info,config_id,session_type,session_name,msg_num,window_size,create_date,modify_date,last_update,state from ai_session_info ");
         return dao.list(AiSessionInfo.class, queryParam);
     }
 
@@ -70,7 +71,7 @@ public class AiSessionInfoController {
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.REQUEST)
     public ResponseData<AiSessionInfo> load(@Parameter(description = "主键ID", required = true) @RequestParam long id) {
         AuthServiceHelper.logRef(AiSessionInfo.class, id);
-        return dao.queryForObject(AiSessionInfo.class, new AuthIdQueryParam(id));
+        return dao.queryForObject(AiSessionInfo.class, new AuthIdQueryParam(AuthServiceHelper.getSaasId(), id));
     }
 
     /**
@@ -85,7 +86,7 @@ public class AiSessionInfoController {
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData delete(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark) {
         AuthServiceHelper.logInfo(AiSessionInfo.class, id, remark);
-        return dao.update(new AiSessionInfo().state(CommonState.DELETED.getValue()), new AuthIdStateQueryParam(id, CommonState.ENABLED.getValue()));
+        return dao.update(new AiSessionInfo().modifyDate(SystemClock.nowDate()).state(CommonState.DELETED.getValue()), new AuthIdStateQueryParam(AuthServiceHelper.getSaasId(), id, CommonState.DISABLED.getValue()));
     }
 
 }

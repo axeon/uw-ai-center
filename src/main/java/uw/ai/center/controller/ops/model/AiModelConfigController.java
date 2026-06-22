@@ -188,6 +188,7 @@ public class AiModelConfigController {
             }
         }
         return dao.queryForObject( AiModelConfig.class,new AuthIdQueryParam(aiModelConfig.getId()) ).onSuccess(aiModelConfigDb-> {
+            String previousConfigCode = aiModelConfigDb.getConfigCode();
             aiModelConfigDb.setMchId(aiModelConfig.getMchId());
             aiModelConfigDb.setApiId(aiModelConfig.getApiId());
             aiModelConfigDb.setVendorClass(aiModelConfig.getVendorClass());
@@ -200,7 +201,7 @@ public class AiModelConfigController {
             aiModelConfigDb.setModelData(aiModelConfig.getModelData());
             aiModelConfigDb.setModifyDate(SystemClock.nowDate());
             return dao.update( aiModelConfigDb ).onSuccess(updatedEntity -> {
-                AiVendorHelper.invalidateConfig(aiModelConfigDb.getId());
+                AiVendorHelper.invalidateConfig(aiModelConfigDb.getId(), previousConfigCode);
                 SysDataHistoryHelper.saveHistory( aiModelConfigDb,remark );
             } );
         } );

@@ -63,8 +63,9 @@ public class AiDocumentSplitter implements DocumentSplitter {
             segments.add(TextSegment.from(raw.text(), metadata));
         }
         // 限制最大chunk数量，防止超大文档产生过多segment
+        // 注：subList 返回的是原 List 的视图，序列化或跨层传递时可能出问题，这里拷贝成独立 ArrayList
         if (segments.size() > chunkMaxNum) {
-            segments = segments.subList(0, chunkMaxNum);
+            segments = new ArrayList<>(segments.subList(0, chunkMaxNum));
         }
         return segments;
     }

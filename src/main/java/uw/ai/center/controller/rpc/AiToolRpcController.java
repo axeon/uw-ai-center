@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.web.bind.annotation.*;
 import uw.ai.center.entity.AiToolInfo;
 import uw.ai.center.tool.AiToolHelper;
+import uw.ai.center.util.SecurityUtils;
 import uw.ai.rpc.AiToolRpc;
 import uw.ai.vo.AiToolMeta;
 import uw.auth.service.annotation.MscPermDeclare;
@@ -74,6 +75,10 @@ public class AiToolRpcController implements AiToolRpc {
         if (aiToolMeta == null) {
             return ResponseData.warnMsg("参数错误！");
         }
+        // SSRF 防护：appName 必须为合法服务名（仅字母/数字/连字符），防止注册时把 appName 设为恶意域名/IP
+        if (!SecurityUtils.isValidServiceName(aiToolMeta.getAppName())) {
+            return ResponseData.errorMsg("非法 appName: " + aiToolMeta.getAppName());
+        }
         try {
             if (aiToolMeta.getId() <= 0) {
                 long count = dao.queryForValue(Long.class, "select count(*) from ai_tool_info where app_name=? and tool_class=? and state=?", new Object[]{aiToolMeta.getAppName(), aiToolMeta.getToolClass(), CommonState.ENABLED.getValue()}).getData();
@@ -94,16 +99,26 @@ public class AiToolRpcController implements AiToolRpc {
                 aiToolConfig.setState(CommonState.ENABLED.getValue());
                 dao.save(aiToolConfig);
             } else {
-                dao.load(AiToolInfo.class, aiToolMeta.getId()).onSuccess(aiToolConfigDb -> {
-                    aiToolConfigDb.setToolClass(aiToolMeta.getToolClass());
-                    aiToolConfigDb.setToolVersion(aiToolMeta.getToolVersion());
-                    aiToolConfigDb.setToolName(aiToolMeta.getToolName());
-                    aiToolConfigDb.setToolDesc(aiToolMeta.getToolDesc());
-                    aiToolConfigDb.setToolInput(aiToolMeta.getToolInput());
-                    aiToolConfigDb.setToolOutput(aiToolMeta.getToolOutput());
-                    aiToolConfigDb.setModifyDate(new java.util.Date());
-                    dao.update(aiToolConfigDb);
-                });
+                // 更新前先校验：传入 appName 必须与 DB 中原 appName 一致，
+                // 防止某个微服务通过传 id 越权修改/覆盖其他微服务注册的工具
+                AiToolInfo existing = dao.load(AiToolInfo.class, aiToolMeta.getId()).getData();
+                if (existing == null) {
+                    return ResponseData.errorMsg("工具不存在或已被删除");
+                }
+                if (!existing.getAppName().equals(aiToolMeta.getAppName())) {
+                    logger.warn("越权更新被拒绝: 工具 appName 不一致, toolId={}, dbAppName={}, reqAppName={}",
+                            aiToolMeta.getId(), existing.getAppName(), aiToolMeta.getAppName());
+                    return ResponseData.errorMsg("无权修改其他应用注册的工具");
+                }
+                // appName/toolClass 是工具主键（缓存key=appName/toolClass），
+                // 修改会导致历史对话中引用的 toolCode 失效，此处禁止修改
+                existing.setToolVersion(aiToolMeta.getToolVersion());
+                existing.setToolName(aiToolMeta.getToolName());
+                existing.setToolDesc(aiToolMeta.getToolDesc());
+                existing.setToolInput(aiToolMeta.getToolInput());
+                existing.setToolOutput(aiToolMeta.getToolOutput());
+                existing.setModifyDate(new java.util.Date());
+                dao.update(existing);
             }
             AiToolHelper.invalidateToolCache();
             return ResponseData.success();

@@ -156,10 +156,14 @@ public class AiRagDocController {
         aiRagDoc.setCreateDate( SystemClock.nowDate() );
         aiRagDoc.setModifyDate( null );
         aiRagDoc.setState( CommonState.ENABLED.getValue() );
-        //保存历史记录
-        return dao.save( aiRagDoc ).onSuccess(savedEntity -> {
+        // DB 写入失败时回滚已写入的 ES chunk，避免留下孤儿向量
+        ResponseData<AiRagDoc> saveResult = dao.save( aiRagDoc );
+        if (saveResult.isSuccess()) {
             SysDataHistoryHelper.saveHistory(aiRagDoc);
-        });
+        } else {
+            AiRagService.rollbackChunks(libId, fileContentMap.keySet());
+        }
+        return saveResult;
     }
 
 

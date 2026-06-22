@@ -21,6 +21,7 @@ import uw.ai.rpc.AiChatRpc;
 import uw.ai.vo.AiChatGenerateParam;
 import uw.ai.vo.AiChatMsgParam;
 import uw.ai.vo.AiChatSessionParam;
+import uw.auth.service.AuthServiceHelper;
 import uw.auth.service.annotation.MscPermDeclare;
 import uw.auth.service.annotation.ResponseAdviceIgnore;
 import uw.auth.service.constant.UserType;
@@ -106,32 +107,36 @@ public class AiChatRpcController implements AiChatRpc {
     @Operation(summary = "初始化会话", description = "初始化会话")
     @MscPermDeclare(user = UserType.RPC)
     public ResponseData<AiSessionInfo> initSession(@ModelAttribute AiChatSessionParam param) {
-        return AiChatService.initSession(param.getSaasId(), param.getUserId(), param.getUserType(), param.getUserInfo(), param.getConfigId(), SessionType.CHAT.getValue(), param.getUserPrompt(), 0, param.getSystemPrompt(), param.getToolList(), param.getRagLibIds());
+        return AiChatService.initSession(param.getSaasId(), param.getUserId(), param.getUserType(), param.getUserInfo(), param.getConfigId(), SessionType.CHAT.getValue(), null, param.getWindowSize(), param.getSystemPrompt(), param.getToolList(), param.getRagLibIds());
     }
 
     /**
      * 列出会话信息（分页）。
+     * <p>强制绑定调用方 saasId，防止 RPC 调用方查询其他租户的会话数据。
      *
-     * @param queryParam 查询参数
+     * @param queryParam 查询参数（自动绑定调用方 saasId）
      * @return 会话分页列表
      */
     @GetMapping("/listSessionInfo")
     @Operation(summary = "列出会话信息", description = "列出会话信息")
     @MscPermDeclare(user = UserType.RPC)
     public ResponseData<PageList<AiSessionInfo>> listSessionInfo(AiSessionInfoQueryParam queryParam) {
+        queryParam.saasId(AuthServiceHelper.getSaasId());
         return AiChatService.listSessionInfo(queryParam);
     }
 
     /**
      * 列出会话消息（分页）。
+     * <p>强制绑定调用方 saasId，防止 RPC 调用方查询其他租户的会话消息。
      *
-     * @param queryParam 查询参数
+     * @param queryParam 查询参数（自动绑定调用方 saasId）
      * @return 会话消息分页列表
      */
     @GetMapping("/listSessionMsg")
     @Operation(summary = "列出会话消息", description = "列出会话消息")
     @MscPermDeclare(user = UserType.RPC)
     public ResponseData<PageList<AiSessionMsg>> listSessionMsg(AiSessionMsgQueryParam queryParam) {
+        queryParam.saasId(AuthServiceHelper.getSaasId());
         return AiChatService.listSessionMsg(queryParam);
     }
 

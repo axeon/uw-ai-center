@@ -37,6 +37,8 @@ public class AiRagSearcher {
     public static List<Bm25SearchHit> searchBm25(ElasticsearchClient esClient, String indexName, String query, int k) {
         try {
             // 使用ES高级客户端发起match查询，ES会对text字段做分词后计算BM25得分
+            // 注：esClient.search() 的 TDocument 由第二个参数 (Map.class) 推断，需为 raw Map；
+            // 此处用原始类型兼容泛型约束，循环内再做 instanceof 防御性转换。
             SearchResponse<Map> response = esClient.search(s -> s
                             .index(indexName)
                             .query(q -> q.match(m -> m.field("text").query(query)))
@@ -44,29 +46,26 @@ public class AiRagSearcher {
                     Map.class);
             List<Bm25SearchHit> results = new ArrayList<>();
             for (var hit : response.hits().hits()) {
-                Map source = hit.source();
+                Map<String, Object> source = hit.source();
                 if (source == null) {
                     continue;
                 }
                 // 提取chunk文本内容
                 String text = (String) source.get("text");
                 // 从metadata中提取UUID（ES文档的metadata.id存的是chunk的UUID）
-                Map metadata = (Map) source.get("metadata");
+                Object metadataObj = source.get("metadata");
+                Map<String, Object> metadata = metadataObj instanceof Map ? (Map<String, Object>) metadataObj : null;
                 String id = metadata != null ? (String) metadata.get("id") : hit.id();
                 results.add(new Bm25SearchHit(id, hit.score() != null ? hit.score() : 0.0, text));
             }
-            // 调试日志：输出BM25搜索结果数量和每条的得分
-            logger.info("BM25搜索完成, index={}, query={}, 返回{}条结果", indexName, query, results.size());
-            for (int i = 0; i < results.size(); i++) {
-                Bm25SearchHit r = results.get(i);
-                // 截取前50字符避免日志过长
-                String preview = r.text != null && r.text.length() > 50 ? r.text.substring(0, 50) + "..." : r.text;
-                logger.info("  BM25[{}]: id={}, score={}, text={}", i, r.id, String.format("%.4f", r.score), preview);
-            }
+            // 调试日志：仅输出索引名和命中数量，不打印 query/chunk 内容（可能含用户敏感数据）
+            logger.debug("BM25搜索完成, index={}, 返回{}条结果", indexName, results.size());
             return results;
         } catch (Exception e) {
             // BM25失败时降级：返回空列表，query()方法会退化为纯向量检索
-            logger.error("BM25搜索失败, index={}, query={}", indexName, query, e);
+            // 错误日志不打印 query 内容（用户敏感数据），只打印索引名和异常类型
+            logger.error("BM25搜索失败, index={}, errorClass={}, msg={}", indexName,
+                    e.getClass().getSimpleName(), e.getMessage());
             return List.of();
         }
     }
@@ -138,18 +137,10 @@ public class AiRagSearcher {
                 .sorted()  // ScoredChunk实现了Comparable，按score降序排列
                 .collect(Collectors.toList());
 
-        // 调试日志：输出融合后的排序结果
-        logger.info("双路融合完成, 向量{}条 + BM25{}条, 合并去重后{}条, 权重向量={}, BM25={}",
+        // 调试日志：仅输出统计信息，不打印 chunk 文本（可能含敏感数据）
+        logger.debug("双路融合完成, 向量{}条 + BM25{}条, 合并去重后{}条, 权重向量={}, BM25={}",
                 vectorMatches.size(), bm25Hits.size(), result.size(),
                 String.format("%.1f", vectorWeight), String.format("%.1f", bm25Weight));
-        for (int i = 0; i < Math.min(result.size(), 10); i++) {
-            ScoredChunk c = result.get(i);
-            double[] scores = chunkMap.get(c.id);
-            String preview = c.text != null && c.text.length() > 50 ? c.text.substring(0, 50) + "..." : c.text;
-            logger.info("  融合[{}]: id={}, 融合分={}, 向量归一化={}, BM25归一化={}, text={}",
-                    i, c.id, String.format("%.4f", c.score),
-                    String.format("%.4f", scores[0]), String.format("%.4f", scores[1]), preview);
-        }
         return result;
     }
 

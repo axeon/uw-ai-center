@@ -6,6 +6,7 @@ import com.github.benmanes.caffeine.cache.CacheLoader;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import dev.langchain4j.data.document.Document;
 import dev.langchain4j.data.document.parser.apache.tika.ApacheTikaDocumentParser;
 import dev.langchain4j.data.embedding.Embedding;
 import dev.langchain4j.data.document.Metadata;
@@ -25,11 +26,13 @@ import uw.ai.center.util.AiDocumentSplitter;
 import uw.ai.center.vendor.AiVendorClientWrapper;
 import uw.ai.center.vendor.AiVendorHelper;
 import uw.ai.center.constant.ModelType;
+import uw.common.app.constant.CommonState;
 import uw.common.app.helper.JsonConfigHelper;
 import uw.common.app.vo.JsonConfigBox;
 import uw.common.app.vo.JsonConfigParam;
 import uw.common.util.EnumUtils;
 import uw.common.util.JsonUtils;
+import uw.common.util.SystemClock;
 import uw.dao.DaoManager;
 
 import java.io.IOException;
@@ -53,6 +56,17 @@ public class AiRagService {
      * RAG库ES索引前缀.
      */
     public static final String RAG_ES_INDEX_PREFIX = "uw.ai.rag.";
+    /**
+     * 单个 RAG 文档大小上限：50MB。
+     */
+    private static final long MAX_RAG_DOC_SIZE = 50L * 1024 * 1024;
+    /**
+     * 允许的 RAG 文档扩展名白名单。
+     */
+    private static final java.util.Set<String> ALLOWED_RAG_DOC_EXTENSIONS = java.util.Set.of(
+            "txt", "md", "csv", "log",
+            "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx",
+            "html", "htm", "xml", "json", "rtf");
     /**
      * 日志记录器.
      */
@@ -82,10 +96,11 @@ public class AiRagService {
     /**
      * 添加文档（文件上传方式）.
      * 使用Tika解析文件，再用AiDocumentSplitter分割为带UUID的TextSegment列表。
+     * <p>向量化或 ES 写入失败时，会尝试回滚已写入的 chunk，避免留下孤儿向量。
      *
      * @param ragLibId RAG库ID
      * @param docFile 上传的文档文件
-     * @return Map<UUID, chunkText> 用于存入AiRagDoc.docContent
+     * @return Map<UUID, chunkText> 用于存入AiRagDoc.docContent；失败返回 null
      */
     public static Map<String, String> buildDocument(long ragLibId, MultipartFile docFile) {
         AiRagClientWrapper ragClientWrapper = getRagClientWrapper(ragLibId);
@@ -93,23 +108,71 @@ public class AiRagService {
             logger.error("RAG客户端不存在, libId={}", ragLibId);
             return null;
         }
+        if (docFile == null || docFile.isEmpty()) {
+            logger.warn("RAG文档上传为空, libId={}", ragLibId);
+            return null;
+        }
+        if (docFile.getSize() > MAX_RAG_DOC_SIZE) {
+            logger.warn("RAG文档超过大小限制({} > {}), filename={}", docFile.getSize(), MAX_RAG_DOC_SIZE, docFile.getOriginalFilename());
+            return null;
+        }
+        String filename = docFile.getOriginalFilename();
+        if (filename == null || filename.contains("..") || filename.contains("/") || filename.contains("\\")) {
+            logger.warn("RAG文档文件名非法, filename={}", filename);
+            return null;
+        }
+        int dotIdx = filename == null ? -1 : filename.lastIndexOf('.');
+        if (dotIdx < 0) {
+            logger.warn("RAG文档缺少扩展名, filename={}", filename);
+            return null;
+        }
+        String ext = filename.substring(dotIdx + 1).toLowerCase();
+        if (!ALLOWED_RAG_DOC_EXTENSIONS.contains(ext)) {
+            logger.warn("RAG文档类型不支持, filename={}, ext={}", filename, ext);
+            return null;
+        }
+        List<TextSegment> segments = null;
+        List<String> writtenIds = null;
         try (InputStream inputStream = docFile.getInputStream()) {
             // 使用Tika解析文档为纯文本
             ApacheTikaDocumentParser parser = new ApacheTikaDocumentParser();
-            dev.langchain4j.data.document.Document lc4jDoc = parser.parse(inputStream);
+            Document lc4jDoc = parser.parse(inputStream);
             // 使用AiDocumentSplitter分割（内含原生递归分割+UUID生成+最大数量限制）
-            List<TextSegment> segments = ragClientWrapper.documentSplitter.split(lc4jDoc.text());
+            segments = ragClientWrapper.documentSplitter.split(lc4jDoc.text());
             List<Embedding> embeddings = ragClientWrapper.embeddingModel.embedAll(segments).content();
             // 使用metadata.id作为ES文档_id，使_id与metadata.id一致，这样removeAll才能按_id正确删除
-            List<String> ids = segments.stream().map(s -> s.metadata().getString("id")).toList();
-            ragClientWrapper.vectorStore.addAll(ids, embeddings, segments);
+            writtenIds = segments.stream().map(s -> s.metadata().getString("id")).toList();
+            ragClientWrapper.vectorStore.addAll(writtenIds, embeddings, segments);
             return segments.stream().collect(Collectors.toMap(
                     s -> s.metadata().getString("id"),
                     TextSegment::text));
-        } catch (IOException e) {
-            logger.error("处理文件[{}]时发生错误!{}", docFile.getOriginalFilename(), e.getMessage(), e);
+        } catch (Exception e) {
+            // 向量化或 ES 写入失败：回滚已写入的 chunk，避免留下孤儿向量
+            String errorMsg = e.getClass().getSimpleName() + ": " + e.getMessage();
+            logger.error("处理文件[{}]失败，尝试回滚已写入chunk, written={}, err={}",
+                    docFile.getOriginalFilename(),
+                    writtenIds != null ? writtenIds.size() : 0, errorMsg, e);
+            rollbackWrittenChunks(ragClientWrapper, writtenIds);
         }
         return null;
+    }
+
+    /**
+     * 回滚已写入 ES 的 chunk：按 id 列表批量删除，避免留下孤儿向量。
+     * 回滚本身失败仅记录日志，不影响主流程错误返回。
+     *
+     * @param ragClientWrapper RAG 客户端
+     * @param ids              已写入 ES 的 chunk id 列表（可能为 null）
+     */
+    private static void rollbackWrittenChunks(AiRagClientWrapper ragClientWrapper, List<String> ids) {
+        if (ragClientWrapper == null || ids == null || ids.isEmpty()) {
+            return;
+        }
+        try {
+            ragClientWrapper.vectorStore.removeAll(new ArrayList<>(ids));
+        } catch (Exception rollbackErr) {
+            logger.warn("回滚已写入chunk失败，可能需要人工清理ES, count={}", ids.size(), rollbackErr);
+        }
     }
 
     /**
@@ -128,13 +191,20 @@ public class AiRagService {
         }
         // 使用AiDocumentSplitter分割（内含原生递归分割+UUID生成+最大数量限制）
         List<TextSegment> segments = ragClientWrapper.documentSplitter.split(fileContent);
-        List<Embedding> embeddings = ragClientWrapper.embeddingModel.embedAll(segments).content();
-        // 使用metadata.id作为ES文档_id，使_id与metadata.id一致，这样removeAll才能按_id正确删除
-        List<String> ids = segments.stream().map(s -> s.metadata().getString("id")).toList();
-        ragClientWrapper.vectorStore.addAll(ids, embeddings, segments);
-        return segments.stream().collect(Collectors.toMap(
-                s -> s.metadata().getString("id"),
-                TextSegment::text));
+        List<String> ids = null;
+        try {
+            List<Embedding> embeddings = ragClientWrapper.embeddingModel.embedAll(segments).content();
+            // 使用metadata.id作为ES文档_id，使_id与metadata.id一致，这样removeAll才能按_id正确删除
+            ids = segments.stream().map(s -> s.metadata().getString("id")).toList();
+            ragClientWrapper.vectorStore.addAll(ids, embeddings, segments);
+            return segments.stream().collect(Collectors.toMap(
+                    s -> s.metadata().getString("id"),
+                    TextSegment::text));
+        } catch (Exception e) {
+            logger.error("纯文本向量化或ES写入失败, libId={}, err={}", ragLibId, e.getMessage(), e);
+            rollbackWrittenChunks(ragClientWrapper, ids);
+            return null;
+        }
     }
 
     /**
@@ -193,17 +263,50 @@ public class AiRagService {
     }
 
     /**
-     * 删除RAG库.
+     * 删除RAG库：级联软删除 DB 中文档记录，再删除 ES 索引。
+     * <p>顺序：先软删 DB（ai_rag_doc.state → DELETED），失效客户端缓存，再删 ES 索引。
+     * ES 删除失败抛出异常，但 DB 软删已生效，避免留下孤儿 doc 记录指向已不存在 chunk。
      *
      * @param ragLibId RAG库ID
      */
     public static void deleteLib(long ragLibId) {
+        // 1. 软删除该库下所有非删除态的文档记录，避免 RAG 库恢复后引用幽灵 chunk
+        try {
+            dao.execute("update ai_rag_doc set state=?, modify_date=? where lib_id=? and state<>?",
+                    new Object[]{CommonState.DELETED.getValue(), SystemClock.nowDate(), ragLibId, CommonState.DELETED.getValue()});
+        } catch (Exception e) {
+            logger.error("软删除RAG文档记录失败, ragLibId={}", ragLibId, e);
+            throw new RuntimeException("软删除RAG文档记录失败: " + ragLibId, e);
+        }
+        // 2. 失效该 RAG 库的客户端缓存（释放 EmbeddingModel 引用等）
+        invalidateRagClientCache(ragLibId);
+        // 3. 删除ES索引
         try {
             esClient.indices().delete(d -> d.index(RAG_ES_INDEX_PREFIX + ragLibId));
         } catch (Exception e) {
             logger.error("删除ES索引失败, ragLibId={}", ragLibId, e);
             throw new RuntimeException("删除ES索引失败: " + ragLibId, e);
         }
+    }
+
+    /**
+     * 按 chunk id 集合批量删除 ES 向量数据.
+     * <p>用于文档入库后 DB 写入失败的补偿回滚，避免 ES 中留下孤儿 chunk。
+     * 回滚本身的异常仅记录日志，不向上抛出。
+     *
+     * @param ragLibId RAG库ID
+     * @param chunkIds 要删除的 chunk id 集合
+     */
+    public static void rollbackChunks(long ragLibId, java.util.Collection<String> chunkIds) {
+        if (chunkIds == null || chunkIds.isEmpty()) {
+            return;
+        }
+        AiRagClientWrapper ragClientWrapper = getRagClientWrapper(ragLibId);
+        if (ragClientWrapper == null) {
+            logger.warn("回滚chunk失败：RAG客户端不存在, libId={}", ragLibId);
+            return;
+        }
+        rollbackWrittenChunks(ragClientWrapper, new ArrayList<>(chunkIds));
     }
 
     /**

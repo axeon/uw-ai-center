@@ -1,7 +1,6 @@
 package uw.ai.center.entity;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import uw.common.util.JsonUtils;
 import uw.dao.DataEntity;
 import uw.dao.DataUpdateInfo;
 import uw.dao.annotation.ColumnMeta;
@@ -405,10 +404,14 @@ public class AiModelApi implements DataEntity,Serializable{
 
     /**
      * 重载toString方法.
+     * <p>注意：apiKey 不直接输出，避免日志/异常栈中泄漏密钥。如需排查请走数据库。
      */
     @Override
     public String toString() {
-        return JsonUtils.toString(this);
+        return "AiModelApi{id=" + id + ", saasId=" + saasId + ", mchId=" + mchId
+                + ", apiCode='" + apiCode + '\'' + ", apiName='" + apiName + '\''
+                + ", apiUrl='" + apiUrl + '\'' + ", apiKey=" + (apiKey == null || apiKey.isEmpty() ? "[]" : "[MASKED]")
+                + ", state=" + state + ", createDate=" + createDate + ", modifyDate=" + modifyDate + '}';
     }
 
     /**

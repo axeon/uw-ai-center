@@ -12,6 +12,7 @@ import uw.auth.service.constant.ActionLog;
 import uw.auth.service.constant.AuthType;
 import uw.auth.service.constant.UserType;
 import uw.common.app.constant.CommonState;
+import uw.common.app.dto.AuthIdQueryParam;
 import uw.common.app.dto.AuthIdStateQueryParam;
 import uw.common.response.ResponseData;
 import uw.dao.DaoManager;
@@ -54,7 +55,7 @@ public class AiSessionMsgController {
     @Operation(summary = "轻量级列表session消息", description = "轻量级列表session消息，一般用于select控件。")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.USER, log = ActionLog.NONE)
     public ResponseData<PageList<AiSessionMsg>> listLite(AiSessionMsgQueryParam queryParam) {
-        queryParam.SELECT_SQL( "SELECT id,session_id,create_date,state from ai_session_msg " );
+        queryParam.SELECT_SQL( "SELECT id,saas_id,user_id,config_id,session_id,user_prompt,request_date,response_start_date,response_end_date,state from ai_session_msg " );
         return dao.list(AiSessionMsg.class, queryParam);
     }
 
@@ -69,7 +70,7 @@ public class AiSessionMsgController {
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.REQUEST)
     public ResponseData<AiSessionMsg> load(@Parameter(description = "主键ID", required = true) @RequestParam long id) {
         AuthServiceHelper.logRef(AiSessionMsg.class,id);
-        return dao.load(AiSessionMsg.class, id);
+        return dao.queryForObject(AiSessionMsg.class, new AuthIdQueryParam(AuthServiceHelper.getSaasId(), id));
     }
 
     /**
@@ -84,7 +85,7 @@ public class AiSessionMsgController {
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData delete(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiSessionMsg.class,id,remark);
-        return dao.update(new AiSessionMsg().state(CommonState.DELETED.getValue()), new AuthIdStateQueryParam(id, CommonState.ENABLED.getValue()));
+        return dao.update(new AiSessionMsg().state(CommonState.DELETED.getValue()), new AuthIdStateQueryParam(AuthServiceHelper.getSaasId(), id, CommonState.ENABLED.getValue()));
     }
 
 }
