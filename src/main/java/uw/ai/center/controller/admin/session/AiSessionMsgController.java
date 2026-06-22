@@ -50,10 +50,10 @@ public class AiSessionMsgController {
      * @param queryParam 查询参数
      * @return 会话消息分页列表（精简字段）
      */
-    @GetMapping("/listLite")
+    @GetMapping("/liteList")
     @Operation(summary = "轻量级列表session消息", description = "轻量级列表session消息，一般用于select控件。")
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.USER, log = ActionLog.NONE)
-    public ResponseData<PageList<AiSessionMsg>> listLite(AiSessionMsgQueryParam queryParam) {
+    public ResponseData<PageList<AiSessionMsg>> liteList(AiSessionMsgQueryParam queryParam) {
         queryParam.SELECT_SQL( "SELECT id,session_id,create_date,state from ai_session_msg " );
         return dao.list(AiSessionMsg.class, queryParam);
     }

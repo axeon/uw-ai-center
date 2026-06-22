@@ -51,10 +51,10 @@ public class AiSessionMsgController {
      * @param queryParam 查询参数（自动绑定当前租户 saasId）
      * @return 会话消息分页列表（精简字段）
      */
-    @GetMapping("/listLite")
+    @GetMapping("/liteList")
     @Operation(summary = "轻量级列表session消息", description = "轻量级列表session消息，一般用于select控件。")
     @MscPermDeclare(user = UserType.SAAS, auth = AuthType.USER, log = ActionLog.NONE)
-    public ResponseData<PageList<AiSessionMsg>> listLite(AiSessionMsgQueryParam queryParam) {
+    public ResponseData<PageList<AiSessionMsg>> liteList(AiSessionMsgQueryParam queryParam) {
         queryParam.SELECT_SQL( "SELECT id,saas_id,user_id,config_id,session_id,user_prompt,request_date,response_start_date,response_end_date,state from ai_session_msg " );
         return dao.list(AiSessionMsg.class, queryParam);
     }

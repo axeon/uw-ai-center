@@ -58,10 +58,10 @@ public class AiToolInfoController {
      * @param queryParam 查询参数
      * @return 工具信息分页列表（精简字段）
      */
-    @GetMapping("/listLite")
+    @GetMapping("/liteList")
     @Operation(summary = "轻量级列表AI工具信息", description = "轻量级列表AI工具信息，一般用于select控件。")
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.USER, log = ActionLog.NONE)
-    public ResponseData<PageList<AiToolInfo>> listLite(AiToolInfoQueryParam queryParam){
+    public ResponseData<PageList<AiToolInfo>> liteList(AiToolInfoQueryParam queryParam){
         queryParam.SELECT_SQL( "SELECT id,app_name,tool_class,tool_version,tool_name,tool_desc,create_date,modify_date,state from ai_tool_info " );
         return dao.list(AiToolInfo.class, queryParam);
     }
