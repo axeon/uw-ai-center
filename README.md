@@ -96,8 +96,8 @@ util/               AiDocumentSplitter（RAG 文档分割）/ SecurityUtils（SS
 
 ## 开发约定
 
-- 全局开发规范（Client SDK 设计、时间类型优先 `java.util.Date`、序列化异常信息泄露防护等）见仓库根目录 `CLAUDE.md`。
-- Javadoc 覆盖类 / 属性 / 方法三级，公共 API 必须有 `@param` / `@return`。
+- 遵循统一的项目编码与 Javadoc 规范：类 / 属性 / 方法三级注释完整，公共 API 必须有 `@param` / `@return`。
+- 时间字段统一使用 `java.util.Date`，与历史序列化约定及对外 API 契约保持一致。
 
 ## 构建
 
