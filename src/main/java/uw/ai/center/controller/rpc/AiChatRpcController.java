@@ -107,7 +107,7 @@ public class AiChatRpcController implements AiChatRpc {
     @Operation(summary = "初始化会话", description = "初始化会话")
     @MscPermDeclare(user = UserType.RPC)
     public ResponseData<AiSessionInfo> initSession(@ModelAttribute AiChatSessionParam param) {
-        return AiChatService.initSession(param.getSaasId(), param.getUserId(), param.getUserType(), param.getUserInfo(), param.getConfigId(), SessionType.CHAT.getValue(), null, param.getWindowSize(), param.getSystemPrompt(), param.getToolList(), param.getRagLibIds());
+        return AiChatService.initSession(param.getSaasId(), param.getUserId(), param.getUserType(), param.getUserInfo(), param.getConfigId(), SessionType.CHAT.getValue(), param.getUserPrompt(), param.getWindowSize(), param.getSystemPrompt(), param.getToolList(), param.getRagLibIds());
     }
 
     /**

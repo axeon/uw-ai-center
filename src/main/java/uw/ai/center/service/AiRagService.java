@@ -23,9 +23,8 @@ import org.springframework.web.multipart.MultipartFile;
 import uw.ai.center.entity.AiRagDoc;
 import uw.ai.center.entity.AiRagLib;
 import uw.ai.center.util.AiDocumentSplitter;
-import uw.ai.center.vendor.AiVendorClientWrapper;
 import uw.ai.center.vendor.AiVendorHelper;
-import uw.ai.center.constant.ModelType;
+import uw.ai.center.vendor.client.EmbeddingClient;
 import uw.common.app.constant.CommonState;
 import uw.common.app.helper.JsonConfigHelper;
 import uw.common.app.vo.JsonConfigBox;
@@ -35,7 +34,6 @@ import uw.common.util.JsonUtils;
 import uw.common.util.SystemClock;
 import uw.dao.DaoManager;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -231,6 +229,8 @@ public class AiRagService {
 
     /**
      * 重建文档（先删旧数据再写入，避免ES中出现重复chunk）.
+     * <p>ES 操作异常或前置数据缺失时回滚 DB 状态为 DISABLED，避免出现"DB=ENABLED 但 ES 无向量"的不一致状态。
+     * 回滚本身的异常仅记录日志，不向上抛出。
      *
      * @param ragDocId RAG文档ID
      */
@@ -238,28 +238,51 @@ public class AiRagService {
         dao.load(AiRagDoc.class, ragDocId).onSuccess(aiRagDoc -> {
             AiRagClientWrapper ragClientWrapper = getRagClientWrapper(aiRagDoc.getLibId());
             if (ragClientWrapper == null) {
-                logger.error("RAG客户端不存在, libId={}", aiRagDoc.getLibId());
+                logger.error("RAG客户端不存在, libId={}, 回滚DB状态", aiRagDoc.getLibId());
+                rollbackDocStateToDisabled(ragDocId);
                 return;
             }
             Map<String, String> docMap = JsonUtils.parse(aiRagDoc.getDocContent(), new TypeReference<Map<String, String>>() {
             });
             if (docMap == null || docMap.isEmpty()) {
-                logger.warn("文档内容为空, ragDocId={}", ragDocId);
+                logger.warn("文档内容为空, ragDocId={}, 回滚DB状态", ragDocId);
+                rollbackDocStateToDisabled(ragDocId);
                 return;
             }
-            // 先删除旧的chunk数据，再写入新的，避免重复
-            ragClientWrapper.vectorStore.removeAll(new ArrayList<>(docMap.keySet()));
-            List<TextSegment> segments = new ArrayList<>(docMap.size());
-            for (Map.Entry<String, String> entry : docMap.entrySet()) {
-                Metadata metadata = new Metadata();
-                metadata.put("id", entry.getKey());
-                segments.add(TextSegment.from(entry.getValue(), metadata));
+            try {
+                // 先删除旧的chunk数据，再写入新的，避免重复
+                ragClientWrapper.vectorStore.removeAll(new ArrayList<>(docMap.keySet()));
+                List<TextSegment> segments = new ArrayList<>(docMap.size());
+                for (Map.Entry<String, String> entry : docMap.entrySet()) {
+                    Metadata metadata = new Metadata();
+                    metadata.put("id", entry.getKey());
+                    segments.add(TextSegment.from(entry.getValue(), metadata));
+                }
+                List<Embedding> embeddings = ragClientWrapper.embeddingModel.embedAll(segments).content();
+                // 使用metadata.id作为ES文档_id，使_id与metadata.id一致，这样removeAll才能按_id正确删除
+                List<String> ids = segments.stream().map(s -> s.metadata().getString("id")).toList();
+                ragClientWrapper.vectorStore.addAll(ids, embeddings, segments);
+            } catch (Exception e) {
+                logger.error("重建文档向量失败, ragDocId={}, 回滚DB状态", ragDocId, e);
+                rollbackDocStateToDisabled(ragDocId);
             }
-            List<Embedding> embeddings = ragClientWrapper.embeddingModel.embedAll(segments).content();
-            // 使用metadata.id作为ES文档_id，使_id与metadata.id一致，这样removeAll才能按_id正确删除
-            List<String> ids = segments.stream().map(s -> s.metadata().getString("id")).toList();
-            ragClientWrapper.vectorStore.addAll(ids, embeddings, segments);
         });
+    }
+
+    /**
+     * 把文档 DB 状态从 ENABLED 回滚为 DISABLED，仅用于 rebuildDocument 失败时的状态补偿。
+     * 回滚本身的异常仅记录日志，不向上抛出。
+     *
+     * @param ragDocId RAG文档ID
+     */
+    private static void rollbackDocStateToDisabled(long ragDocId) {
+        try {
+            dao.execute("update ai_rag_doc set state=?, modify_date=? where id=? and state=?",
+                    new Object[]{CommonState.DISABLED.getValue(), SystemClock.nowDate(),
+                            ragDocId, CommonState.ENABLED.getValue()});
+        } catch (Exception ex) {
+            logger.error("回滚文档状态失败, ragDocId={}", ragDocId, ex);
+        }
     }
 
     /**
@@ -342,12 +365,16 @@ public class AiRagService {
      * @return 拼接的检索结果文本
      */
     public static String query(long ragLibId, String query) {
+        long startMs = SystemClock.now();
+        String shortQuery = truncate(query, 100);
         AiRagClientWrapper ragClientWrapper = getRagClientWrapper(ragLibId);
         if (ragClientWrapper == null) {
             logger.error("RAG客户端不存在, libId={}", ragLibId);
             return "";
         }
+        logger.info("RAG查询开始, libId={}, libName={}, query=[{}]", ragLibId, ragClientWrapper.aiRagLib.getLibName(), shortQuery);
         // 向量检索
+        long t1 = SystemClock.now();
         Embedding queryEmbedding = ragClientWrapper.embeddingModel.embed(query).content();
         EmbeddingSearchRequest vectorRequest = EmbeddingSearchRequest.builder()
                 .queryEmbedding(queryEmbedding)
@@ -355,15 +382,19 @@ public class AiRagService {
                 .minScore(ragClientWrapper.searchSimilarityThreshold)
                 .build();
         EmbeddingSearchResult<TextSegment> vectorResult = ragClientWrapper.vectorStore.search(vectorRequest);
+        long vectorMs = SystemClock.now() - t1;
 
         // BM25全文检索
+        long t2 = SystemClock.now();
         List<AiRagSearcher.Bm25SearchHit> bm25Results =
                 AiRagSearcher.searchBm25(esClient, RAG_ES_INDEX_PREFIX + ragLibId, query, ragClientWrapper.searchBm25K);
+        long bm25Ms = SystemClock.now() - t2;
 
         // 合并去重 + 加权融合（权重从libConfig读取）
         List<AiRagSearcher.ScoredChunk> merged = AiRagSearcher.mergeAndFuse(
                 vectorResult.matches(), bm25Results,
                 ragClientWrapper.searchVectorWeight, ragClientWrapper.searchBm25Weight);
+        int topK = Math.min(ragClientWrapper.searchTopK, merged.size());
 
         // 取最终 TopK，拼接文本
         StringBuilder sb = new StringBuilder(1280);
@@ -372,7 +403,17 @@ public class AiRagService {
         merged.stream().limit(ragClientWrapper.searchTopK).forEach(chunk ->
                 sb.append(chunk.text()).append("\n"));
         sb.append("\n");
+        logger.info("RAG查询完成, libId={}, vectorHits={}, bm25Hits={}, fused={}, topK={}, resultLen={}, vectorMs={}, bm25Ms={}, totalMs={}",
+                ragLibId, vectorResult.matches().size(), bm25Results.size(), merged.size(), topK, sb.length(), vectorMs, bm25Ms, SystemClock.now() - startMs);
         return sb.toString();
+    }
+
+    /**
+     * 截断字符串到指定长度（超出补省略号），用于日志输出避免 query 过长刷屏。
+     */
+    private static String truncate(String s, int maxLen) {
+        if (s == null) return "";
+        return s.length() <= maxLen ? s : s.substring(0, maxLen) + "...";
     }
 
     /**
@@ -402,18 +443,14 @@ public class AiRagService {
         // overlap为chunkSize的10%（如chunkSize=800则overlap=80），提供跨chunk边界上下文
         AiDocumentSplitter documentSplitter = new AiDocumentSplitter(chunkSize, chunkSize / 10, chunkMaxNum);
 
-        AiVendorClientWrapper vendorWrapper;
+        EmbeddingClient embeddingClient;
         try {
-            vendorWrapper = AiVendorHelper.getClientWrapper(ragLib.getEmbedConfigId());
+            embeddingClient = AiVendorHelper.getEmbeddingClient(ragLib.getEmbedConfigId());
         } catch (IllegalStateException e) {
             logger.error("RAG库[{}]获取EmbeddingModel失败: {}", ragLibId, e.getMessage());
             return null;
         }
-        if (!vendorWrapper.isType(ModelType.EMBEDDING)) {
-            logger.error("RAG库[{}]获取EmbeddingModel失败: 配置不是EMBEDDING类型", ragLibId);
-            return null;
-        }
-        dev.langchain4j.model.embedding.EmbeddingModel embeddingModel = vendorWrapper.getEmbeddingModel();
+        EmbeddingModel embeddingModel = embeddingClient.getEmbeddingModel();
 
         ElasticsearchEmbeddingStore vectorStore = ElasticsearchEmbeddingStore.builder()
                 .client(esClient)

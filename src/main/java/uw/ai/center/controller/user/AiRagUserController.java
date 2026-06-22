@@ -6,7 +6,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import uw.ai.center.dto.UserRagLibQueryParam;
-import uw.ai.center.entity.AiModelConfig;
 import uw.ai.center.entity.AiRagLib;
 import uw.auth.service.AuthServiceHelper;
 import uw.auth.service.annotation.MscPermDeclare;
@@ -39,7 +38,7 @@ public class AiRagUserController {
     @Operation(summary = "列表RAG库", description = "列表RAG库")
     @MscPermDeclare(auth = AuthType.NONE, log = ActionLog.BASE)
     public ResponseData<PageList<AiRagLib>> list(UserRagLibQueryParam queryParam) {
-        AuthServiceHelper.logRef( AiModelConfig.class );
+        AuthServiceHelper.logRef( AiRagLib.class );
         queryParam.saasId(AuthServiceHelper.getSaasId());
         queryParam.SELECT_SQL( "select id, saas_id, lib_type, lib_name, lib_desc, embed_config_id, embed_model_name, create_date, modify_date, state FROM ai_rag_lib ");
         return dao.list( AiRagLib.class, queryParam );

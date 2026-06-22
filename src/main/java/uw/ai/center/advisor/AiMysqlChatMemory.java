@@ -3,6 +3,7 @@ package uw.ai.center.advisor;
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.UserMessage;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uw.ai.center.entity.AiSessionMsg;
@@ -34,7 +35,7 @@ public class AiMysqlChatMemory {
     /**
      * 从 MySQL 加载会话历史消息。
      * 先按 id 降序取最近 N 条（N 由 windowSize 控制），再反转为升序，
-     * 保证历史消息时间顺序正确（最旧在前、最新在后）。
+     * 保证历史消息时间顺序正确（最旧在前、最新在前）。
      *
      * @param sessionId  会话ID
      * @param windowSize 每轮对话消息对数量上限（&lt;=0 时使用默认值 50，&gt;MAX_HISTORY_LIMIT 时截断）
@@ -44,14 +45,20 @@ public class AiMysqlChatMemory {
         List<ChatMessage> messages = new ArrayList<>(limit * 2);
         try {
             dao.list(AiSessionMsg.class,
-                    "select * from ai_session_msg where session_id=? and state=? order by id desc limit ?",
+                    "select id, session_id, user_prompt, response_info from ai_session_msg where session_id=? and state=? order by id desc limit ?",
                     new Object[]{sessionId, CommonState.ENABLED.getValue(), limit}).onSuccess(msgList -> {
                 // 数据库按 id desc 返回（最新在前），反向遍历后追加（最旧在前）
                 List<AiSessionMsg> raw = msgList.list();
                 for (int i = raw.size() - 1; i >= 0; i--) {
                     AiSessionMsg msg = raw.get(i);
-                    messages.add(new UserMessage(msg.getUserPrompt()));
-                    messages.add(new AiMessage(msg.getResponseInfo()));
+                    String userPrompt = msg.getUserPrompt();
+                    String responseInfo = msg.getResponseInfo();
+                    if (StringUtils.isNotBlank(userPrompt)) {
+                        messages.add(new UserMessage(userPrompt));
+                    }
+                    if (StringUtils.isNotBlank(responseInfo)) {
+                        messages.add(new AiMessage(responseInfo));
+                    }
                 }
             });
         } catch (Exception e) {
