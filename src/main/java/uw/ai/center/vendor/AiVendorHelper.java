@@ -6,11 +6,17 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import uw.ai.center.constant.ModelType;
 import uw.ai.center.entity.AiModelApi;
 import uw.ai.center.entity.AiModelConfig;
 import uw.ai.center.entity.AiRagLib;
 import uw.ai.center.vo.AiApiConfigData;
 import uw.ai.center.vo.AiModelConfigData;
+import uw.ai.center.vendor.client.AiModelClient;
+import uw.ai.center.vendor.client.AudioTranscriptionClient;
+import uw.ai.center.vendor.client.ChatClient;
+import uw.ai.center.vendor.client.EmbeddingClient;
+import uw.ai.center.vendor.client.ImageGenerationClient;
 import uw.ai.center.vendor.ollama.OllamaVendor;
 import uw.ai.center.vendor.openai.OpenAiVendor;
 import uw.cache.CacheChangeNotifyListener;
@@ -25,7 +31,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * AI Vendor 帮助类，管理 Vendors、AiModelConfigData 聚合缓存和 AiVendorClientWrapper 实例缓存。
+ * AI Vendor 帮助类，管理 Vendors、AiModelConfigData 聚合缓存和 AiModelClient 实例缓存。
  */
 @Component
 public class AiVendorHelper {
@@ -37,11 +43,11 @@ public class AiVendorHelper {
     private static final Map<String, AiVendor> VENDOR_MAP = new ConcurrentHashMap<>();
 
     /**
-     * AiVendorClientWrapper 实例缓存
+     * AiModelClient 实例缓存
      */
-    private static final LoadingCache<Long, AiVendorClientWrapper> CLIENT_WRAPPER_CACHE = Caffeine.newBuilder()
+    private static final LoadingCache<Long, AiModelClient> CLIENT_CACHE = Caffeine.newBuilder()
             .maximumSize(1000)
-            .build(AiVendorHelper::buildClientWrapper);
+            .build(AiVendorHelper::buildClient);
 
     /**
      * FusionCache cacheName：configCode → configId 映射（高频 RPC 查询场景）。
@@ -58,7 +64,7 @@ public class AiVendorHelper {
                 .entityClass(AiModelConfigData.class)
                 .localCacheMaxNum(10000)
                 .cacheExpireMillis(86400_000L)
-                .nullProtectMillis(86400_000L)
+                .nullProtectMillis(60_000L)
                 .build(), new CacheDataLoader<Long, AiModelConfigData>() {
             @Override
             public AiModelConfigData load(Long configId) throws Exception {
@@ -76,15 +82,15 @@ public class AiVendorHelper {
                 return new AiModelConfigData(modelConfig, new AiApiConfigData(apiConfig));
             }
         }, (CacheChangeNotifyListener<Long, AiModelConfigData>) (key, oldValue, newValue) -> {
-            // 缓存变更时级联失效 ClientWrapper
-            invalidateClientWrapper(key);
+            // 缓存变更时级联失效 Client
+            invalidateClient(key);
         });
 
         FusionCache.config(FusionCache.Config.builder()
                 .entityClass(AiModelApi.class)
                 .localCacheMaxNum(10000)
                 .cacheExpireMillis(86400_000L)
-                .nullProtectMillis(86400_000L)
+                .nullProtectMillis(60_000L)
                 .build(), new CacheDataLoader<Long, AiModelApi>() {
             @Override
             public AiModelApi load(Long apiId) throws Exception {
@@ -98,7 +104,7 @@ public class AiVendorHelper {
                 .cacheName(CACHE_CONFIG_CODE_TO_ID)
                 .localCacheMaxNum(1000)
                 .cacheExpireMillis(86400_000L)
-                .nullProtectMillis(86400_000L)
+                .nullProtectMillis(60_000L)
                 .build(), new CacheDataLoader<String, Long>() {
             @Override
             public Long load(String configCode) throws Exception {
@@ -113,7 +119,7 @@ public class AiVendorHelper {
                 .cacheName(CACHE_API_CODE_TO_ID)
                 .localCacheMaxNum(1000)
                 .cacheExpireMillis(86400_000L)
-                .nullProtectMillis(86400_000L)
+                .nullProtectMillis(60_000L)
                 .build(), new CacheDataLoader<String, Long>() {
             @Override
             public Long load(String apiCode) throws Exception {
@@ -162,21 +168,31 @@ public class AiVendorHelper {
     }
 
     /**
-     * 获取 AiVendorClientWrapper。
+     * 获取 CHAT 类型客户端。类型不符时抛 IllegalStateException。
      */
-    public static AiVendorClientWrapper getClientWrapper(long configId) {
-        AiVendorClientWrapper wrapper = CLIENT_WRAPPER_CACHE.get(configId);
-        if (wrapper == null) {
-            throw new IllegalStateException("AI模型配置[" + configId + "]不存在或未启用");
-        }
-        return wrapper;
+    public static ChatClient getChatClient(long configId) {
+        return asType(getClient(configId), ModelType.CHAT, ChatClient.class, configId);
     }
 
     /**
-     * 获取 AiVendorClientWrapper（向后兼容旧API）。
+     * 获取 EMBEDDING 类型客户端。类型不符时抛 IllegalStateException。
      */
-    public static AiVendorClientWrapper getChatClient(long configId) {
-        return getClientWrapper(configId);
+    public static EmbeddingClient getEmbeddingClient(long configId) {
+        return asType(getClient(configId), ModelType.EMBEDDING, EmbeddingClient.class, configId);
+    }
+
+    /**
+     * 获取 IMAGE_GENERATION 类型客户端。类型不符时抛 IllegalStateException。
+     */
+    public static ImageGenerationClient getImageClient(long configId) {
+        return asType(getClient(configId), ModelType.IMAGE_GENERATION, ImageGenerationClient.class, configId);
+    }
+
+    /**
+     * 获取 AUDIO_TRANSCRIPTION 类型客户端。类型不符时抛 IllegalStateException。
+     */
+    public static AudioTranscriptionClient getAudioTranscriptionClient(long configId) {
+        return asType(getClient(configId), ModelType.AUDIO_TRANSCRIPTION, AudioTranscriptionClient.class, configId);
     }
 
     /**
@@ -240,12 +256,16 @@ public class AiVendorHelper {
 
     /**
      * 刷新指定模型配置的缓存。
-     * FusionCache 失效时自动触发 CacheChangeNotifyListener → invalidateClientWrapper。
+     * FusionCache 失效时自动触发 CacheChangeNotifyListener → invalidateClient。
      * <p>configCode 双清使用调用方传入的 {@code previousConfigCode}（推荐为 update 前读到的旧值），
      * 避免"失效前再读缓存"导致的 TOCTOU：失效期间若缓存已被其他线程重建为新 code，
      * 再读到的 code 就不是需要失效的那一份。
      * <p>此外，级联失效所有以该 configId 作为 embedConfigId 的 RAG 库客户端缓存，
      * 避免 RAG 侧 EmbeddingModel 引用脱节（换 Key/换维度后产生脏向量）。
+     * <p><b>失效顺序</b>：先级联失效 RAG 客户端缓存（停止新请求拿到旧 wrapper），
+     * 再失效主缓存触发 client.close()，缩小"已拿到旧 wrapper 的线程继续使用已关闭 EmbeddingModel"
+     * 的竞态窗口。极端并发场景下仍可能出现连接已关闭异常，调用方 RAG 查询/入库需具备重试或
+     * 失败回退能力。
      *
      * @param configId           要失效的模型配置ID
      * @param previousConfigCode 调用方在 update 前读到的旧 configCode（可为 null，将退化为读缓存）
@@ -259,12 +279,13 @@ public class AiVendorHelper {
                 oldCode = data.getAiModelConfig().getConfigCode();
             }
         }
+        // 1. 先级联失效引用该 configId 的 RAG 库客户端缓存，避免新请求拿到旧 wrapper
+        cascadeInvalidateRagClients(configId);
+        // 2. 再失效主缓存，触发 CacheChangeNotifyListener → invalidateClient（close 旧 client）
         FusionCache.invalidate(AiModelConfigData.class, configId);
         if (StringUtils.isNotBlank(oldCode)) {
             FusionCache.invalidate(CACHE_CONFIG_CODE_TO_ID, oldCode);
         }
-        // 级联失效引用该 configId 的 RAG 库客户端缓存
-        cascadeInvalidateRagClients(configId);
     }
 
     /**
@@ -305,19 +326,14 @@ public class AiVendorHelper {
      * API配置变更时，级联失效关联的模型配置缓存。
      * <p>apiCode 双清使用调用方传入的 {@code previousApiCode}（推荐为 update 前读到的旧值），
      * 避免"失效前再读缓存"导致的 TOCTOU。
+     * <p><b>失效顺序</b>：先失效 {@code AiModelApi}，再级联失效关联的 {@code AiModelConfigData}。
+     * 反序会导致 CacheDataLoader 重新加载 ModelConfig 时复用尚未刷新的 AiModelApi 缓存，
+     * 把旧 apiKey 重新打包进 AiModelConfigData，直到下一次主缓存过期才能自愈。
      *
      * @param apiId           要失效的 API 配置ID
      * @param previousApiCode 调用方在 update 前读到的旧 apiCode（可为 null，将退化为读缓存）
      */
     public static void invalidateApiConfig(long apiId, String previousApiCode) {
-        PageList<AiModelConfig> configs = dao.list(AiModelConfig.class,
-                "select id from ai_model_config where api_id=? and state<>?",
-                new Object[]{apiId, uw.common.app.constant.CommonState.DELETED.getValue()}).getData();
-        if (configs != null) {
-            for (AiModelConfig config : configs) {
-                invalidateConfig(config.getId());
-            }
-        }
         String oldCode = previousApiCode;
         if (oldCode == null) {
             AiModelApi api = FusionCache.get(AiModelApi.class, apiId);
@@ -325,9 +341,19 @@ public class AiVendorHelper {
                 oldCode = api.getApiCode();
             }
         }
+        // 1. 先失效 AiModelApi + apiCode 映射，确保后续 CacheDataLoader 重载 ModelConfig 时拿到新的 apiKey
         FusionCache.invalidate(AiModelApi.class, apiId);
         if (StringUtils.isNotBlank(oldCode)) {
             FusionCache.invalidate(CACHE_API_CODE_TO_ID, oldCode);
+        }
+        // 2. 再级联失效引用该 apiId 的 ModelConfig，CacheDataLoader 会复用上一步已刷新的 AiModelApi 缓存
+        PageList<AiModelConfig> configs = dao.list(AiModelConfig.class,
+                "select id from ai_model_config where api_id=? and state<>?",
+                new Object[]{apiId, uw.common.app.constant.CommonState.DELETED.getValue()}).getData();
+        if (configs != null) {
+            for (AiModelConfig config : configs) {
+                invalidateConfig(config.getId());
+            }
         }
     }
 
@@ -339,23 +365,46 @@ public class AiVendorHelper {
     }
 
     /**
-     * 级联失效ClientWrapper实例缓存。
-     * 使用 asMap().remove() 原子移除，避免 getIfPresent → close → invalidate 期间其他线程重新加载新 wrapper 而被误删。
-     * 由CacheChangeNotifyListener自动调用。
+     * 级联失效 Client 实例缓存。
+     * 使用 asMap().remove() 原子移除，避免 getIfPresent → close → invalidate 期间其他线程重新加载新 client 而被误删。
+     * 由 CacheChangeNotifyListener 自动调用。
      */
-    public static void invalidateClientWrapper(Long configId) {
-        AiVendorClientWrapper wrapper = CLIENT_WRAPPER_CACHE.asMap().remove(configId);
-        if (wrapper != null) {
-            wrapper.close();
+    public static void invalidateClient(Long configId) {
+        AiModelClient client = CLIENT_CACHE.asMap().remove(configId);
+        if (client != null) {
+            client.close();
         }
     }
 
     /**
-     * 构建 AiVendorClientWrapper。
-     * 从FusionCache获取聚合数据，委托给 AiVendor.buildClientWrapper。
-     * 配置不存在、Vendor未注册或模型类型不支持时抛出IllegalStateException。
+     * 内部统一获取 Client 实例。配置不存在或未启用时抛 IllegalStateException。
      */
-    private static AiVendorClientWrapper buildClientWrapper(long configId) {
+    private static AiModelClient getClient(long configId) {
+        AiModelClient client = CLIENT_CACHE.get(configId);
+        if (client == null) {
+            throw new IllegalStateException("AI模型配置[" + configId + "]不存在或未启用");
+        }
+        return client;
+    }
+
+    /**
+     * 类型校验 + 强转，统一错误提示。
+     */
+    private static <T extends AiModelClient> T asType(AiModelClient client, ModelType expected,
+                                                     Class<T> clazz, long configId) {
+        if (!clazz.isInstance(client)) {
+            throw new IllegalStateException("configId[" + configId + "]不是" + expected.getDesc()
+                    + "类型，实际类型=" + client.getModelType());
+        }
+        return clazz.cast(client);
+    }
+
+    /**
+     * 构建 AiModelClient。
+     * 从 FusionCache 获取聚合数据，委托给 AiVendor.buildClient。
+     * 配置不存在、Vendor 未注册或模型类型不支持时抛出 IllegalStateException。
+     */
+    private static AiModelClient buildClient(long configId) {
         AiModelConfigData configData = FusionCache.get(AiModelConfigData.class, configId);
         if (configData == null) {
             throw new IllegalStateException("AI模型配置[" + configId + "]不存在或未启用");
@@ -371,10 +420,11 @@ public class AiVendorHelper {
             throw new IllegalStateException("未找到AI Vendor: " + configData.getVendorClass());
         }
 
-        AiVendorClientWrapper wrapper = vendor.buildClientWrapper(configData);
-        if (wrapper == null) {
-            throw new IllegalStateException("Vendor[" + vendor.vendorName() + "]不支持模型类型[" + configData.getModelType() + "], configId=" + configId);
+        AiModelClient client = vendor.buildClient(configData);
+        if (client == null) {
+            throw new IllegalStateException("Vendor[" + vendor.vendorName() + "]不支持模型类型["
+                    + configData.getModelType() + "], configId=" + configId);
         }
-        return wrapper;
+        return client;
     }
 }

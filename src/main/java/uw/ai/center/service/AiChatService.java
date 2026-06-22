@@ -26,13 +26,13 @@ import uw.ai.center.entity.AiSessionInfo;
 import uw.ai.center.entity.AiSessionMsg;
 import uw.ai.center.advisor.AiMysqlChatMemory;
 import uw.ai.center.tool.AiToolHelper;
-import uw.ai.center.vendor.AiVendorClientWrapper;
 import uw.ai.center.vendor.AiVendorHelper;
-import uw.ai.center.constant.ModelType;
+import uw.ai.center.vendor.client.ChatClient;
 import uw.ai.center.vo.AiChatSentEvent;
 import uw.ai.center.vo.AiModelConfigData;
 import uw.ai.vo.AiToolCallInfo;
 import uw.common.app.constant.CommonState;
+import uw.common.app.vo.JsonConfigBox;
 import uw.common.response.ResponseData;
 import uw.common.util.JsonUtils;
 import uw.common.util.SystemClock;
@@ -41,7 +41,6 @@ import uw.common.data.PageList;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -115,7 +114,14 @@ public class AiChatService {
             iteration++;
             for (ToolExecutionRequest req : aiMessage.toolExecutionRequests()) {
                 String toolInput = mergeToolContext(req.arguments(), toolContext);
-                String result = AiToolHelper.executeTool(req.name(), toolInput);
+                String result;
+                try {
+                    result = AiToolHelper.executeTool(req.name(), toolInput);
+                } catch (Exception e) {
+                    // 单次工具执行失败不中断整条链路：把异常文案作为工具结果回传，让模型据此决定下一步
+                    logger.error("工具执行异常, toolName={}, key={}", req.name(), logKey, e);
+                    result = "[ERROR] 工具执行异常: " + e.getClass().getSimpleName() + " - " + e.getMessage();
+                }
                 messages.add(aiMessage);
                 messages.add(new ToolExecutionResultMessage(req.id(), req.name(), result));
             }
@@ -167,6 +173,17 @@ public class AiChatService {
     }
 
     /**
+     * 从模型配置参数盒读取 systemPrompt（vendor 未注册或参数盒为空时返回原值，不抛 NPE）。
+     */
+    private static String resolveSystemPrompt(AiModelConfigData configData, String systemPrompt) {
+        if (StringUtils.isNotBlank(systemPrompt) || configData == null) {
+            return systemPrompt;
+        }
+        JsonConfigBox box = configData.getConfigParamBox();
+        return box != null ? box.getParam("systemPrompt", "") : systemPrompt;
+    }
+
+    /**
      * 校验 prompt 长度。返回 null 表示通过，否则返回错误响应。
      */
     private static ResponseData validatePromptLength(String systemPrompt, String userPrompt) {
@@ -200,28 +217,25 @@ public class AiChatService {
         if (promptCheck != null) {
             return promptCheck;
         }
-        AiVendorClientWrapper vendorWrapper;
+        ChatClient chatClient;
         try {
-            vendorWrapper = AiVendorHelper.getClientWrapper(configId);
+            chatClient = AiVendorHelper.getChatClient(configId);
         } catch (IllegalStateException e) {
             logger.warn("generate 获取ChatClient失败, configId={}, errClass={}, msg={}", configId, e.getClass().getSimpleName(), e.getMessage());
             return ResponseData.errorMsg("AI模型配置不存在或未启用，请联系管理员");
         }
-        if (!vendorWrapper.isType(ModelType.CHAT)) {
-            return ResponseData.errorMsg("ChatClient获取失败!");
-        }
-        AiModelConfigData configData = vendorWrapper.getConfigData();
-        if (StringUtils.isBlank(systemPrompt)) {
-            systemPrompt = configData.getConfigParamBox().getParam("systemPrompt", "");
-        }
-        // 初始化会话信息
+        AiModelConfigData configData = chatClient.getConfigData();
+        systemPrompt = resolveSystemPrompt(configData, systemPrompt);
+        // 初始化会话信息（sessionName 传 userPrompt：会话名展示用户首个问题，符合 ChatGPT 等聊天产品的习惯）
         AiSessionInfo sessionInfo = loadSession(saasId, userId, SessionType.COMMON.getValue(), null).getData();
         if (sessionInfo == null) {
-            ResponseData<AiSessionInfo> responseData = initSession(saasId, userId, userType, userInfo, configId, SessionType.COMMON.getValue(), null, null, systemPrompt, toolList, ragLibIds);
+            ResponseData<AiSessionInfo> responseData = initSession(saasId, userId, userType, userInfo, configId, SessionType.COMMON.getValue(), userPrompt, null, systemPrompt, toolList, ragLibIds);
             if (responseData.isNotSuccess()) {
                 return responseData.raw();
-            } else {
-                sessionInfo = responseData.getData();
+            }
+            sessionInfo = responseData.getData();
+            if (sessionInfo == null) {
+                return ResponseData.errorMsg("初始化会话失败，请稍后重试");
             }
         }
         // 构建附件信息
@@ -239,13 +253,21 @@ public class AiChatService {
         }
         //检查rag信息。
         String ragContent = null;
+        String ragSource = "none";
         if (ragLibIds == null || ragLibIds.length == 0) {
             if (StringUtils.isNotBlank(sessionInfo.getRagConfig())) {
                 ragLibIds = JsonUtils.parse(sessionInfo.getRagConfig(), long[].class);
+                ragSource = "session";
             }
+        } else {
+            ragSource = "request";
         }
         if (ragLibIds != null && ragLibIds.length > 0) {
             ragContent = queryRagInfo(ragLibIds, userPrompt).getData();
+            logger.info("RAG已启用, sessionId={}, source={}, ragLibIds={}, ragContentLen={}, userPrompt=[{}]",
+                    sessionInfo.getId(), ragSource, Arrays.toString(ragLibIds), ragContent == null ? 0 : ragContent.length(), truncateForLog(userPrompt, 100));
+        } else {
+            logger.debug("RAG未启用, sessionId={}, userPrompt=[{}]", sessionInfo.getId(), truncateForLog(userPrompt, 100));
         }
         String contextData = null;
         if (StringUtils.isNotBlank(ragContent) || StringUtils.isNotBlank(fileContent)) {
@@ -269,7 +291,7 @@ public class AiChatService {
         ChatResponse chatResponse;
         try {
             if (toolSpecs != null && !toolSpecs.isEmpty()) {
-                ToolLoopResult loopResult = executeToolLoop(vendorWrapper.getChatModel(), messages,
+                ToolLoopResult loopResult = executeToolLoop(chatClient.getChatModel(), messages,
                         toolSpecs, toolContext, configId);
                 chatResponse = loopResult.finalResponse;
                 // 达到最大迭代次数仍有工具请求：模型未产出有效文本，给固定提示而非落库 null
@@ -284,13 +306,17 @@ public class AiChatService {
                 sessionMsg.setRequestTokens(loopResult.totalInputTokens);
                 sessionMsg.setResponseTokens(loopResult.totalOutputTokens);
             } else {
-                chatResponse = vendorWrapper.getChatModel().chat(messages);
+                chatResponse = chatClient.getChatModel().chat(messages);
                 TokenUsage tokenUsage = chatResponse.tokenUsage();
                 sessionMsg.setRequestTokens(sumInputTokens(tokenUsage));
                 sessionMsg.setResponseTokens(sumOutputTokens(tokenUsage));
             }
         } catch (Exception e) {
             logger.error("AI模型调用失败, configId={}", configId, e);
+            // 异常路径下也落库 sessionMsg，避免会话历史出现只问不答的"幽灵"消息
+            sessionMsg.setResponseEndDate(SystemClock.nowDate());
+            sessionMsg.setResponseInfo("[ERROR] AI模型调用失败");
+            saveSessionMsg(sessionMsg);
             return ResponseData.errorMsg("AI模型调用失败，请稍后重试");
         }
 
@@ -309,28 +335,25 @@ public class AiChatService {
         if (promptCheck != null) {
             return promptCheck;
         }
-        AiVendorClientWrapper vendorWrapper;
+        ChatClient chatClient;
         try {
-            vendorWrapper = AiVendorHelper.getClientWrapper(configId);
+            chatClient = AiVendorHelper.getChatClient(configId);
         } catch (IllegalStateException e) {
             logger.warn("chatGenerate 获取ChatClient失败, configId={}, errClass={}, msg={}", configId, e.getClass().getSimpleName(), e.getMessage());
             return Flux.just(ResponseData.errorMsg("AI模型配置不存在或未启用，请联系管理员").toString());
         }
-        if (!vendorWrapper.isType(ModelType.CHAT)) {
-            return Flux.just(ResponseData.errorMsg("ChatClient获取失败！").toString());
-        }
-        AiModelConfigData configData = vendorWrapper.getConfigData();
-        if (StringUtils.isBlank(systemPrompt)) {
-            systemPrompt = configData.getConfigParamBox().getParam("systemPrompt", "");
-        }
-        // 初始化会话信息
+        AiModelConfigData configData = chatClient.getConfigData();
+        systemPrompt = resolveSystemPrompt(configData, systemPrompt);
+        // 初始化会话信息（sessionName 传 userPrompt：会话名展示用户首个问题，符合 ChatGPT 等聊天产品的习惯）
         AiSessionInfo sessionInfo = loadSession(saasId, userId, SessionType.COMMON.getValue(), null).getData();
         if (sessionInfo == null) {
-            ResponseData<AiSessionInfo> responseData = initSession(saasId, userId, userType, userInfo, configId, SessionType.COMMON.getValue(), null, null, systemPrompt, toolList, ragLibIds);
+            ResponseData<AiSessionInfo> responseData = initSession(saasId, userId, userType, userInfo, configId, SessionType.COMMON.getValue(), userPrompt, null, systemPrompt, toolList, ragLibIds);
             if (responseData.isNotSuccess()) {
                 return Flux.just(responseData.toString());
-            } else {
-                sessionInfo = responseData.getData();
+            }
+            sessionInfo = responseData.getData();
+            if (sessionInfo == null) {
+                return Flux.just(ResponseData.errorMsg("初始化会话失败，请稍后重试").toString());
             }
         }
         // 构建附件信息
@@ -348,13 +371,21 @@ public class AiChatService {
         }
         //检查rag信息。
         String ragContent = null;
+        String ragSource = "none";
         if (ragLibIds == null || ragLibIds.length == 0) {
             if (StringUtils.isNotBlank(sessionInfo.getRagConfig())) {
                 ragLibIds = JsonUtils.parse(sessionInfo.getRagConfig(), long[].class);
+                ragSource = "session";
             }
+        } else {
+            ragSource = "request";
         }
         if (ragLibIds != null && ragLibIds.length > 0) {
             ragContent = queryRagInfo(ragLibIds, userPrompt).getData();
+            logger.info("RAG已启用, sessionId={}, source={}, ragLibIds={}, ragContentLen={}, userPrompt=[{}]",
+                    sessionInfo.getId(), ragSource, Arrays.toString(ragLibIds), ragContent == null ? 0 : ragContent.length(), truncateForLog(userPrompt, 100));
+        } else {
+            logger.debug("RAG未启用, sessionId={}, userPrompt=[{}]", sessionInfo.getId(), truncateForLog(userPrompt, 100));
         }
         String contextData = null;
         if (StringUtils.isNotBlank(ragContent) || StringUtils.isNotBlank(fileContent)) {
@@ -382,7 +413,7 @@ public class AiChatService {
         // TODO: 后续接入 LangChain4j 流式 + 工具的整合 API 时，改为工具决策完成后流式产出回答文本
         if (hasTools) {
             try {
-                ToolLoopResult loopResult = executeToolLoop(vendorWrapper.getChatModel(), messages,
+                ToolLoopResult loopResult = executeToolLoop(chatClient.getChatModel(), messages,
                         toolSpecs, toolContext, configId);
                 ChatResponse response = loopResult.finalResponse;
                 String finalText = response.aiMessage().text();
@@ -416,7 +447,19 @@ public class AiChatService {
             // 防御性：onComplete/onError 可能被同一上游重复触发或并发触发，保证 sessionMsg 只落库一次
             AtomicBoolean saved = new AtomicBoolean(false);
 
-            vendorWrapper.getStreamingChatModel().chat(messages, new StreamingChatResponseHandler() {
+            // 兜底：客户端取消订阅（如浏览器关闭）或上游无回调时，保证 sessionMsg 落库一次。
+            // 正常 complete/error 路径中 saved 已被 set 为 true，此处不会重复执行。
+            sink.onDispose(() -> {
+                if (saved.compareAndSet(false, true)) {
+                    sessionMsg.setResponseEndDate(SystemClock.nowDate());
+                    sessionMsg.setResponseInfo(responseBuilder.length() > 0
+                            ? responseBuilder.toString()
+                            : "[ERROR] AI响应被中断");
+                    saveSessionMsg(sessionMsg);
+                }
+            });
+
+            chatClient.getStreamingChatModel().chat(messages, new StreamingChatResponseHandler() {
                 @Override
                 public void onPartialResponse(String token) {
                     responseBuilder.append(token);
@@ -489,18 +532,17 @@ public class AiChatService {
     public static ResponseData<AiSessionInfo> initSession(long saasId, long userId, int userType, String userInfo, long configId, int sessionType, String sessionName, Integer windowSize, String systemPrompt, List<AiToolCallInfo> toolList, long[] ragLibIds) {
         AiModelConfigData configData;
         try {
-            AiVendorClientWrapper vendorWrapper = AiVendorHelper.getClientWrapper(configId);
-            configData = vendorWrapper.getConfigData();
+            configData = AiVendorHelper.getModelConfigData(configId);
         } catch (Exception e) {
             logger.warn("获取模型配置失败, configId={}, 将使用默认值: {}", configId, e.getMessage());
             return ResponseData.errorMsg("模型不可用，请稍后再试");
         }
-        if (configData != null && StringUtils.isBlank(systemPrompt)) {
-            systemPrompt = configData.getConfigParamBox().getParam("systemPrompt", "");
+        if (configData != null) {
+            systemPrompt = resolveSystemPrompt(configData, systemPrompt);
         }
-        // 调用方未显式传会话名时，使用"新会话+时间戳"兜底，避免会话名为 null 或误用 userPrompt
+        // 调用方未显式传会话名时使用"新会话"兜底（如 AiChatUserController 显式初始化空会话的场景）。
         if (StringUtils.isBlank(sessionName)) {
-            sessionName = "新会话-" + new SimpleDateFormat("yyyy-MM-dd HH:mm").format(SystemClock.nowDate());
+            sessionName = "新会话";
         }
         long sessionId = dao.getSequenceId(AiSessionInfo.class);
         AiSessionInfo sessionInfo = new AiSessionInfo();
@@ -619,10 +661,21 @@ public class AiChatService {
         if (ragLibIds == null || ragLibIds.length == 0) {
             return ResponseData.success(sb.toString());
         }
+        long startMs = SystemClock.now();
+        logger.info("RAG检索开始, ragLibIds={}, userPrompt=[{}]", Arrays.toString(ragLibIds), truncateForLog(userPrompt, 100));
         for (int i = 0; i < ragLibIds.length; i++) {
             sb.append(AiRagService.query(ragLibIds[i], userPrompt));
         }
+        logger.info("RAG检索完成, libCount={}, resultLen={}, totalMs={}", ragLibIds.length, sb.length(), SystemClock.now() - startMs);
         return ResponseData.success(sb.toString());
+    }
+
+    /**
+     * 截断字符串用于日志输出（null 安全、超长补省略号），避免 query 刷屏。
+     */
+    private static String truncateForLog(String s, int maxLen) {
+        if (s == null) return "";
+        return s.length() <= maxLen ? s : s.substring(0, maxLen) + "...";
     }
 
     /**
@@ -755,13 +808,21 @@ public class AiChatService {
         }
         //检查rag信息。
         String ragContent = null;
+        String ragSource = "none";
         if (ragLibIds == null || ragLibIds.length == 0) {
             if (StringUtils.isNotBlank(sessionInfo.getRagConfig())) {
                 ragLibIds = JsonUtils.parse(sessionInfo.getRagConfig(), long[].class);
+                ragSource = "session";
             }
+        } else {
+            ragSource = "request";
         }
         if (ragLibIds != null && ragLibIds.length > 0) {
             ragContent = queryRagInfo(ragLibIds, userPrompt).getData();
+            logger.info("RAG已启用, sessionId={}, source={}, ragLibIds={}, ragContentLen={}, userPrompt=[{}]",
+                    sessionInfo.getId(), ragSource, Arrays.toString(ragLibIds), ragContent == null ? 0 : ragContent.length(), truncateForLog(userPrompt, 100));
+        } else {
+            logger.debug("RAG未启用, sessionId={}, userPrompt=[{}]", sessionInfo.getId(), truncateForLog(userPrompt, 100));
         }
         String contextData = null;
         if (StringUtils.isNotBlank(ragContent) || StringUtils.isNotBlank(fileContent)) {
@@ -770,21 +831,15 @@ public class AiChatService {
         // 初始化会话消息
         AiSessionMsg sessionMsg = initSessionMsg(saasId, userId, userType, userInfo, configId, sessionInfo.getId(), systemPrompt, userPrompt, toolList, fileInfo, ragLibIds, contextData);
         // 获取LangChain4j客户端（使用请求中的configId，而非会话中的，因为会话可能由图片生成创建而configId=0）
-        AiVendorClientWrapper vendorWrapper;
+        ChatClient chatClient;
         try {
-            vendorWrapper = AiVendorHelper.getClientWrapper(configId);
+            chatClient = AiVendorHelper.getChatClient(configId);
         } catch (IllegalStateException e) {
             logger.warn("chat 获取ChatClient失败, configId={}, errClass={}, msg={}", configId, e.getClass().getSimpleName(), e.getMessage());
             sessionMsg.setResponseEndDate(SystemClock.nowDate());
             sessionMsg.setResponseInfo("[ERROR] AI模型配置不存在或未启用");
             saveSessionMsg(sessionMsg);
             return Flux.just(ResponseData.errorMsg("AI模型配置不存在或未启用，请联系管理员").toString());
-        }
-        if (!vendorWrapper.isType(ModelType.CHAT)) {
-            sessionMsg.setResponseEndDate(SystemClock.nowDate());
-            sessionMsg.setResponseInfo("[ERROR] ChatClient类型不支持CHAT模型");
-            saveSessionMsg(sessionMsg);
-            return Flux.just(ResponseData.errorMsg("ChatClient获取失败！").toString());
         }
 
         // === LangChain4j 流式调用（加载历史消息） ===
@@ -803,7 +858,7 @@ public class AiChatService {
         // 如果有工具，先同步执行工具调用循环，再流式返回最终结果
         if (hasTools) {
             try {
-                ToolLoopResult loopResult = executeToolLoop(vendorWrapper.getChatModel(), messages,
+                ToolLoopResult loopResult = executeToolLoop(chatClient.getChatModel(), messages,
                         toolSpecs, toolContext, sessionInfo.getId());
                 ChatResponse response = loopResult.finalResponse;
                 String finalText = response.aiMessage().text();
@@ -836,7 +891,19 @@ public class AiChatService {
             // 防御性：onComplete/onError 可能被同一上游重复触发或并发触发，保证 sessionMsg 只落库一次
             AtomicBoolean saved = new AtomicBoolean(false);
 
-            vendorWrapper.getStreamingChatModel().chat(messages, new StreamingChatResponseHandler() {
+            // 兜底：客户端取消订阅（如浏览器关闭）或上游无回调时，保证 sessionMsg 落库一次。
+            // 正常 complete/error 路径中 saved 已被 set 为 true，此处不会重复执行。
+            sink.onDispose(() -> {
+                if (saved.compareAndSet(false, true)) {
+                    sessionMsg.setResponseEndDate(SystemClock.nowDate());
+                    sessionMsg.setResponseInfo(responseBuilder.length() > 0
+                            ? responseBuilder.toString()
+                            : "[ERROR] AI响应被中断");
+                    saveSessionMsg(sessionMsg);
+                }
+            });
+
+            chatClient.getStreamingChatModel().chat(messages, new StreamingChatResponseHandler() {
                 @Override
                 public void onPartialResponse(String token) {
                     responseBuilder.append(token);

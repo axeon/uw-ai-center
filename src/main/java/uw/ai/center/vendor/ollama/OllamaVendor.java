@@ -3,13 +3,11 @@ package uw.ai.center.vendor.ollama;
 import dev.langchain4j.model.ollama.OllamaChatModel;
 import dev.langchain4j.model.ollama.OllamaEmbeddingModel;
 import dev.langchain4j.model.ollama.OllamaStreamingChatModel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import uw.ai.center.constant.ModelType;
 import uw.ai.center.vo.AiModelConfigData;
 import uw.ai.center.vendor.AiVendor;
-import uw.ai.center.vendor.AiVendorClientWrapper;
+import uw.ai.center.vendor.client.ChatClient;
+import uw.ai.center.vendor.client.EmbeddingClient;
 import uw.common.app.vo.JsonConfigBox;
 import uw.common.app.vo.JsonConfigParam;
 
@@ -22,8 +20,6 @@ import java.util.List;
  */
 @Service
 public class OllamaVendor implements AiVendor {
-
-    private static final Logger logger = LoggerFactory.getLogger(OllamaVendor.class);
 
     @Override
     public String vendorName() {
@@ -50,30 +46,14 @@ public class OllamaVendor implements AiVendor {
         return Arrays.asList(OllamaParam.Config.values());
     }
 
-    @Override
-    public AiVendorClientWrapper buildClientWrapper(AiModelConfigData configData) {
-        ModelType modelType = ModelType.of(configData.getModelType());
-        if (modelType == null) {
-            logger.warn("未知的模型类型: {}, configId={}", configData.getModelType(), configData.getId());
-            return null;
-        }
-        return switch (modelType) {
-            case CHAT -> buildChat(configData);
-            case EMBEDDING -> buildEmbedding(configData);
-            default -> {
-                logger.warn("OllamaVendor暂不支持模型类型: {}", modelType);
-                yield null;
-            }
-        };
-    }
-
     /**
      * 构建 CHAT 客户端：同时创建同步 OllamaChatModel 与流式 OllamaStreamingChatModel。
      *
      * @param configData 模型配置数据
      * @return 封装了两个聊天模型的客户端
      */
-    private AiVendorClientWrapper buildChat(AiModelConfigData configData) {
+    @Override
+    public ChatClient buildChatClient(AiModelConfigData configData) {
         JsonConfigBox configParamBox = configData.getConfigParamBox();
         double temperature = configParamBox != null
                 ? configParamBox.getDoubleParam("temperature", 0.7) : 0.7;
@@ -92,7 +72,7 @@ public class OllamaVendor implements AiVendor {
                 .timeout(Duration.ofSeconds(120))
                 .build();
 
-        return new AiVendorClientWrapper(configData, this, syncModel, streamingModel, null, null, null, null);
+        return new ChatClient(configData, this, syncModel, streamingModel);
     }
 
     /**
@@ -101,14 +81,15 @@ public class OllamaVendor implements AiVendor {
      * @param configData 模型配置数据
      * @return 封装了嵌入模型的客户端
      */
-    private AiVendorClientWrapper buildEmbedding(AiModelConfigData configData) {
+    @Override
+    public EmbeddingClient buildEmbeddingClient(AiModelConfigData configData) {
         var embeddingModel = OllamaEmbeddingModel.builder()
                 .baseUrl(configData.getApiUrl())
                 .modelName(configData.getModelName())
                 .timeout(Duration.ofSeconds(60))
                 .build();
 
-        return new AiVendorClientWrapper(configData, this, null, null, embeddingModel, null, null, null);
+        return new EmbeddingClient(configData, this, embeddingModel);
     }
 
     @Override

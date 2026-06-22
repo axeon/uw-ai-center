@@ -1,18 +1,16 @@
 package uw.ai.center.vendor.dashscope;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import uw.ai.center.constant.ModelType;
+import uw.ai.center.vo.AiModelConfigData;
+import uw.ai.center.vendor.AiVendor;
+import uw.ai.center.vendor.client.AudioTranscriptionClient;
+import uw.ai.center.vendor.client.ImageGenerationClient;
 import uw.ai.center.vendor.dashscope.imageModel.DashScopeImageModel;
 import uw.ai.center.vendor.dashscope.imageModel.DashScopeImageParam;
 import uw.ai.center.vendor.dashscope.realtimeTranscriptionModel.DashScopeAudioParam;
 import uw.ai.center.vendor.dashscope.realtimeTranscriptionModel.DashScopeRealtimeTranscriptionModel;
 import uw.ai.center.vendor.dashscope.realtimeTranscriptionModel.RealtimeTranscriptionModel;
 import uw.ai.center.vendor.dashscope.ttsModel.DashScopeTtsParam;
-import uw.ai.center.vo.AiModelConfigData;
-import uw.ai.center.vendor.AiVendor;
-import uw.ai.center.vendor.AiVendorClientWrapper;
 import uw.common.app.vo.JsonConfigBox;
 import uw.common.app.vo.JsonConfigParam;
 
@@ -28,8 +26,6 @@ import java.util.Map;
  */
 @Service
 public class DashScopeVendor implements AiVendor {
-
-    private static final Logger logger = LoggerFactory.getLogger(DashScopeVendor.class);
 
     @Override
     public String vendorName() {
@@ -60,30 +56,6 @@ public class DashScopeVendor implements AiVendor {
         return params;
     }
 
-    @Override
-    public AiVendorClientWrapper buildClientWrapper(AiModelConfigData configData) {
-        ModelType modelType = ModelType.of(configData.getModelType());
-        if (modelType == null) {
-            logger.warn("未知的模型类型: {}, configId={}", configData.getModelType(), configData.getId());
-            return null;
-        }
-        return switch (modelType) {
-            case IMAGE_GENERATION -> buildImageGeneration(configData);
-            case AUDIO_TRANSCRIPTION -> buildAudioTranscription(configData);
-            case TTS -> {
-                logger.warn("DashScopeVendor暂不支持模型类型: {}，将在后续功能点中实现", modelType);
-                yield null;
-            }
-            default -> {
-                logger.warn("DashScopeVendor不支持模型类型: {}", modelType);
-                yield null;
-            }
-        };
-    }
-
-    /**
-     * 构建图片生成客户端。
-     */
     /**
      * 构建图片生成客户端（通义万相）。
      * <p>从 configParam 读取 image.size / image.style / image.n 参数，封装为 {@link DashScopeImageModel}。
@@ -91,7 +63,8 @@ public class DashScopeVendor implements AiVendor {
      * @param configData 模型配置数据
      * @return 封装了图片生成模型的客户端
      */
-    private AiVendorClientWrapper buildImageGeneration(AiModelConfigData configData) {
+    @Override
+    public ImageGenerationClient buildImageClient(AiModelConfigData configData) {
         JsonConfigBox configParamBox = configData.getConfigParamBox();
         Map<String, Object> params = new HashMap<>();
         if (configParamBox != null) {
@@ -116,20 +89,17 @@ public class DashScopeVendor implements AiVendor {
                 params
         );
 
-        return new AiVendorClientWrapper(configData, this, null, null, null, imageModel, null, null);
+        return new ImageGenerationClient(configData, this, imageModel);
     }
 
     /**
      * 构建实时语音识别客户端（DashScope Fun-ASR 协议）。
-     * <p>
-     * 鉴权方式：使用 ai_model_api.api_key 作为 Bearer Token（请求头 Authorization）。
-     * 模型名：从 ai_model_config.model_name 读取（如 fun-asr-realtime）。
-     * 业务空间ID：可选，通过 configParam 的 dashscope.workspace_id 配置。
-     * 其他识别参数（format/sample_rate/language_hints 等）通过 configParam 的 audio.* 配置。
+     * <p>仅作为配置载体，不持有 RealtimeTranscriptionModel 实例。调用方通过
+     * {@link AudioTranscriptionClient#createRealtimeSession()} 现场创建独立实例。
      */
-    private AiVendorClientWrapper buildAudioTranscription(AiModelConfigData configData) {
-        return new AiVendorClientWrapper(configData, this, null, null, null, null,
-                createAudioTranscriptionModel(configData), null);
+    @Override
+    public AudioTranscriptionClient buildAudioTranscriptionClient(AiModelConfigData configData) {
+        return new AudioTranscriptionClient(configData, this);
     }
 
     /**

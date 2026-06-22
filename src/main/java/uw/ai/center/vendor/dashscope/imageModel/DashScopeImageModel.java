@@ -36,9 +36,12 @@ public class DashScopeImageModel implements ImageModel {
     public Response<Image> generate(String prompt) {
         logger.info("DashScope图片生成: model={}, prompt={}", modelName, prompt);
         List<String> imageUrls = DashScopeApiClient.generateImage(baseUrl, apiKey, modelName, prompt, defaultParams);
-        String firstUrl = imageUrls.isEmpty() ? null : imageUrls.get(0);
+        if (imageUrls.isEmpty()) {
+            // 上游返回空列表时不能调 URI.create(null)，否则 NPE
+            return Response.from(null);
+        }
         Image image = Image.builder()
-                .url(URI.create(firstUrl))
+                .url(URI.create(imageUrls.get(0)))
                 .build();
         return Response.from(image);
     }

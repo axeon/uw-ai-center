@@ -3,14 +3,13 @@ package uw.ai.center.service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.multipart.MultipartFile;
-import uw.ai.center.constant.ModelType;
 import uw.ai.center.constant.SessionType;
 import uw.ai.center.entity.AiSessionInfo;
 import uw.ai.center.entity.AiSessionMsg;
+import uw.ai.center.vendor.AiVendorHelper;
+import uw.ai.center.vendor.client.AudioTranscriptionClient;
 import uw.ai.center.vendor.dashscope.realtimeTranscriptionModel.RealtimeTranscriptionModel;
 import uw.ai.center.vendor.dashscope.realtimeTranscriptionModel.TranscriptionResultListener;
-import uw.ai.center.vendor.AiVendorClientWrapper;
-import uw.ai.center.vendor.AiVendorHelper;
 import uw.common.app.constant.CommonState;
 import uw.common.response.ResponseData;
 import uw.common.util.SystemClock;
@@ -19,6 +18,7 @@ import uw.dao.DaoManager;
 import java.io.IOException;
 import java.util.Date;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * AI语音服务。
@@ -46,19 +46,15 @@ public class AiAudioService {
      * @return 独立的 RealtimeTranscriptionModel 实例
      */
     public static RealtimeTranscriptionModel createTranscriptionSession(long configId) {
-        AiVendorClientWrapper wrapper;
+        AudioTranscriptionClient audioClient;
         try {
-            wrapper = AiVendorHelper.getClientWrapper(configId);
+            audioClient = AiVendorHelper.getAudioTranscriptionClient(configId);
         } catch (Exception e) {
             logger.error("获取语音识别模型配置失败, configId={}", configId, e);
             throw new RuntimeException("获取语音识别模型配置失败：" + e.getMessage());
         }
 
-        if (wrapper == null || !wrapper.isType(ModelType.AUDIO_TRANSCRIPTION)) {
-            throw new RuntimeException("语音识别模型配置错误，请检查configId和modelType");
-        }
-
-        return wrapper.createAudioTranscriptionModel();
+        return audioClient.createRealtimeSession();
     }
 
     /**
@@ -68,16 +64,11 @@ public class AiAudioService {
      * @return 验证结果
      */
     public static ResponseData<Void> validateTranscriptionConfig(long configId) {
-        AiVendorClientWrapper wrapper;
         try {
-            wrapper = AiVendorHelper.getClientWrapper(configId);
+            AiVendorHelper.getAudioTranscriptionClient(configId);
         } catch (Exception e) {
             logger.error("获取语音识别模型配置失败, configId={}", configId, e);
             return ResponseData.errorMsg("获取语音识别模型配置失败：" + e.getMessage());
-        }
-
-        if (wrapper == null || !wrapper.isType(ModelType.AUDIO_TRANSCRIPTION)) {
-            return ResponseData.errorMsg("语音识别模型配置错误，请检查configId和modelType");
         }
 
         return ResponseData.success(null);
@@ -107,16 +98,12 @@ public class AiAudioService {
                                                       long configId,
                                                       MultipartFile audioFile)
     {
-        AiVendorClientWrapper wrapper;
+        AudioTranscriptionClient audioClient;
         try {
-            wrapper = AiVendorHelper.getClientWrapper(configId);
+            audioClient = AiVendorHelper.getAudioTranscriptionClient(configId);
         } catch (Exception e) {
             logger.error("获取语音识别模型配置失败, configId={}", configId, e);
             return ResponseData.errorMsg("获取语音识别模型配置失败：" + e.getMessage());
-        }
-
-        if (wrapper == null || !wrapper.isType(ModelType.AUDIO_TRANSCRIPTION)) {
-            return ResponseData.errorMsg("语音识别模型配置错误，请检查configId和modelType");
         }
 
         if (audioFile == null || audioFile.isEmpty()) {
@@ -138,9 +125,9 @@ public class AiAudioService {
         // 记录请求开始时间
         Date requestDate = SystemClock.nowDate();
 
-        // 每次请求创建独立的模型实例，避免与缓存中的共享实例（或其他并发请求）的会话状态冲突。
+        // 每次请求创建独立的模型实例，避免并发会话互相冲突。
         // 实例基于不可变配置，start() 时才建立 WebSocket，创建成本极低。
-        RealtimeTranscriptionModel model = wrapper.createAudioTranscriptionModel();
+        RealtimeTranscriptionModel model = audioClient.createRealtimeSession();
         if (model == null) {
             return ResponseData.errorMsg("语音识别模型实例为空，请检查模型配置");
         }
@@ -152,6 +139,8 @@ public class AiAudioService {
 
             // 收集所有 SentenceEnd 结果
             CopyOnWriteArrayList<String> sentences = new CopyOnWriteArrayList<>();
+            // onError 回调写入，主循环检查后提前中断，避免继续 sleep+sendAudio 浪费时间
+            AtomicReference<String> asyncErrorMessage = new AtomicReference<>(null);
 
             TranscriptionResultListener listener = new TranscriptionResultListener() {
                 @Override
@@ -183,6 +172,7 @@ public class AiAudioService {
                 @Override
                 public void onError(String message) {
                     logger.error("语音识别错误: {}", message);
+                    asyncErrorMessage.set(message);
                 }
             };
 
@@ -196,11 +186,18 @@ public class AiAudioService {
             // 发送阶段总超时起点
             long sendStartMillis = requestDate.getTime();
             while (offset < audioBytes.length) {
+                // onError 触发时立即中断发送，避免继续 sleep+sendAudio 等待总超时
+                if (asyncErrorMessage.get() != null) {
+                    break;
+                }
                 // 总执行超时保护：避免长音频阻塞请求线程
                 if (SystemClock.nowDate().getTime() - sendStartMillis > MAX_TOTAL_MILLIS) {
                     logger.warn("语音识别发送阶段超时, configId={}, fileName={}, sentBytes={}/{}",
                             configId, fileName, offset, audioBytes.length);
-                    return ResponseData.errorMsg("语音识别超时，音频过长（上限约 " + MAX_AUDIO_SECONDS + " 秒）");
+                    String timeoutMsg = "语音识别超时，音频过长（上限约 " + MAX_AUDIO_SECONDS + " 秒）";
+                    saveSessionMsg(saasId, userId, userType, userInfo, configId, sessionInfo, fileName,
+                            "[ERROR] " + timeoutMsg, requestDate);
+                    return ResponseData.errorMsg(timeoutMsg);
                 }
                 int end = Math.min(offset + chunkSize, audioBytes.length);
                 byte[] chunk = new byte[end - offset];
@@ -213,6 +210,14 @@ public class AiAudioService {
 
             // 停止识别
             model.stop();
+
+            // onError 中断后给出明确错误，并落库历史记录
+            String errMsg = asyncErrorMessage.get();
+            if (errMsg != null) {
+                saveSessionMsg(saasId, userId, userType, userInfo, configId, sessionInfo, fileName,
+                        "[ERROR] 语音识别失败：" + errMsg, requestDate);
+                return ResponseData.errorMsg("语音识别失败：" + errMsg);
+            }
 
             // 拼接所有句子结果
             String transcriptionText = String.join("", sentences);
@@ -229,9 +234,13 @@ public class AiAudioService {
 
         } catch (IOException e) {
             logger.error("读取音频文件失败, configId={}, fileName={}", configId, fileName, e);
+            saveSessionMsg(saasId, userId, userType, userInfo, configId, sessionInfo, fileName,
+                    "[ERROR] 读取音频文件失败：" + e.getMessage(), requestDate);
             return ResponseData.errorMsg("读取音频文件失败：" + e.getMessage());
         } catch (Exception e) {
             logger.error("语音识别失败, configId={}, fileName={}", configId, fileName, e);
+            saveSessionMsg(saasId, userId, userType, userInfo, configId, sessionInfo, fileName,
+                    "[ERROR] 语音识别失败：" + e.getMessage(), requestDate);
             return ResponseData.errorMsg("语音识别失败：" + e.getMessage());
         } finally {
             // 实例为本次请求独立创建，使用完毕后关闭，释放底层 WebSocket 连接

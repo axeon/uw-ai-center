@@ -1,17 +1,13 @@
 package uw.ai.center.service;
 
 import java.util.List;
-import dev.langchain4j.data.image.Image;
-import dev.langchain4j.model.output.Response;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uw.ai.center.constant.ModelType;
 import uw.ai.center.constant.SessionType;
 import uw.ai.center.entity.AiSessionInfo;
 import uw.ai.center.entity.AiSessionMsg;
-import uw.ai.center.vendor.AiVendorClientWrapper;
 import uw.ai.center.vendor.AiVendorHelper;
-import uw.ai.center.vendor.dashscope.imageModel.DashScopeImageModel;
+import uw.ai.center.vendor.client.ImageGenerationClient;
 import uw.ai.vo.AiImageResultData;
 import uw.common.response.ResponseData;
 import uw.common.util.SystemClock;
@@ -37,16 +33,12 @@ public class AiImageService {
      */
     public static ResponseData<AiImageResultData> generate(long saasId, long userId, int userType, String userInfo,
                                                  long configId, long sessionId, String prompt) {
-        AiVendorClientWrapper wrapper;
+        ImageGenerationClient imageClient;
         try {
-            wrapper = AiVendorHelper.getClientWrapper(configId);
+            imageClient = AiVendorHelper.getImageClient(configId);
         } catch (Exception e) {
             logger.error("获取图片生成模型配置失败, configId={}", configId, e);
             return ResponseData.errorMsg("获取图片生成模型配置失败：" + e.getMessage());
-        }
-
-        if (!wrapper.isType(ModelType.IMAGE_GENERATION)) {
-            return ResponseData.errorMsg("图片生成模型配置错误，请检查configId和modelType");
         }
 
         // 加载或创建会话
@@ -62,21 +54,15 @@ public class AiImageService {
         sessionMsg.setResponseStartDate(SystemClock.nowDate());
 
         try {
-            // 优先使用 DashScopeImageModel 的多图生成能力
-            List<String> imageUrls;
-            if (wrapper.getImageModel() instanceof DashScopeImageModel dashScopeImageModel) {
-                imageUrls = dashScopeImageModel.generateMultiple(prompt);
-            } else {
-                // 其他 ImageModel 实现，回退到单图模式
-                Response<Image> response = wrapper.getImageModel().generate(prompt);
-                if (response == null) {
-                    return ResponseData.errorMsg("图片生成返回结果为空");
-                }
-                String url = response.content().url() != null ? response.content().url().toString() : null;
-                imageUrls = (url != null && !url.isEmpty()) ? List.of(url) : List.of();
-            }
-
+            // 多图/单图分支封装在 ImageGenerationClient.generateImages 内部
+            List<String> imageUrls = imageClient.generateImages(prompt);
             if (imageUrls.isEmpty()) {
+                // 与 catch 分支一致：写 [ERROR] 历史，避免请求记录丢失
+                sessionMsg.setRequestTokens(0);
+                sessionMsg.setResponseTokens(0);
+                sessionMsg.setResponseEndDate(SystemClock.nowDate());
+                sessionMsg.setResponseInfo("[ERROR] 图片生成返回的URL为空");
+                AiChatService.saveSessionMsg(sessionMsg);
                 return ResponseData.errorMsg("图片生成返回的URL为空");
             }
 
