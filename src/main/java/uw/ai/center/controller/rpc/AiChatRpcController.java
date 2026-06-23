@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import uw.ai.center.constant.SessionType;
@@ -21,12 +22,16 @@ import uw.ai.rpc.AiChatRpc;
 import uw.ai.vo.AiChatGenerateParam;
 import uw.ai.vo.AiChatMsgParam;
 import uw.ai.vo.AiChatSessionParam;
+import uw.ai.vo.AiToolCallInfo;
 import uw.auth.service.AuthServiceHelper;
 import uw.auth.service.annotation.MscPermDeclare;
 import uw.auth.service.annotation.ResponseAdviceIgnore;
 import uw.auth.service.constant.UserType;
 import uw.common.response.ResponseData;
 import uw.common.data.PageList;
+import uw.common.util.JsonUtils;
+
+import java.beans.PropertyEditorSupport;
 
 /**
  * 聊天 RPC 接口（供其他微服务通过 RPC 调用 AI 对话能力）。
@@ -41,6 +46,25 @@ import uw.common.data.PageList;
 public class AiChatRpcController implements AiChatRpc {
 
     private static final Logger log = LoggerFactory.getLogger(AiChatRpcController.class);
+
+    /**
+     * 注册 String→AiToolCallInfo 的属性编辑器。
+     * <p>RPC 客户端（uw-ai jar）以 multipart 表单提交 toolList，对象会被序列化成 JSON 字符串，
+     * 此处将其反序列化回 AiToolCallInfo，避免 @ModelAttribute 数据绑定报 typeMismatch 400。
+     */
+    @InitBinder
+    public void initBinder(WebDataBinder binder) {
+        binder.registerCustomEditor(AiToolCallInfo.class, new PropertyEditorSupport() {
+            @Override
+            public void setAsText(String text) throws IllegalArgumentException {
+                if (text == null || text.isBlank()) {
+                    setValue(null);
+                    return;
+                }
+                setValue(JsonUtils.parse(text, AiToolCallInfo.class));
+            }
+        });
+    }
 
     /**
      * 同步生成：单轮同步对话，支持工具调用/RAG/附件。
