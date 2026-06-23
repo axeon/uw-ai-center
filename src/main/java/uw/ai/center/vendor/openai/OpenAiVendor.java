@@ -1,35 +1,29 @@
 package uw.ai.center.vendor.openai;
 
+import dev.langchain4j.model.openai.OpenAiChatModel;
+import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
+import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 import org.springframework.stereotype.Service;
-import uw.ai.center.constant.ModelType;
-import uw.ai.center.vendor.AiVendor;
-import uw.ai.center.vendor.client.AiModelClient;
+import uw.ai.center.vendor.capability.ChatVendor;
+import uw.ai.center.vendor.capability.EmbeddingVendor;
+import uw.ai.center.vendor.client.ChatClient;
+import uw.ai.center.vendor.client.EmbeddingClient;
 import uw.ai.center.vo.AiModelConfigData;
+import uw.common.app.vo.JsonConfigBox;
 import uw.common.app.vo.JsonConfigParam;
 
+import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 /**
- * OpenAI 协议入口。
- * <p>数据库 {@code ai_model_config.vendor_class} 存的是本类的全限定名，作为"协议标识"稳定不变。
- * <p>本类承担两类职责：
- * <ul>
- *   <li>提供协议元信息（vendorName/vendorDesc/configParam/listModel 等）—— 所有 OpenAI 协议下的能力子类共享，避免在每个子类重复</li>
- *   <li>按 {@code modelType} 委托构建到独立的能力子类（{@link OpenAiChatVendor} / {@link OpenAiEmbeddingVendor}），
- *       让 chat 与 embedding 的实际构建逻辑物理隔离到不同文件</li>
- * </ul>
+ * OpenAI 协议 vendor 实现。
+ * <p>implements 列表即能力清单：{@link ChatVendor} + {@link EmbeddingVendor}，
+ * 类型系统直接表达"本 vendor 支持哪些能力"，无需点开源码看哪些方法被覆写。
  */
 @Service
-public class OpenAiVendor implements AiVendor {
-
-    private final OpenAiChatVendor chatVendor;
-    private final OpenAiEmbeddingVendor embeddingVendor;
-
-    public OpenAiVendor(OpenAiChatVendor chatVendor, OpenAiEmbeddingVendor embeddingVendor) {
-        this.chatVendor = chatVendor;
-        this.embeddingVendor = embeddingVendor;
-    }
+public class OpenAiVendor implements ChatVendor, EmbeddingVendor {
 
     /**
      * {@inheritDoc}
@@ -69,22 +63,57 @@ public class OpenAiVendor implements AiVendor {
 
     /**
      * {@inheritDoc}
-     * @return OpenAI 配置参数集合（温度、最大 token、工具等）
+     * @return OpenAI 配置参数集合（合并 CHAT 与 EMBEDDING 两类参数）
      */
     @Override
     public List<JsonConfigParam> configParam() {
-        return Arrays.asList(OpenAiParam.Config.values());
+        List<JsonConfigParam> params = new ArrayList<>();
+        params.addAll(Arrays.asList(OpenAiChatParam.Config.values()));
+        params.addAll(Arrays.asList(OpenAiEmbeddingParam.Config.values()));
+        return params;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public AiModelClient buildClient(AiModelConfigData configData) {
-        ModelType modelType = ModelType.of(configData.getModelType());
-        return switch (modelType) {
-            case CHAT -> chatVendor.buildChatClient(configData);
-            case EMBEDDING -> embeddingVendor.buildEmbeddingClient(configData);
-            default -> throw new IllegalStateException(
-                    "OpenAiVendor 不支持模型类型[" + configData.getModelType() + "]");
-        };
+    public ChatClient buildChatClient(AiModelConfigData configData) {
+        JsonConfigBox configParamBox = configData.getConfigParamBox();
+        double temperature = configParamBox != null
+                ? configParamBox.getDoubleParam("temperature", 0.7) : 0.7;
+
+        var syncModel = OpenAiChatModel.builder()
+                .apiKey(configData.getApiKeyRaw())
+                .baseUrl(configData.getApiUrl())
+                .modelName(configData.getModelName())
+                .temperature(temperature)
+                .timeout(Duration.ofSeconds(120))
+                .build();
+
+        var streamingModel = OpenAiStreamingChatModel.builder()
+                .apiKey(configData.getApiKeyRaw())
+                .baseUrl(configData.getApiUrl())
+                .modelName(configData.getModelName())
+                .temperature(temperature)
+                .timeout(Duration.ofSeconds(120))
+                .build();
+
+        return new ChatClient(configData, syncModel, streamingModel);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public EmbeddingClient buildEmbeddingClient(AiModelConfigData configData) {
+        var embeddingModel = OpenAiEmbeddingModel.builder()
+                .apiKey(configData.getApiKeyRaw())
+                .baseUrl(configData.getApiUrl())
+                .modelName(configData.getModelName())
+                .timeout(Duration.ofSeconds(60))
+                .build();
+
+        return new EmbeddingClient(configData, embeddingModel);
     }
 
     /**

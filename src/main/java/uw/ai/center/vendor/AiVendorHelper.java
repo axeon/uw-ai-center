@@ -17,6 +17,10 @@ import uw.ai.center.vendor.client.AudioTranscriptionClient;
 import uw.ai.center.vendor.client.ChatClient;
 import uw.ai.center.vendor.client.EmbeddingClient;
 import uw.ai.center.vendor.client.ImageGenerationClient;
+import uw.ai.center.vendor.capability.AudioTranscriptionVendor;
+import uw.ai.center.vendor.capability.ChatVendor;
+import uw.ai.center.vendor.capability.EmbeddingVendor;
+import uw.ai.center.vendor.capability.ImageGenerationVendor;
 import uw.cache.CacheChangeNotifyListener;
 import uw.cache.CacheDataLoader;
 import uw.cache.FusionCache;
@@ -385,8 +389,10 @@ public class AiVendorHelper {
 
     /**
      * 构建 AiModelClient。
-     * <p>仅负责从 FusionCache 取聚合配置、定位 Vendor 实例，分发逻辑交给 {@link AiVendor#buildClient}。
-     * 每个 Vendor 在协议入口类内部按 {@link ModelType} 自行分发到能力子类。
+     * <p>唯一的 ModelType 分发点：按 {@link ModelType} 找到对应的能力接口，
+     * 校验 vendor 是否 implements 该能力接口，cast 调用对应的 buildXxxClient 方法。
+     * <p>配置不存在、Vendor 未注册、或不支持该能力时抛出 IllegalStateException。
+     * <p>新增能力只需新增一个 case + 一个能力接口，老 vendor 与老调用方零改动。
      */
     private static AiModelClient buildClient(long configId) {
         AiModelConfigData configData = FusionCache.get(AiModelConfigData.class, configId);
@@ -404,6 +410,46 @@ public class AiVendorHelper {
             throw new IllegalStateException("未找到AI Vendor: " + configData.getVendorClass());
         }
 
-        return vendor.buildClient(configData);
+        ModelType modelType = ModelType.of(configData.getModelType());
+        if (modelType == null) {
+            throw new IllegalStateException("未支持的模型类型[" + configData.getModelType()
+                    + "], configId=" + configId);
+        }
+
+        return switch (modelType) {
+            case CHAT -> {
+                if (!(vendor instanceof ChatVendor cv)) {
+                    throw unsupported(vendor, modelType, configId);
+                }
+                yield cv.buildChatClient(configData);
+            }
+            case EMBEDDING -> {
+                if (!(vendor instanceof EmbeddingVendor ev)) {
+                    throw unsupported(vendor, modelType, configId);
+                }
+                yield ev.buildEmbeddingClient(configData);
+            }
+            case IMAGE_GENERATION -> {
+                if (!(vendor instanceof ImageGenerationVendor iv)) {
+                    throw unsupported(vendor, modelType, configId);
+                }
+                yield iv.buildImageClient(configData);
+            }
+            case AUDIO_TRANSCRIPTION -> {
+                if (!(vendor instanceof AudioTranscriptionVendor av)) {
+                    throw unsupported(vendor, modelType, configId);
+                }
+                yield av.buildAudioTranscriptionClient(configData);
+            }
+            default -> throw new IllegalStateException("模型类型[" + modelType + "]暂未接入能力接口, configId=" + configId);
+        };
+    }
+
+    /**
+     * 构造"vendor 不支持某能力"的统一异常。
+     */
+    private static IllegalStateException unsupported(AiVendor vendor, ModelType modelType, long configId) {
+        return new IllegalStateException("Vendor[" + vendor.vendorName() + "]不支持模型类型["
+                + modelType.getDesc() + "], configId=" + configId);
     }
 }

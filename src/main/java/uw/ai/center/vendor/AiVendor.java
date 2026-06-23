@@ -2,8 +2,6 @@ package uw.ai.center.vendor;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
-import uw.ai.center.vo.AiModelConfigData;
-import uw.ai.center.vendor.client.AiModelClient;
 import uw.common.app.vo.JsonConfigParam;
 
 import java.util.List;
@@ -57,16 +55,6 @@ public interface AiVendor {
     @JsonProperty("configParam")
     @Schema(title = "配置参数信息集合", description = "配置参数信息集合，管理员可见。")
     List<JsonConfigParam> configParam();
-
-    /**
-     * 按 {@link AiModelConfigData#getModelType()} 分发到具体能力构建方法。
-     * <p>由协议入口实现类负责 switch modelType 路由到对应的子类（chatVendor/embeddingVendor 等），
-     * 不支持的类型抛出 {@link IllegalStateException}。
-     *
-     * @param configData 聚合了 API 配置与模型配置的数据对象
-     * @return 具体的 {@link AiModelClient} 子类实例
-     */
-    AiModelClient buildClient(AiModelConfigData configData);
 
     /**
      * 获取模型列表。

@@ -9,10 +9,10 @@ import uw.ai.center.vendor.openai.OpenAiVendor;
 
 /**
  * AI Vendor 自动配置。
- * <p>启动时将 Spring 容器托管的协议入口 Vendor 注册到 {@link AiVendorHelper}。
- * <p>每个协议入口内部按能力委托给独立的子类（如 {@code OpenAiChatVendor} / {@code OpenAiEmbeddingVendor}），
- * 既保证代码职责单一，又让数据库 {@code vendor_class} 字段保持稳定（只表达"协议"，不关心具体能力）。
- * <p>能力子类是 Spring bean 但不注册到 VENDOR_MAP —— 它们只对协议入口可见，不对外暴露。
+ * <p>启动时将 Spring 容器托管的 Vendor 实例注册到 {@link AiVendorHelper}。
+ * <p>每个 Vendor 类通过 implements 能力接口（{@code ChatVendor} / {@code EmbeddingVendor} 等）
+ * 表达自身支持的能力，类的 implements 列表即能力清单；数据库 {@code vendor_class} 字段
+ * 只表达"协议"，不关心具体能力。
  */
 @Configuration
 public class Lc4jVendorAutoConfiguration {
