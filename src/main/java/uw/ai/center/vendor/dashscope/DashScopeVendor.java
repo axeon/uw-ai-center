@@ -1,52 +1,81 @@
 package uw.ai.center.vendor.dashscope;
 
 import org.springframework.stereotype.Service;
-import uw.ai.center.vo.AiModelConfigData;
+import uw.ai.center.constant.ModelType;
 import uw.ai.center.vendor.AiVendor;
-import uw.ai.center.vendor.client.AudioTranscriptionClient;
-import uw.ai.center.vendor.client.ImageGenerationClient;
-import uw.ai.center.vendor.dashscope.imageModel.DashScopeImageModel;
+import uw.ai.center.vendor.client.AiModelClient;
 import uw.ai.center.vendor.dashscope.imageModel.DashScopeImageParam;
 import uw.ai.center.vendor.dashscope.realtimeTranscriptionModel.DashScopeAudioParam;
-import uw.ai.center.vendor.dashscope.realtimeTranscriptionModel.DashScopeRealtimeTranscriptionModel;
-import uw.ai.center.vendor.dashscope.realtimeTranscriptionModel.RealtimeTranscriptionModel;
 import uw.ai.center.vendor.dashscope.ttsModel.DashScopeTtsParam;
-import uw.common.app.vo.JsonConfigBox;
+import uw.ai.center.vo.AiModelConfigData;
 import uw.common.app.vo.JsonConfigParam;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
- * DashScope 供应商实现。
- * 通过阿里云 DashScope 原生 HTTP API 接入图片生成、语音识别、语音合成等能力。
+ * DashScope 协议入口。
+ * <p>数据库 {@code ai_model_config.vendor_class} 存的是本类的全限定名，作为"协议标识"稳定不变。
+ * <p>本类承担两类职责：
+ * <ul>
+ *   <li>提供协议元信息（vendorName/vendorDesc/configParam/listModel 等）—— 所有 DashScope 协议下的能力子类共享，避免在每个子类重复</li>
+ *   <li>按 {@code modelType} 委托构建到独立的能力子类（{@link DashScopeImageVendor} / {@link DashScopeAudioTranscriptionVendor}），
+ *       让 image 与 audio 的实际构建逻辑物理隔离到不同文件</li>
+ * </ul>
  */
 @Service
 public class DashScopeVendor implements AiVendor {
 
+    private final DashScopeImageVendor imageVendor;
+    private final DashScopeAudioTranscriptionVendor audioTranscriptionVendor;
+
+    public DashScopeVendor(DashScopeImageVendor imageVendor,
+                           DashScopeAudioTranscriptionVendor audioTranscriptionVendor) {
+        this.imageVendor = imageVendor;
+        this.audioTranscriptionVendor = audioTranscriptionVendor;
+    }
+
+    /**
+     * {@inheritDoc}
+     * @return "DashScope"
+     */
     @Override
     public String vendorName() {
         return "DashScope";
     }
 
+    /**
+     * {@inheritDoc}
+     * @return "阿里云DashScope原生API"
+     */
     @Override
     public String vendorDesc() {
         return "阿里云DashScope原生API";
     }
 
+    /**
+     * {@inheritDoc}
+     * @return "1.0.0"
+     */
     @Override
     public String vendorVersion() {
         return "1.0.0";
     }
 
+    /**
+     * {@inheritDoc}
+     * @return 空字符串（未配置图标）
+     */
     @Override
     public String vendorIcon() {
         return "";
     }
 
+    /**
+     * {@inheritDoc}
+     * @return DashScope 配置参数集合（image/audio/tts 三类合并）
+     */
     @Override
     public List<JsonConfigParam> configParam() {
         List<JsonConfigParam> params = new ArrayList<>();
@@ -56,96 +85,15 @@ public class DashScopeVendor implements AiVendor {
         return params;
     }
 
-    /**
-     * 构建图片生成客户端（通义万相）。
-     * <p>从 configParam 读取 image.size / image.style / image.n 参数，封装为 {@link DashScopeImageModel}。
-     *
-     * @param configData 模型配置数据
-     * @return 封装了图片生成模型的客户端
-     */
     @Override
-    public ImageGenerationClient buildImageClient(AiModelConfigData configData) {
-        JsonConfigBox configParamBox = configData.getConfigParamBox();
-        Map<String, Object> params = new HashMap<>();
-        if (configParamBox != null) {
-            String size = configParamBox.getParam("image.size", null);
-            String style = configParamBox.getParam("image.style", null);
-            int n = configParamBox.getIntParam("image.n", 0);
-            if (size != null) {
-                params.put("size", size);
-            }
-            if (style != null) {
-                params.put("style", style);
-            }
-            if (n > 0) {
-                params.put("n", n);
-            }
-        }
-
-        var imageModel = new DashScopeImageModel(
-                configData.getApiUrl(),
-                configData.getApiKeyRaw(),
-                configData.getModelName(),
-                params
-        );
-
-        return new ImageGenerationClient(configData, this, imageModel);
-    }
-
-    /**
-     * 构建实时语音识别客户端（DashScope Fun-ASR 协议）。
-     * <p>仅作为配置载体，不持有 RealtimeTranscriptionModel 实例。调用方通过
-     * {@link AudioTranscriptionClient#createRealtimeSession()} 现场创建独立实例。
-     */
-    @Override
-    public AudioTranscriptionClient buildAudioTranscriptionClient(AiModelConfigData configData) {
-        return new AudioTranscriptionClient(configData, this);
-    }
-
-    /**
-     * 按需创建独立的实时语音识别模型实例。
-     * 模型实例基于不可变配置，start() 时才建立 WebSocket，因此每次请求新建实例成本极低，
-     * 却可彻底避免多请求共享同一实例导致的会话冲突。
-     */
-    @Override
-    public RealtimeTranscriptionModel createAudioTranscriptionModel(AiModelConfigData configData) {
-        JsonConfigBox configParamBox = configData.getConfigParamBox();
-        Map<String, Object> params = new HashMap<>();
-        String workspaceId = null;
-
-        if (configParamBox != null) {
-            // 业务空间ID（可选）
-            workspaceId = configParamBox.getParam("dashscope.workspace_id", "");
-
-            // 音频识别参数
-            String format = configParamBox.getParam("audio.format", null);
-            int sampleRate = configParamBox.getIntParam("audio.sample_rate", 0);
-            String languageHints = configParamBox.getParam("audio.language_hints", null);
-            boolean semanticPunctuation = configParamBox.getBooleanParam("audio.semantic_punctuation", false);
-            int maxSentenceSilence = configParamBox.getIntParam("audio.max_sentence_silence", 0);
-
-            if (format != null && !format.isEmpty()) params.put("format", format);
-            if (sampleRate > 0) params.put("sample_rate", sampleRate);
-            if (languageHints != null && !languageHints.isEmpty()) params.put("language_hints", languageHints);
-            params.put("semantic_punctuation_enabled", semanticPunctuation);
-            if (maxSentenceSilence > 0) params.put("max_sentence_silence", maxSentenceSilence);
-
-            // speech_noise_threshold 可选 float
-            String noiseThresholdStr = configParamBox.getParam("audio.speech_noise_threshold", null);
-            if (noiseThresholdStr != null && !noiseThresholdStr.isEmpty()) {
-                try {
-                    params.put("speech_noise_threshold", Double.parseDouble(noiseThresholdStr));
-                } catch (NumberFormatException ignored) {
-                }
-            }
-        }
-
-        return new DashScopeRealtimeTranscriptionModel(
-                configData.getApiKeyRaw(),
-                configData.getModelName(),
-                workspaceId,
-                params
-        );
+    public AiModelClient buildClient(AiModelConfigData configData) {
+        ModelType modelType = ModelType.of(configData.getModelType());
+        return switch (modelType) {
+            case IMAGE_GENERATION -> imageVendor.buildImageClient(configData);
+            case AUDIO_TRANSCRIPTION -> audioTranscriptionVendor.buildAudioTranscriptionClient(configData);
+            default -> throw new IllegalStateException(
+                    "DashScopeVendor 不支持模型类型[" + configData.getModelType() + "]");
+        };
     }
 
     @Override

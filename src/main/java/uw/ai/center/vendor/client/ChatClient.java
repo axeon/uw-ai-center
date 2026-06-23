@@ -4,7 +4,6 @@ import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.StreamingChatModel;
 import io.swagger.v3.oas.annotations.media.Schema;
 import uw.ai.center.constant.ModelType;
-import uw.ai.center.vendor.AiVendor;
 import uw.ai.center.vo.AiModelConfigData;
 
 /**
@@ -20,11 +19,10 @@ public class ChatClient extends AiModelClient {
     private final StreamingChatModel streamingChatModel;
 
     public ChatClient(AiModelConfigData configData,
-                      AiVendor vendor,
                       ChatModel chatModel,
                       StreamingChatModel streamingChatModel)
     {
-        super(configData, vendor, ModelType.CHAT);
+        super(configData, ModelType.CHAT);
         this.chatModel = chatModel;
         this.streamingChatModel = streamingChatModel;
     }

@@ -5,7 +5,6 @@ import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.model.output.Response;
 import io.swagger.v3.oas.annotations.media.Schema;
 import uw.ai.center.constant.ModelType;
-import uw.ai.center.vendor.AiVendor;
 import uw.ai.center.vendor.dashscope.imageModel.DashScopeImageModel;
 import uw.ai.center.vo.AiModelConfigData;
 
@@ -22,8 +21,8 @@ public class ImageGenerationClient extends AiModelClient {
     @Schema(title = "图片生成模型", description = "图片生成模型")
     private final ImageModel imageModel;
 
-    public ImageGenerationClient(AiModelConfigData configData, AiVendor vendor, ImageModel imageModel) {
-        super(configData, vendor, ModelType.IMAGE_GENERATION);
+    public ImageGenerationClient(AiModelConfigData configData, ImageModel imageModel) {
+        super(configData, ModelType.IMAGE_GENERATION);
         this.imageModel = imageModel;
     }
 

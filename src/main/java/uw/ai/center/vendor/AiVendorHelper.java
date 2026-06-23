@@ -17,8 +17,6 @@ import uw.ai.center.vendor.client.AudioTranscriptionClient;
 import uw.ai.center.vendor.client.ChatClient;
 import uw.ai.center.vendor.client.EmbeddingClient;
 import uw.ai.center.vendor.client.ImageGenerationClient;
-import uw.ai.center.vendor.ollama.OllamaVendor;
-import uw.ai.center.vendor.openai.OpenAiVendor;
 import uw.cache.CacheChangeNotifyListener;
 import uw.cache.CacheDataLoader;
 import uw.cache.FusionCache;
@@ -136,20 +134,6 @@ public class AiVendorHelper {
      * 注册 AiVendor 实例。
      */
     public static void registerVendor(String className, AiVendor vendor) {
-        VENDOR_MAP.put(className, vendor);
-    }
-
-    /**
-     * 注册 OpenAiVendor 实例（向后兼容）。
-     */
-    public static void registerOpenAiVendor(String className, OpenAiVendor vendor) {
-        VENDOR_MAP.put(className, vendor);
-    }
-
-    /**
-     * 注册 OllamaVendor 实例（向后兼容）。
-     */
-    public static void registerOllamaVendor(String className, OllamaVendor vendor) {
         VENDOR_MAP.put(className, vendor);
     }
 
@@ -401,8 +385,8 @@ public class AiVendorHelper {
 
     /**
      * 构建 AiModelClient。
-     * 从 FusionCache 获取聚合数据，委托给 AiVendor.buildClient。
-     * 配置不存在、Vendor 未注册或模型类型不支持时抛出 IllegalStateException。
+     * <p>仅负责从 FusionCache 取聚合配置、定位 Vendor 实例，分发逻辑交给 {@link AiVendor#buildClient}。
+     * 每个 Vendor 在协议入口类内部按 {@link ModelType} 自行分发到能力子类。
      */
     private static AiModelClient buildClient(long configId) {
         AiModelConfigData configData = FusionCache.get(AiModelConfigData.class, configId);
@@ -420,11 +404,6 @@ public class AiVendorHelper {
             throw new IllegalStateException("未找到AI Vendor: " + configData.getVendorClass());
         }
 
-        AiModelClient client = vendor.buildClient(configData);
-        if (client == null) {
-            throw new IllegalStateException("Vendor[" + vendor.vendorName() + "]不支持模型类型["
-                    + configData.getModelType() + "], configId=" + configId);
-        }
-        return client;
+        return vendor.buildClient(configData);
     }
 }

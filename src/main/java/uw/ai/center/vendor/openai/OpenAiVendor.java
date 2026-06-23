@@ -1,31 +1,35 @@
 package uw.ai.center.vendor.openai;
 
-import dev.langchain4j.model.openai.OpenAiChatModel;
-import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
-import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import uw.ai.center.vo.AiModelConfigData;
+import uw.ai.center.constant.ModelType;
 import uw.ai.center.vendor.AiVendor;
-import uw.ai.center.vendor.client.ChatClient;
-import uw.ai.center.vendor.client.EmbeddingClient;
-import uw.common.app.vo.JsonConfigBox;
+import uw.ai.center.vendor.client.AiModelClient;
+import uw.ai.center.vo.AiModelConfigData;
 import uw.common.app.vo.JsonConfigParam;
 
-import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 
 /**
- * OpenAI 供应商实现（LangChain4j）。
- * <p>基于 LangChain4j 的 OpenAiChatModel / OpenAiStreamingChatModel / OpenAiEmbeddingModel 构建客户端，
- * 支持 CHAT 与 EMBEDDING 两种模型类型。
+ * OpenAI 协议入口。
+ * <p>数据库 {@code ai_model_config.vendor_class} 存的是本类的全限定名，作为"协议标识"稳定不变。
+ * <p>本类承担两类职责：
+ * <ul>
+ *   <li>提供协议元信息（vendorName/vendorDesc/configParam/listModel 等）—— 所有 OpenAI 协议下的能力子类共享，避免在每个子类重复</li>
+ *   <li>按 {@code modelType} 委托构建到独立的能力子类（{@link OpenAiChatVendor} / {@link OpenAiEmbeddingVendor}），
+ *       让 chat 与 embedding 的实际构建逻辑物理隔离到不同文件</li>
+ * </ul>
  */
 @Service
 public class OpenAiVendor implements AiVendor {
 
-    private static final Logger logger = LoggerFactory.getLogger(OpenAiVendor.class);
+    private final OpenAiChatVendor chatVendor;
+    private final OpenAiEmbeddingVendor embeddingVendor;
+
+    public OpenAiVendor(OpenAiChatVendor chatVendor, OpenAiEmbeddingVendor embeddingVendor) {
+        this.chatVendor = chatVendor;
+        this.embeddingVendor = embeddingVendor;
+    }
 
     /**
      * {@inheritDoc}
@@ -72,53 +76,15 @@ public class OpenAiVendor implements AiVendor {
         return Arrays.asList(OpenAiParam.Config.values());
     }
 
-    /**
-     * 构建 CHAT 客户端：同时创建同步 ChatModel 与流式 StreamingChatModel。
-     *
-     * @param configData 模型配置数据
-     * @return 封装了两个聊天模型的客户端
-     */
     @Override
-    public ChatClient buildChatClient(AiModelConfigData configData) {
-        JsonConfigBox configParamBox = configData.getConfigParamBox();
-        double temperature = configParamBox != null
-                ? configParamBox.getDoubleParam("temperature", 0.7) : 0.7;
-
-        var syncModel = OpenAiChatModel.builder()
-                .apiKey(configData.getApiKeyRaw())
-                .baseUrl(configData.getApiUrl())
-                .modelName(configData.getModelName())
-                .temperature(temperature)
-                .timeout(Duration.ofSeconds(120))
-                .build();
-
-        var streamingModel = OpenAiStreamingChatModel.builder()
-                .apiKey(configData.getApiKeyRaw())
-                .baseUrl(configData.getApiUrl())
-                .modelName(configData.getModelName())
-                .temperature(temperature)
-                .timeout(Duration.ofSeconds(120))
-                .build();
-
-        return new ChatClient(configData, this, syncModel, streamingModel);
-    }
-
-    /**
-     * 构建 EMBEDDING 客户端，用于将文本转向量供 RAG 检索。
-     *
-     * @param configData 模型配置数据
-     * @return 封装了嵌入模型的客户端
-     */
-    @Override
-    public EmbeddingClient buildEmbeddingClient(AiModelConfigData configData) {
-        var embeddingModel = OpenAiEmbeddingModel.builder()
-                .apiKey(configData.getApiKeyRaw())
-                .baseUrl(configData.getApiUrl())
-                .modelName(configData.getModelName())
-                .timeout(Duration.ofSeconds(60))
-                .build();
-
-        return new EmbeddingClient(configData, this, embeddingModel);
+    public AiModelClient buildClient(AiModelConfigData configData) {
+        ModelType modelType = ModelType.of(configData.getModelType());
+        return switch (modelType) {
+            case CHAT -> chatVendor.buildChatClient(configData);
+            case EMBEDDING -> embeddingVendor.buildEmbeddingClient(configData);
+            default -> throw new IllegalStateException(
+                    "OpenAiVendor 不支持模型类型[" + configData.getModelType() + "]");
+        };
     }
 
     /**
