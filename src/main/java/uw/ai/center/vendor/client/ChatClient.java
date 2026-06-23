@@ -19,8 +19,11 @@ public class ChatClient extends AiModelClient {
     @Schema(title = "流式聊天模型", description = "流式聊天模型")
     private final StreamingChatModel streamingChatModel;
 
-    public ChatClient(AiModelConfigData configData, AiVendor vendor,
-                      ChatModel chatModel, StreamingChatModel streamingChatModel) {
+    public ChatClient(AiModelConfigData configData,
+                      AiVendor vendor,
+                      ChatModel chatModel,
+                      StreamingChatModel streamingChatModel)
+    {
         super(configData, vendor, ModelType.CHAT);
         this.chatModel = chatModel;
         this.streamingChatModel = streamingChatModel;

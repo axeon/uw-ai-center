@@ -185,6 +185,8 @@ public class AiToolInfoController {
     @MscPermDeclare(user = UserType.ADMIN, auth = AuthType.PERM, log = ActionLog.CRIT)
     public ResponseData delete(@Parameter(description = "主键ID") @RequestParam long id, @Parameter(description = "备注") @RequestParam String remark){
         AuthServiceHelper.logInfo(AiToolInfo.class,id,remark);
-        return dao.update(new AiToolInfo().modifyDate(SystemClock.nowDate()).state(CommonState.DELETED.getValue()), new IdStateQueryParam(id, CommonState.DISABLED.getValue()));
+        return dao.update(new AiToolInfo().modifyDate(SystemClock.nowDate()).state(CommonState.DELETED.getValue()), new IdStateQueryParam(id, CommonState.DISABLED.getValue())).onSuccess(updatedEntity -> {
+            AiToolHelper.invalidateToolCache();
+        });
     }
 }

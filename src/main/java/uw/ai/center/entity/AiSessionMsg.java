@@ -8,6 +8,7 @@ import uw.dao.annotation.ColumnMeta;
 import uw.dao.annotation.TableMeta;
 
 import java.io.Serializable;
+import java.util.Date;
 
 
 /**
@@ -138,21 +139,21 @@ public class AiSessionMsg implements DataEntity, Serializable {
      */
     @ColumnMeta(columnName = "request_date", dataType = "java.util.Date", dataSize = 23, nullable = true)
     @Schema(title = "创建时间", description = "创建时间", maxLength = 23, nullable = true)
-    private java.util.Date requestDate;
+    private Date requestDate;
 
     /**
      * 回应开始时间
      */
     @ColumnMeta(columnName = "response_start_date", dataType = "java.util.Date", dataSize = 23, nullable = true)
     @Schema(title = "回应开始时间", description = "回应开始时间", maxLength = 23, nullable = true)
-    private java.util.Date responseStartDate;
+    private Date responseStartDate;
 
     /**
      * 回应结束时间
      */
     @ColumnMeta(columnName = "response_end_date", dataType = "java.util.Date", dataSize = 23, nullable = true)
     @Schema(title = "回应结束时间", description = "回应结束时间", maxLength = 23, nullable = true)
-    private java.util.Date responseEndDate;
+    private Date responseEndDate;
 
     /**
      * 状态
@@ -327,21 +328,21 @@ public class AiSessionMsg implements DataEntity, Serializable {
     /**
      * 获取创建时间。
      */
-    public java.util.Date getRequestDate() {
+    public Date getRequestDate() {
         return this.requestDate;
     }
 
     /**
      * 获取回应开始时间。
      */
-    public java.util.Date getResponseStartDate() {
+    public Date getResponseStartDate() {
         return this.responseStartDate;
     }
 
     /**
      * 获取回应结束时间。
      */
-    public java.util.Date getResponseEndDate() {
+    public Date getResponseEndDate() {
         return this.responseEndDate;
     }
 

@@ -101,11 +101,19 @@ public class DashScopeApiClient {
             body.put("input", input);
             body.put("parameters", parameters);
 
-            logger.info("DashScope图片生成提交任务: url={}, model={}, parameters={}, prompt={}", taskUrl, model, parameters, prompt);
+            logger.info("DashScope图片生成提交任务: url={}, model={}", taskUrl, model);
+            if (logger.isDebugEnabled()) {
+                logger.debug("DashScope图片生成请求参数: parameters={}, prompt={}", parameters, prompt);
+            }
 
             HttpData httpData = HTTP_HELPER.postBodyForData(taskUrl, headers, body);
             String responseBody = httpData.getResponseData();
-            logger.info("DashScope图片生成任务提交响应: statusCode={}, body={}", httpData.getStatusCode(), responseBody);
+            logger.info("DashScope图片生成任务提交响应: statusCode={}", httpData.getStatusCode());
+            if (logger.isDebugEnabled()) {
+                String bodySnippet = responseBody != null && responseBody.length() > 500
+                        ? responseBody.substring(0, 500) + "...(truncated)" : responseBody;
+                logger.debug("DashScope图片生成任务提交响应体: body={}", bodySnippet);
+            }
 
             JsonNode responseJson = OBJECT_MAPPER.readTree(responseBody);
 
