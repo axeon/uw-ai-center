@@ -13,7 +13,6 @@ import uw.common.app.vo.JsonConfigBox;
 import uw.common.app.vo.JsonConfigParam;
 
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -63,14 +62,11 @@ public class OpenAiVendor implements ChatVendor, EmbeddingVendor {
 
     /**
      * {@inheritDoc}
-     * @return OpenAI 配置参数集合（合并 CHAT 与 EMBEDDING 两类参数）
+     * @return OpenAI 配置参数集合（温度、最大 token、工具等）
      */
     @Override
     public List<JsonConfigParam> configParam() {
-        List<JsonConfigParam> params = new ArrayList<>();
-        params.addAll(Arrays.asList(OpenAiChatParam.Config.values()));
-        params.addAll(Arrays.asList(OpenAiEmbeddingParam.Config.values()));
-        return params;
+        return Arrays.asList(OpenAiParam.Config.values());
     }
 
     /**
