@@ -1,13 +1,10 @@
 package uw.ai.center.vendor.openai;
 
 import dev.langchain4j.model.openai.OpenAiChatModel;
-import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 import org.springframework.stereotype.Service;
 import uw.ai.center.vendor.AiChatVendor;
-import uw.ai.center.vendor.AiEmbeddingVendor;
 import uw.ai.center.vendor.client.ChatClient;
-import uw.ai.center.vendor.client.EmbeddingClient;
 import uw.ai.center.vo.AiModelConfigData;
 import uw.common.app.vo.JsonConfigBox;
 import uw.common.app.vo.JsonConfigParam;
@@ -17,12 +14,14 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * OpenAI 协议 vendor 实现。
- * <p>implements 列表即能力清单：{@link AiChatVendor} + {@link AiEmbeddingVendor}，
- * 类型系统直接表达"本 vendor 支持哪些能力"，无需点开源码看哪些方法被覆写。
+ * OpenAI 协议 CHAT 能力 Vendor。
+ * <p>implements 列表即能力清单：{@link AiChatVendor}，类型系统直接表达"本 vendor 仅支持 CHAT"，
+ * 无需点开源码看哪些方法被覆写。
+ * <p>EMBEDDING 能力由独立的 {@link OpenAiEmbeddingVendor} 提供，数据库 vendor_class 字段
+ * 按模型 modelType 区分填本类或子 Vendor 的 className。
  */
 @Service
-public class OpenAiVendor implements AiChatVendor, AiEmbeddingVendor {
+public class OpenAiChatVendor implements AiChatVendor {
 
     /**
      * {@inheritDoc}
@@ -95,21 +94,6 @@ public class OpenAiVendor implements AiChatVendor, AiEmbeddingVendor {
                 .build();
 
         return new ChatClient(configData, syncModel, streamingModel);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public EmbeddingClient buildEmbeddingClient(AiModelConfigData configData) {
-        var embeddingModel = OpenAiEmbeddingModel.builder()
-                .apiKey(configData.getApiKeyRaw())
-                .baseUrl(configData.getApiUrl())
-                .modelName(configData.getModelName())
-                .timeout(Duration.ofSeconds(60))
-                .build();
-
-        return new EmbeddingClient(configData, embeddingModel);
     }
 
     /**
