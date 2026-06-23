@@ -1,4 +1,4 @@
-package uw.ai.center.vendor.dashscope.realtimeTranscriptionModel;
+package uw.ai.center.vendor.dashscope.Transcription;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;

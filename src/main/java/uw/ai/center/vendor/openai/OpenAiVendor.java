@@ -4,8 +4,8 @@ import dev.langchain4j.model.openai.OpenAiChatModel;
 import dev.langchain4j.model.openai.OpenAiEmbeddingModel;
 import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
 import org.springframework.stereotype.Service;
-import uw.ai.center.vendor.capability.ChatVendor;
-import uw.ai.center.vendor.capability.EmbeddingVendor;
+import uw.ai.center.vendor.AiChatVendor;
+import uw.ai.center.vendor.AiEmbeddingVendor;
 import uw.ai.center.vendor.client.ChatClient;
 import uw.ai.center.vendor.client.EmbeddingClient;
 import uw.ai.center.vo.AiModelConfigData;
@@ -18,11 +18,11 @@ import java.util.List;
 
 /**
  * OpenAI 协议 vendor 实现。
- * <p>implements 列表即能力清单：{@link ChatVendor} + {@link EmbeddingVendor}，
+ * <p>implements 列表即能力清单：{@link AiChatVendor} + {@link AiEmbeddingVendor}，
  * 类型系统直接表达"本 vendor 支持哪些能力"，无需点开源码看哪些方法被覆写。
  */
 @Service
-public class OpenAiVendor implements ChatVendor, EmbeddingVendor {
+public class OpenAiVendor implements AiChatVendor, AiEmbeddingVendor {
 
     /**
      * {@inheritDoc}

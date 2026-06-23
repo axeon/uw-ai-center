@@ -17,10 +17,6 @@ import uw.ai.center.vendor.client.AudioTranscriptionClient;
 import uw.ai.center.vendor.client.ChatClient;
 import uw.ai.center.vendor.client.EmbeddingClient;
 import uw.ai.center.vendor.client.ImageGenerationClient;
-import uw.ai.center.vendor.capability.AudioTranscriptionVendor;
-import uw.ai.center.vendor.capability.ChatVendor;
-import uw.ai.center.vendor.capability.EmbeddingVendor;
-import uw.ai.center.vendor.capability.ImageGenerationVendor;
 import uw.cache.CacheChangeNotifyListener;
 import uw.cache.CacheDataLoader;
 import uw.cache.FusionCache;
@@ -418,25 +414,25 @@ public class AiVendorHelper {
 
         return switch (modelType) {
             case CHAT -> {
-                if (!(vendor instanceof ChatVendor cv)) {
+                if (!(vendor instanceof AiChatVendor cv)) {
                     throw unsupported(vendor, modelType, configId);
                 }
                 yield cv.buildChatClient(configData);
             }
             case EMBEDDING -> {
-                if (!(vendor instanceof EmbeddingVendor ev)) {
+                if (!(vendor instanceof AiEmbeddingVendor ev)) {
                     throw unsupported(vendor, modelType, configId);
                 }
                 yield ev.buildEmbeddingClient(configData);
             }
             case IMAGE_GENERATION -> {
-                if (!(vendor instanceof ImageGenerationVendor iv)) {
+                if (!(vendor instanceof AiImageGenerationVendor iv)) {
                     throw unsupported(vendor, modelType, configId);
                 }
                 yield iv.buildImageClient(configData);
             }
             case AUDIO_TRANSCRIPTION -> {
-                if (!(vendor instanceof AudioTranscriptionVendor av)) {
+                if (!(vendor instanceof AiAudioTranscriptionVendor av)) {
                     throw unsupported(vendor, modelType, configId);
                 }
                 yield av.buildAudioTranscriptionClient(configData);

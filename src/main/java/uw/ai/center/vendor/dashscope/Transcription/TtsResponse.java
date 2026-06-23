@@ -1,4 +1,4 @@
-package uw.ai.center.vendor.dashscope.realtimeTranscriptionModel;
+package uw.ai.center.vendor.dashscope.Transcription;
 
 /**
  * 语音合成响应对象。

@@ -4,8 +4,8 @@ import dev.langchain4j.model.ollama.OllamaChatModel;
 import dev.langchain4j.model.ollama.OllamaEmbeddingModel;
 import dev.langchain4j.model.ollama.OllamaStreamingChatModel;
 import org.springframework.stereotype.Service;
-import uw.ai.center.vendor.capability.ChatVendor;
-import uw.ai.center.vendor.capability.EmbeddingVendor;
+import uw.ai.center.vendor.AiChatVendor;
+import uw.ai.center.vendor.AiEmbeddingVendor;
 import uw.ai.center.vendor.client.ChatClient;
 import uw.ai.center.vendor.client.EmbeddingClient;
 import uw.ai.center.vo.AiModelConfigData;
@@ -18,11 +18,11 @@ import java.util.List;
 
 /**
  * Ollama 协议 vendor 实现。
- * <p>implements 列表即能力清单：{@link ChatVendor} + {@link EmbeddingVendor}，
+ * <p>implements 列表即能力清单：{@link AiChatVendor} + {@link AiEmbeddingVendor}，
  * 类型系统直接表达"本 vendor 支持哪些能力"，无需点开源码看哪些方法被覆写。
  */
 @Service
-public class OllamaVendor implements ChatVendor, EmbeddingVendor {
+public class OllamaVendor implements AiChatVendor, AiEmbeddingVendor {
 
     /**
      * {@inheritDoc}

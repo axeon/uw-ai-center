@@ -1,16 +1,16 @@
 package uw.ai.center.vendor.dashscope;
 
 import org.springframework.stereotype.Service;
-import uw.ai.center.vendor.capability.AudioTranscriptionVendor;
-import uw.ai.center.vendor.capability.ImageGenerationVendor;
+import uw.ai.center.vendor.AiAudioTranscriptionVendor;
+import uw.ai.center.vendor.AiImageGenerationVendor;
 import uw.ai.center.vendor.client.AudioTranscriptionClient;
 import uw.ai.center.vendor.client.ImageGenerationClient;
-import uw.ai.center.vendor.dashscope.imageModel.DashScopeImageModel;
-import uw.ai.center.vendor.dashscope.imageModel.DashScopeImageParam;
-import uw.ai.center.vendor.dashscope.realtimeTranscriptionModel.DashScopeAudioParam;
-import uw.ai.center.vendor.dashscope.realtimeTranscriptionModel.DashScopeRealtimeTranscriptionModel;
-import uw.ai.center.vendor.dashscope.realtimeTranscriptionModel.RealtimeTranscriptionModel;
-import uw.ai.center.vendor.dashscope.ttsModel.DashScopeTtsParam;
+import uw.ai.center.vendor.dashscope.image.DashScopeImageModel;
+import uw.ai.center.vendor.dashscope.image.DashScopeImageParam;
+import uw.ai.center.vendor.dashscope.Transcription.DashScopeAudioParam;
+import uw.ai.center.vendor.dashscope.Transcription.DashScopeRealtimeTranscriptionModel;
+import uw.ai.center.vendor.dashscope.Transcription.RealtimeTranscriptionModel;
+import uw.ai.center.vendor.dashscope.tts.DashScopeTtsParam;
 import uw.ai.center.vo.AiModelConfigData;
 import uw.common.app.vo.JsonConfigBox;
 import uw.common.app.vo.JsonConfigParam;
@@ -23,11 +23,11 @@ import java.util.Map;
 
 /**
  * DashScope 协议 vendor 实现（阿里云原生 API）。
- * <p>implements 列表即能力清单：{@link ImageGenerationVendor} + {@link AudioTranscriptionVendor}，
+ * <p>implements 列表即能力清单：{@link AiImageGenerationVendor} + {@link AiAudioTranscriptionVendor}，
  * 类型系统直接表达"本 vendor 支持哪些能力"，无需点开源码看哪些方法被覆写。
  */
 @Service
-public class DashScopeVendor implements ImageGenerationVendor, AudioTranscriptionVendor {
+public class DashScopeVendor implements AiImageGenerationVendor, AiAudioTranscriptionVendor {
 
     /**
      * {@inheritDoc}

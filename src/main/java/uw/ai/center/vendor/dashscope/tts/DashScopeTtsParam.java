@@ -1,4 +1,4 @@
-package uw.ai.center.vendor.dashscope.ttsModel;
+package uw.ai.center.vendor.dashscope.tts;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
