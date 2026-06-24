@@ -1,5 +1,6 @@
 package uw.ai.center.vo;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uw.ai.center.entity.AiModelConfig;
@@ -151,6 +152,7 @@ public class AiModelConfigData {
     /**
      * 获取API密钥明文（仅供服务端内部使用，如构建Vendor客户端，不序列化到前端）。
      */
+    @JsonIgnore
     public String getApiKeyRaw() {
         return apiConfigData != null ? apiConfigData.getApiKeyRaw() : null;
     }

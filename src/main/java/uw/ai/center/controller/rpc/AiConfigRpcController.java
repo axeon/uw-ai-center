@@ -19,6 +19,7 @@ import uw.ai.vo.AiModelConfigVo;
 import uw.auth.service.annotation.MscPermDeclare;
 import uw.auth.service.annotation.ResponseAdviceIgnore;
 import uw.auth.service.constant.UserType;
+import uw.common.app.constant.CommonState;
 import uw.common.response.ResponseData;
 import uw.dao.DaoManager;
 import uw.common.data.PageList;
@@ -56,7 +57,7 @@ public class AiConfigRpcController implements AiConfigRpc {
         if (saasId == null || saasId < 0) {
             return ResponseData.errorMsg("saasId有误");
         }
-        StringBuilder sql = new StringBuilder("select * from ai_model_config where state=1 and saas_id=?");
+        StringBuilder sql = new StringBuilder("select id,saas_id,mch_id,api_id,model_type,model_tag,config_code,config_name,config_desc,model_name,state,create_date,modify_date from ai_model_config where state=" + CommonState.ENABLED.getValue() + " and saas_id=?");
         List<Object> args = new ArrayList<>();
         args.add(saasId);
         if (mchId != null && mchId > 0) {
@@ -93,7 +94,7 @@ public class AiConfigRpcController implements AiConfigRpc {
             return ResponseData.errorMsg("API配置不存在或未启用");
         }
         PageList<AiModelConfig> pageList = dao.list(AiModelConfig.class,
-                "select * from ai_model_config where state=1 and api_id=?",
+                "select id,saas_id,mch_id,api_id,model_type,model_tag,config_code,config_name,config_desc,model_name,state,create_date,modify_date from ai_model_config where state=" + CommonState.ENABLED.getValue() + " and api_id=?",
                 new Object[]{targetApiId}).getData();
         if (pageList == null || pageList.isEmpty()) {
             return ResponseData.success(List.of());
@@ -145,7 +146,7 @@ public class AiConfigRpcController implements AiConfigRpc {
         if (StringUtils.isBlank(modelType)) {
             return ResponseData.errorMsg("模型类型输入有误");
         }
-        StringBuilder sql = new StringBuilder("select * from ai_model_config where state=1 and model_type=?");
+        StringBuilder sql = new StringBuilder("select id,saas_id,mch_id,api_id,model_type,model_tag,config_code,config_name,config_desc,model_name,state,create_date,modify_date from ai_model_config where state=" + CommonState.ENABLED.getValue() + " and model_type=?");
         List<Object> args = new ArrayList<>();
         args.add(modelType);
         if (StringUtils.isNotBlank(modelTag)) {
@@ -176,7 +177,7 @@ public class AiConfigRpcController implements AiConfigRpc {
         if (saasId == null || saasId < 0) {
             return ResponseData.errorMsg("saasId输入有误");
         }
-        StringBuilder sql = new StringBuilder("select * from ai_model_api where state=1 and saas_id=?");
+        StringBuilder sql = new StringBuilder("select id,saas_id,mch_id,api_code,api_name,api_desc,api_url,api_key,state,create_date,modify_date from ai_model_api where state=" + CommonState.ENABLED.getValue() + " and saas_id=?");
         List<Object> args = new ArrayList<>();
         args.add(saasId);
         if (mchId != null && mchId > 0) {

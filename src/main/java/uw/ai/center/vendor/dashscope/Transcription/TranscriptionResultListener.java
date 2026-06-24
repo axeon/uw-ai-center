@@ -1,4 +1,4 @@
-package uw.ai.center.vendor.dashscope.Transcription;
+package uw.ai.center.vendor.dashscope.transcription;
 
 /**
  * 转录结果监听器接口。

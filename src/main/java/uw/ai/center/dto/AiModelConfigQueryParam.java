@@ -82,10 +82,10 @@ public class AiModelConfigQueryParam extends AuthPageQueryParam {
     private String vendorClass;
 
     /**
-     * 模型类型: CHAT/EMBEDDING/RERANK/TTS/OCR。
+     * 模型类型: CHAT/EMBEDDING/RERANK/TTS/OCR/IMAGE_GENERATION/AUDIO_TRANSCRIPTION。
      */
     @QueryMeta(expr = "model_type like ?")
-    @Schema(title = "模型类型: CHAT/EMBEDDING/RERANK/TTS/OCR", description = "模型类型: CHAT/EMBEDDING/RERANK/TTS/OCR")
+    @Schema(title = "模型类型: CHAT/EMBEDDING/RERANK/TTS/OCR/IMAGE_GENERATION/AUDIO_TRANSCRIPTION", description = "模型类型: CHAT/EMBEDDING/RERANK/TTS/OCR/IMAGE_GENERATION/AUDIO_TRANSCRIPTION")
     private String modelType;
 
     /**
@@ -270,21 +270,21 @@ public class AiModelConfigQueryParam extends AuthPageQueryParam {
     }
 
     /**
-     * 获取模型类型: CHAT/EMBEDDING/RERANK/TTS/OCR。
+     * 获取模型类型: CHAT/EMBEDDING/RERANK/TTS/OCR/IMAGE_GENERATION/AUDIO_TRANSCRIPTION。
      */
     public String getModelType() {
         return this.modelType;
     }
 
     /**
-     * 设置模型类型: CHAT/EMBEDDING/RERANK/TTS/OCR。
+     * 设置模型类型: CHAT/EMBEDDING/RERANK/TTS/OCR/IMAGE_GENERATION/AUDIO_TRANSCRIPTION。
      */
     public void setModelType(String modelType) {
         this.modelType = modelType;
     }
 
     /**
-     * 设置模型类型: CHAT/EMBEDDING/RERANK/TTS/OCR链式调用。
+     * 设置模型类型: CHAT/EMBEDDING/RERANK/TTS/OCR/IMAGE_GENERATION/AUDIO_TRANSCRIPTION链式调用。
      */
     public AiModelConfigQueryParam modelType(String modelType) {
         setModelType(modelType);

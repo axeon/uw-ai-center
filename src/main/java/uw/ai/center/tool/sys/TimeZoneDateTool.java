@@ -70,7 +70,7 @@ public class TimeZoneDateTool implements AiTool<TimeZoneDateTool.ToolParam, Resp
      */
     public static class ToolParam extends AiToolParam {
 
-        @Schema(description ="时区，默认为UTC", requiredMode = Schema.RequiredMode.REQUIRED)
+        @Schema(title = "时区", description = "时区,默认为UTC", requiredMode = Schema.RequiredMode.REQUIRED)
         private String timeZone = ZoneId.systemDefault().getId();
 
         public String getTimeZone() {
