@@ -318,7 +318,7 @@ public class AiRagService {
                     new Object[]{CommonState.DELETED.getValue(), SystemClock.nowDate(), ragLibId, CommonState.DELETED.getValue()});
         } catch (Exception e) {
             logger.error("软删除RAG文档记录失败, ragLibId={}", ragLibId, e);
-            throw new RuntimeException("软删除RAG文档记录失败: " + ragLibId, e);
+            throw new IllegalStateException("软删除RAG文档记录失败: " + ragLibId, e);
         }
         // 2. 失效该 RAG 库的客户端缓存（释放 EmbeddingModel 引用等）
         invalidateRagClientCache(ragLibId);
@@ -327,7 +327,7 @@ public class AiRagService {
             esClient.indices().delete(d -> d.index(RAG_ES_INDEX_PREFIX + ragLibId));
         } catch (Exception e) {
             logger.error("删除ES索引失败, ragLibId={}", ragLibId, e);
-            throw new RuntimeException("删除ES索引失败: " + ragLibId, e);
+            throw new IllegalStateException("删除ES索引失败: " + ragLibId, e);
         }
     }
 

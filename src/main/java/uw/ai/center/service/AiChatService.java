@@ -477,7 +477,6 @@ public class AiChatService {
         // 如果有工具，先同步执行工具调用循环，再流式返回最终结果
         // 注：LangChain4j 的工具调用在同步 ChatModel 上完成，无法在工具决策阶段流式，
         // 仅最终回答阶段可流式；当前实现为工具循环完成后一次性返回 finalText，并非真正的端到端流式。
-        // TODO: 后续接入 LangChain4j 流式 + 工具的整合 API 时，改为工具决策完成后流式产出回答文本
         if (hasTools) {
             try {
                 ToolLoopResult loopResult = executeToolLoop(chatClient.getChatModel(), messages,

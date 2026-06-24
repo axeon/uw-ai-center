@@ -57,8 +57,9 @@ public class AiConfigRpcController implements AiConfigRpc {
         if (saasId == null || saasId < 0) {
             return ResponseData.errorMsg("saasId有误");
         }
-        StringBuilder sql = new StringBuilder("select id,saas_id,mch_id,api_id,model_type,model_tag,config_code,config_name,config_desc,model_name,state,create_date,modify_date from ai_model_config where state=" + CommonState.ENABLED.getValue() + " and saas_id=?");
+        StringBuilder sql = new StringBuilder("select id,saas_id,mch_id,api_id,model_type,model_tag,config_code,config_name,config_desc,model_name,state,create_date,modify_date from ai_model_config where state=? and saas_id=?");
         List<Object> args = new ArrayList<>();
+        args.add(CommonState.ENABLED.getValue());
         args.add(saasId);
         if (mchId != null && mchId > 0) {
             sql.append(" and mch_id=?");
@@ -94,8 +95,8 @@ public class AiConfigRpcController implements AiConfigRpc {
             return ResponseData.errorMsg("API配置不存在或未启用");
         }
         PageList<AiModelConfig> pageList = dao.list(AiModelConfig.class,
-                "select id,saas_id,mch_id,api_id,model_type,model_tag,config_code,config_name,config_desc,model_name,state,create_date,modify_date from ai_model_config where state=" + CommonState.ENABLED.getValue() + " and api_id=?",
-                new Object[]{targetApiId}).getData();
+                "select id,saas_id,mch_id,api_id,model_type,model_tag,config_code,config_name,config_desc,model_name,state,create_date,modify_date from ai_model_config where state=? and api_id=?",
+                new Object[]{CommonState.ENABLED.getValue(), targetApiId}).getData();
         if (pageList == null || pageList.isEmpty()) {
             return ResponseData.success(List.of());
         }
@@ -146,8 +147,9 @@ public class AiConfigRpcController implements AiConfigRpc {
         if (StringUtils.isBlank(modelType)) {
             return ResponseData.errorMsg("模型类型输入有误");
         }
-        StringBuilder sql = new StringBuilder("select id,saas_id,mch_id,api_id,model_type,model_tag,config_code,config_name,config_desc,model_name,state,create_date,modify_date from ai_model_config where state=" + CommonState.ENABLED.getValue() + " and model_type=?");
+        StringBuilder sql = new StringBuilder("select id,saas_id,mch_id,api_id,model_type,model_tag,config_code,config_name,config_desc,model_name,state,create_date,modify_date from ai_model_config where state=? and model_type=?");
         List<Object> args = new ArrayList<>();
+        args.add(CommonState.ENABLED.getValue());
         args.add(modelType);
         if (StringUtils.isNotBlank(modelTag)) {
             sql.append(" and model_tag=?");
@@ -177,8 +179,9 @@ public class AiConfigRpcController implements AiConfigRpc {
         if (saasId == null || saasId < 0) {
             return ResponseData.errorMsg("saasId输入有误");
         }
-        StringBuilder sql = new StringBuilder("select id,saas_id,mch_id,api_code,api_name,api_desc,api_url,api_key,state,create_date,modify_date from ai_model_api where state=" + CommonState.ENABLED.getValue() + " and saas_id=?");
+        StringBuilder sql = new StringBuilder("select id,saas_id,mch_id,api_code,api_name,api_desc,api_url,api_key,state,create_date,modify_date from ai_model_api where state=? and saas_id=?");
         List<Object> args = new ArrayList<>();
+        args.add(CommonState.ENABLED.getValue());
         args.add(saasId);
         if (mchId != null && mchId > 0) {
             sql.append(" and mch_id=?");
