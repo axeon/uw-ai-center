@@ -37,6 +37,24 @@ public class DashScopeApiClient {
     private static final JsonInterfaceHelper HTTP_HELPER = new JsonInterfaceHelper();
 
     /**
+     * 响应体截断上限：日志与异常 message 中只保留前 500 字符，避免完整 HTTP 响应（可能含上游鉴权回显等敏感信息）进入可观测链路。
+     */
+    private static final int RESPONSE_BODY_LOG_LIMIT = 500;
+
+    /**
+     * 截断 HTTP 响应体到 {@value #RESPONSE_BODY_LOG_LIMIT} 字符上限。
+     * 用于日志和异常 message，避免上游错误响应被原样塞入堆栈/日志造成信息泄露。
+     */
+    private static String truncateBody(String body) {
+        if (body == null) {
+            return "null";
+        }
+        return body.length() > RESPONSE_BODY_LOG_LIMIT
+                ? body.substring(0, RESPONSE_BODY_LOG_LIMIT) + "...(truncated)"
+                : body;
+    }
+
+    /**
      * DashScope Fun-ASR WebSocket
      */
     public static final String DASHSCOPE_WS_URL = "wss://dashscope.aliyuncs.com/api-ws/v1/inference";
@@ -110,9 +128,7 @@ public class DashScopeApiClient {
             String responseBody = httpData.getResponseData();
             logger.info("DashScope图片生成任务提交响应: statusCode={}", httpData.getStatusCode());
             if (logger.isDebugEnabled()) {
-                String bodySnippet = responseBody != null && responseBody.length() > 500
-                        ? responseBody.substring(0, 500) + "...(truncated)" : responseBody;
-                logger.debug("DashScope图片生成任务提交响应体: body={}", bodySnippet);
+                logger.debug("DashScope图片生成任务提交响应体: body={}", truncateBody(responseBody));
             }
 
             JsonNode responseJson = OBJECT_MAPPER.readTree(responseBody);
@@ -132,7 +148,8 @@ public class DashScopeApiClient {
             String taskId = responseJson.path("output").path("task_id").asText();
             String errorMsg = responseJson.path("message").asText("");
             if (taskId.isEmpty()) {
-                throw new RuntimeException("DashScope图片生成任务提交失败: statusCode=" + statusCode + ", message=" + errorMsg + ", response=" + responseBody);
+                throw new RuntimeException("DashScope图片生成任务提交失败: statusCode=" + statusCode
+                        + ", message=" + errorMsg + ", response=" + truncateBody(responseBody));
             }
             logger.info("DashScope图片生成任务已提交: taskId={}", taskId);
 
