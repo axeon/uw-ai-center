@@ -18,7 +18,6 @@ import dev.langchain4j.store.embedding.elasticsearch.ElasticsearchEmbeddingStore
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import uw.ai.center.entity.AiRagDoc;
 import uw.ai.center.entity.AiRagLib;
@@ -43,7 +42,6 @@ import java.util.stream.Collectors;
 /**
  * RAG库服务.
  */
-@Service
 public class AiRagService {
 
     /**
@@ -85,8 +83,9 @@ public class AiRagService {
     private static final DaoManager dao = DaoManager.getInstance();
     /**
      * ElasticsearchClient实例（替代原RestClient，使用ES官方高级客户端API）.
+     * <p>由 {@code AiEsConfiguration#elasticsearchClient} 在 Bean 创建时通过 {@link #setEsClient} 注入。
      */
-    private static ElasticsearchClient esClient;
+    private static volatile ElasticsearchClient esClient;
     /**
      * 实例缓存。
      */
@@ -97,7 +96,27 @@ public class AiRagService {
         }
     });
 
-    private AiRagService(ElasticsearchClient esClient) {
+    /**
+     * 私有构造器，禁止实例化（纯静态工具类）。
+     */
+    private AiRagService() {
+    }
+
+    /**
+     * 注入 ElasticsearchClient 实例。
+     * <p>由 {@code AiEsConfiguration} 在 Spring 启动期间调用一次，初始化静态字段。
+     * 使用 volatile + 单次写入保证可见性，运行期不可重设。
+     *
+     * @param esClient ES 官方高级客户端
+     */
+    public static void setEsClient(ElasticsearchClient esClient) {
+        if (esClient == null) {
+            throw new IllegalArgumentException("esClient must not be null");
+        }
+        if (AiRagService.esClient != null) {
+            logger.warn("AiRagService.esClient 已初始化，重复注入将被忽略");
+            return;
+        }
         AiRagService.esClient = esClient;
     }
 
