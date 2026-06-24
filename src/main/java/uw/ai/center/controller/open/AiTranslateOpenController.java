@@ -23,7 +23,7 @@ import uw.common.response.ResponseData;
  */
 @RestController
 @RequestMapping("/open/translate")
-@Tag(name = "Ai翻译接口")
+@Tag(name = "AI翻译接口")
 @ResponseAdviceIgnore
 @MscPermDeclare(auth = AuthType.USER, log = ActionLog.BASE)
 public class AiTranslateOpenController {

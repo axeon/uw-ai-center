@@ -19,7 +19,7 @@ import uw.common.response.ResponseData;
  * <p>供其他微服务通过 RPC 调用，上传音频文件进行实时语音识别（ASR），返回识别文本。
  */
 @RestController
-@Tag(name = "AudioRPC接口")
+@Tag(name = "AI音频接口")
 @RequestMapping("/rpc/audio")
 @Primary
 @ResponseAdviceIgnore

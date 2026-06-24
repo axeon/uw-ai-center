@@ -29,6 +29,8 @@ import java.util.stream.Collectors;
 
 /**
  * AiToolHelper。
+ * <p>项目约定:Helper 类提供 static API + @Service 构造器注入,通过 {@link #INSTANCE} 单例引用访问 Spring 注入的字段。
+ * 仅支持单 Spring 上下文(多上下文场景下 INSTANCE 会被覆盖,需重构为纯实例方法 + 注入)。
  */
 @Service
 public class AiToolHelper {
@@ -36,7 +38,16 @@ public class AiToolHelper {
     private static final Logger logger = LoggerFactory.getLogger(AiToolHelper.class);
 
     private static final DaoManager dao = DaoManager.getInstance();
-    private static RestClient authRestClient;
+
+    /**
+     * 单例引用(Spring 容器启动时由构造器赋值,供 static API 访问实例字段如 {@link #authRestClient})。
+     */
+    private static volatile AiToolHelper INSTANCE;
+
+    /**
+     * RPC 转发用的鉴权 RestClient(实例字段,Spring 注入,带服务发现与鉴权)。
+     */
+    private final RestClient authRestClient;
 
     /**
      * 工具回调超时时间（毫秒）。下游微服务超过该时间未响应则视为失败，避免拖垮 AI 主调用链。
@@ -70,7 +81,8 @@ public class AiToolHelper {
      * @param authRestClient 鉴权 RestClient（由 Spring 容器注入，带服务发现与鉴权）
      */
     public AiToolHelper(RestClient authRestClient) {
-        AiToolHelper.authRestClient = authRestClient;
+        this.authRestClient = authRestClient;
+        INSTANCE = this;
     }
 
     /**
@@ -145,7 +157,7 @@ public class AiToolHelper {
         String url = "http://" + aiToolInfo.getAppName() + "/rpc/ai/tool/execute";
         // 超时保护：异步派发 + Future.get(timeout)，防止下游微服务挂起拖垮 AI 主流程
         CompletableFuture<ResponseData> future = CompletableFuture.supplyAsync(() ->
-                authRestClient.post()
+                INSTANCE.authRestClient.post()
                         .uri(url)
                         .body(param)
                         .retrieve()

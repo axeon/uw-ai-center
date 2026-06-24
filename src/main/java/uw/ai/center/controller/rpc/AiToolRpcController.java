@@ -25,7 +25,7 @@ import java.util.List;
  * AI工具RPC接口。
  */
 @RestController
-@Tag(name = "ToolRPC接口")
+@Tag(name = "AI工具接口")
 @RequestMapping("/rpc/tool")
 @Primary
 public class AiToolRpcController implements AiToolRpc {
@@ -51,9 +51,9 @@ public class AiToolRpcController implements AiToolRpc {
     public ResponseData<List<AiToolMeta>> listToolMeta(@RequestParam String appName) {
         PageList<AiToolInfo> dataPageList;
         if (StringUtils.isNotBlank(appName)) {
-            dataPageList = dao.list(AiToolInfo.class, "select * from ai_tool_info where app_name=?", new Object[]{appName}).getData();
+            dataPageList = dao.list(AiToolInfo.class, "select id,app_name,tool_class,tool_version,tool_name,tool_desc,tool_input,tool_output,create_date,modify_date,state from ai_tool_info where app_name=?", new Object[]{appName}).getData();
         } else {
-            dataPageList = dao.list(AiToolInfo.class, "select * from ai_tool_info where state=?", new Object[]{CommonState.ENABLED.getValue()}).getData();
+            dataPageList = dao.list(AiToolInfo.class, "select id,app_name,tool_class,tool_version,tool_name,tool_desc,tool_input,tool_output,create_date,modify_date,state from ai_tool_info where state=?", new Object[]{CommonState.ENABLED.getValue()}).getData();
         }
         if (dataPageList == null || dataPageList.isEmpty()) {
             return ResponseData.success(List.of());

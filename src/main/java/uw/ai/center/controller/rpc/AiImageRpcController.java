@@ -20,7 +20,7 @@ import uw.common.response.ResponseData;
  * <p>供其他微服务通过 RPC 调用，根据文本提示词生成图片，返回图片 URL 列表及会话 ID。
  */
 @RestController
-@Tag(name = "ImageRPC接口")
+@Tag(name = "AI图片生成接口")
 @RequestMapping("/rpc/image")
 @Primary
 @ResponseAdviceIgnore

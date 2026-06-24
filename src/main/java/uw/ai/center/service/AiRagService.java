@@ -59,6 +59,16 @@ public class AiRagService {
      */
     private static final long MAX_RAG_DOC_SIZE = 50L * 1024 * 1024;
     /**
+     * 纯文本入库字符数上限：5MB。
+     * 超出会拒绝入库,防止 splitter 生成超大中间 segment 触发上游 embedding API 限流或 OOM。
+     */
+    private static final int MAX_RAG_TEXT_SIZE = 5 * 1024 * 1024;
+    /**
+     * RAG query 字符数上限：2000。
+     * 超出会自动截断,防止超长 query 撑爆 embedding token。
+     */
+    private static final int MAX_RAG_QUERY_LENGTH = 2000;
+    /**
      * 允许的 RAG 文档扩展名白名单。
      */
     private static final java.util.Set<String> ALLOWED_RAG_DOC_EXTENSIONS = java.util.Set.of(
@@ -182,6 +192,15 @@ public class AiRagService {
      * @return Map<UUID, chunkText> 用于存入AiRagDoc.docContent
      */
     public static Map<String, String> buildDocument(long ragLibId, String fileContent) {
+        if (fileContent == null || fileContent.isEmpty()) {
+            logger.warn("纯文本入库被拒绝: 内容为空, libId={}", ragLibId);
+            return null;
+        }
+        if (fileContent.length() > MAX_RAG_TEXT_SIZE) {
+            logger.warn("纯文本入库被拒绝: 内容超过上限({}字符), libId={}, length={}",
+                    MAX_RAG_TEXT_SIZE, ragLibId, fileContent.length());
+            return null;
+        }
         AiRagClientWrapper ragClientWrapper = getRagClientWrapper(ragLibId);
         if (ragClientWrapper == null) {
             logger.error("RAG客户端不存在, libId={}", ragLibId);
@@ -366,6 +385,14 @@ public class AiRagService {
      */
     public static String query(long ragLibId, String query) {
         long startMs = SystemClock.now();
+        if (query == null || query.isEmpty()) {
+            logger.warn("RAG查询被拒绝: query为空, libId={}", ragLibId);
+            return "";
+        }
+        if (query.length() > MAX_RAG_QUERY_LENGTH) {
+            logger.warn("RAG query过长自动截断, libId={}, length={}", ragLibId, query.length());
+            query = query.substring(0, MAX_RAG_QUERY_LENGTH);
+        }
         String shortQuery = truncate(query, 100);
         AiRagClientWrapper ragClientWrapper = getRagClientWrapper(ragLibId);
         if (ragClientWrapper == null) {

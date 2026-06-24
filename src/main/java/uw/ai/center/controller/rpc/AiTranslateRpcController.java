@@ -25,7 +25,7 @@ import uw.common.response.ResponseData;
  * <p>供其他微服务通过 RPC 调用，提供数组翻译与 Map 翻译能力，结果转为结构化对象返回。
  */
 @RestController
-@Tag(name = "TranslateRPC接口")
+@Tag(name = "AI翻译接口")
 @RequestMapping("/rpc/translate")
 @Primary
 public class AiTranslateRpcController implements AiTranslateRpc {

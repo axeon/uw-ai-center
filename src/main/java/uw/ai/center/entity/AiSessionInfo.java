@@ -45,8 +45,8 @@ public class AiSessionInfo implements DataEntity, Serializable {
     /**
      * 用户类型
      */
-    @ColumnMeta(columnName = "user_type", dataType = "int", dataSize = 10, nullable = true)
-    @Schema(title = "用户类型", description = "用户类型", maxLength = 10, nullable = true)
+    @ColumnMeta(columnName = "user_type", dataType = "int", dataSize = 10, nullable = false)
+    @Schema(title = "用户类型", description = "用户类型", maxLength = 10, nullable = false)
     private int userType;
 
     /**
@@ -59,15 +59,15 @@ public class AiSessionInfo implements DataEntity, Serializable {
     /**
      * 配置ID
      */
-    @ColumnMeta(columnName = "config_id", dataType = "long", dataSize = 19, nullable = true)
-    @Schema(title = "配置ID", description = "配置ID", maxLength = 19, nullable = true)
+    @ColumnMeta(columnName = "config_id", dataType = "long", dataSize = 19, nullable = false)
+    @Schema(title = "配置ID", description = "配置ID", maxLength = 19, nullable = false)
     private long configId;
 
     /**
      * session类型
      */
-    @ColumnMeta(columnName = "session_type", dataType = "int", dataSize = 10, nullable = true)
-    @Schema(title = "session类型", description = "session类型", maxLength = 10, nullable = true)
+    @ColumnMeta(columnName = "session_type", dataType = "int", dataSize = 10, nullable = false)
+    @Schema(title = "session类型", description = "session类型", maxLength = 10, nullable = false)
     private int sessionType;
 
     /**
@@ -80,29 +80,29 @@ public class AiSessionInfo implements DataEntity, Serializable {
     /**
      * session大小
      */
-    @ColumnMeta(columnName = "msg_num", dataType = "int", dataSize = 10, nullable = true)
-    @Schema(title = "session大小", description = "session大小", maxLength = 10, nullable = true)
+    @ColumnMeta(columnName = "msg_num", dataType = "int", dataSize = 10, nullable = false)
+    @Schema(title = "session大小", description = "session大小", maxLength = 10, nullable = false)
     private int msgNum;
 
     /**
      * 历史长度
      */
-    @ColumnMeta(columnName = "window_size", dataType = "int", dataSize = 10, nullable = true)
-    @Schema(title = "历史长度", description = "历史长度", maxLength = 10, nullable = true)
+    @ColumnMeta(columnName = "window_size", dataType = "int", dataSize = 10, nullable = false)
+    @Schema(title = "历史长度", description = "历史长度", maxLength = 10, nullable = false)
     private int windowSize;
 
     /**
      * 请求token数
      */
-    @ColumnMeta(columnName = "request_tokens", dataType = "long", dataSize = 19, nullable = true)
-    @Schema(title = "请求token数", description = "请求token数", maxLength = 19, nullable = true)
+    @ColumnMeta(columnName = "request_tokens", dataType = "long", dataSize = 19, nullable = false)
+    @Schema(title = "请求token数", description = "请求token数", maxLength = 19, nullable = false)
     private long requestTokens;
 
     /**
      * 响应token数
      */
-    @ColumnMeta(columnName = "response_tokens", dataType = "long", dataSize = 19, nullable = true)
-    @Schema(title = "响应token数", description = "响应token数", maxLength = 19, nullable = true)
+    @ColumnMeta(columnName = "response_tokens", dataType = "long", dataSize = 19, nullable = false)
+    @Schema(title = "响应token数", description = "响应token数", maxLength = 19, nullable = false)
     private long responseTokens;
 
     /**
@@ -150,8 +150,8 @@ public class AiSessionInfo implements DataEntity, Serializable {
     /**
      * 状态
      */
-    @ColumnMeta(columnName = "state", dataType = "int", dataSize = 10, nullable = true)
-    @Schema(title = "状态", description = "状态", maxLength = 10, nullable = true)
+    @ColumnMeta(columnName = "state", dataType = "int", dataSize = 10, nullable = false)
+    @Schema(title = "状态", description = "状态", maxLength = 10, nullable = false)
     private int state;
 
     /**

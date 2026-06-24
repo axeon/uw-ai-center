@@ -42,6 +42,21 @@ public class DashScopeApiClient {
     private static final int RESPONSE_BODY_LOG_LIMIT = 500;
 
     /**
+     * 任务轮询最大次数。
+     */
+    private static final int POLL_MAX_RETRIES = 30;
+
+    /**
+     * 轮询初始 sleep（毫秒）。
+     */
+    private static final long POLL_INITIAL_SLEEP_MILLIS = 2000L;
+
+    /**
+     * 轮询 sleep 上限（毫秒）。
+     */
+    private static final long POLL_MAX_SLEEP_MILLIS = 10000L;
+
+    /**
      * 截断 HTTP 响应体到 {@value #RESPONSE_BODY_LOG_LIMIT} 字符上限。
      * 用于日志和异常 message，避免上游错误响应被原样塞入堆栈/日志造成信息泄露。
      */
@@ -158,15 +173,16 @@ public class DashScopeApiClient {
             Map<String, String> queryHeaders = new HashMap<>();
             queryHeaders.put("Authorization", "Bearer " + apiKey);
 
-            int maxRetries = 30;
-            for (int i = 0; i < maxRetries; i++) {
-                Thread.sleep(2000);
+            long nextSleep = POLL_INITIAL_SLEEP_MILLIS;
+            for (int i = 0; i < POLL_MAX_RETRIES; i++) {
+                Thread.sleep(nextSleep);
 
                 HttpData queryData = HTTP_HELPER.getForData(queryUrl, queryHeaders, null);
                 JsonNode queryJson = OBJECT_MAPPER.readTree(queryData.getResponseData());
 
                 String taskStatus = queryJson.path("output").path("task_status").asText();
-                logger.info("DashScope图片生成任务轮询({}/{}): taskId={}, status={}", i + 1, maxRetries, taskId, taskStatus);
+                logger.info("DashScope图片生成任务轮询({}/{}): taskId={}, status={}, nextSleep={}",
+                        i + 1, POLL_MAX_RETRIES, taskId, taskStatus, nextSleep);
 
                 switch (taskStatus) {
                     case "SUCCEEDED":
@@ -177,14 +193,17 @@ public class DashScopeApiClient {
                         String failMsg = queryJson.path("output").path("message").asText("未知错误");
                         throw new RuntimeException("DashScope图片生成任务失败: " + failMsg);
                     case "PENDING", "RUNNING":
-                        // 继续轮询
+                        // 指数退避(2s→4s→8s,上限 10s)
+                        nextSleep = Math.min(nextSleep * 2, POLL_MAX_SLEEP_MILLIS);
                         break;
                     default:
                         throw new RuntimeException("DashScope图片生成任务未知状态: " + taskStatus);
                 }
             }
 
-            throw new RuntimeException("DashScope图片生成任务超时（60秒）");
+            throw new RuntimeException("DashScope图片生成任务超时(maxRetries=" + POLL_MAX_RETRIES
+                    + ", initialSleepMillis=" + POLL_INITIAL_SLEEP_MILLIS
+                    + ", maxSleepMillis=" + POLL_MAX_SLEEP_MILLIS + ")");
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("DashScope图片生成任务被中断", e);

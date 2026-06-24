@@ -20,7 +20,7 @@ import uw.common.response.ResponseData;
  */
 @RestController
 @RequestMapping("/user/image")
-@Tag(name = "AI图片生成", description = "AI图片生成用户接口")
+@Tag(name = "AI图片生成", description = "AI图片生成")
 @ResponseAdviceIgnore
 public class AiImageUserController {
 

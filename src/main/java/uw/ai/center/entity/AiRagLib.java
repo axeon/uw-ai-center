@@ -39,8 +39,8 @@ public class AiRagLib implements DataEntity,Serializable{
     /**
      * 文档库类型
      */
-    @ColumnMeta(columnName="lib_type", dataType="int", dataSize=10, nullable=true)
-    @Schema(title = "文档库类型", description = "文档库类型", maxLength=10, nullable=true )
+    @ColumnMeta(columnName="lib_type", dataType="int", dataSize=10, nullable=false)
+    @Schema(title = "文档库类型", description = "文档库类型", maxLength=10, nullable=false )
     private int libType;
 
     /**
@@ -60,8 +60,8 @@ public class AiRagLib implements DataEntity,Serializable{
     /**
      * embed配置ID
      */
-    @ColumnMeta(columnName="embed_config_id", dataType="long", dataSize=19, nullable=true)
-    @Schema(title = "embed配置ID", description = "embed配置ID", maxLength=19, nullable=true )
+    @ColumnMeta(columnName="embed_config_id", dataType="long", dataSize=19, nullable=false)
+    @Schema(title = "embed配置ID", description = "embed配置ID", maxLength=19, nullable=false )
     private long embedConfigId;
 
     /**
@@ -96,8 +96,8 @@ public class AiRagLib implements DataEntity,Serializable{
     /**
      * 状态
      */
-    @ColumnMeta(columnName="state", dataType="int", dataSize=10, nullable=true)
-    @Schema(title = "状态", description = "状态", maxLength=10, nullable=true )
+    @ColumnMeta(columnName="state", dataType="int", dataSize=10, nullable=false)
+    @Schema(title = "状态", description = "状态", maxLength=10, nullable=false )
     private int state;
 
     /**

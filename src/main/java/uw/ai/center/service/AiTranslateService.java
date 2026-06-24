@@ -67,6 +67,15 @@ public class AiTranslateService {
      * 翻译列表。
      */
     public static ResponseData<String> translateList(long saasId, long userId, int userType, String userInfo, AiTranslateListParam param) {
+        if (param == null) {
+            return ResponseData.errorMsg("翻译参数不能为空");
+        }
+        if (param.getTextList() == null || param.getTextList().isEmpty()) {
+            return ResponseData.errorMsg("待翻译文本列表不能为空");
+        }
+        if (param.getLangList() == null || param.getLangList().isEmpty()) {
+            return ResponseData.errorMsg("目标语言列表不能为空");
+        }
         String TRANSLATE_USER_PROMPT_TEMPLATE = """
                 请帮我把以下JSON数组中的文字分别翻译成 %s 语言。
                 %s
@@ -84,6 +93,15 @@ public class AiTranslateService {
      * 翻译Map。
      */
     public static ResponseData<String> translateMap(long saasId, long userId, int userType, String userInfo, AiTranslateMapParam param) {
+        if (param == null) {
+            return ResponseData.errorMsg("翻译参数不能为空");
+        }
+        if (param.getTextMap() == null || param.getTextMap().isEmpty()) {
+            return ResponseData.errorMsg("待翻译文本Map不能为空");
+        }
+        if (param.getLangList() == null || param.getLangList().isEmpty()) {
+            return ResponseData.errorMsg("目标语言列表不能为空");
+        }
         String TRANSLATE_USER_PROMPT_TEMPLATE = """
                 请帮我把以下JSON Map的Value值分别翻译成 %s 语言。
                 %s

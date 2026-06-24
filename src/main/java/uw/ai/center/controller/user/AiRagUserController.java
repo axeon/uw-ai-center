@@ -22,7 +22,7 @@ import uw.dao.TransactionException;
  * <p>面向 C 端用户，只读列出当前租户下启用的 RAG 库，供前端在对话时选择挂载的知识库。
  */
 @RestController
-@Tag(name = "RagUser接口")
+@Tag(name = "RAG问答接口")
 @RequestMapping("/user/rag")
 public class AiRagUserController {
     private final DaoManager dao = DaoManager.getInstance();

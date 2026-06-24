@@ -20,7 +20,7 @@ import uw.common.response.ResponseData;
  */
 @RestController
 @RequestMapping("/open/test")
-@Tag(name = "AiTest接口")
+@Tag(name = "AI测试接口")
 @ResponseAdviceIgnore
 @Profile({"dev", "debug"})
 public class AiTestOpenController {

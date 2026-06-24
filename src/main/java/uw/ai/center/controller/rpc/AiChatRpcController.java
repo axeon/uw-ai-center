@@ -39,7 +39,7 @@ import java.beans.PropertyEditorSupport;
  * configId 与 configCode 二选一，通过 {@link AiVendorHelper#resolveConfigId} 解析。
  */
 @RestController
-@Tag(name = "ChatRPC接口")
+@Tag(name = "AI聊天接口")
 @RequestMapping("/rpc/chat")
 @Primary
 @ResponseAdviceIgnore
@@ -91,7 +91,7 @@ public class AiChatRpcController implements AiChatRpc {
      * @return SSE 事件流
      */
     @Override
-    @PostMapping(value = "chatGenerate", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    @PostMapping(value = "/chatGenerate", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     @Operation(summary = "生成数据", description = "生成数据")
     @MscPermDeclare(user = UserType.RPC)
     public Flux<String> chatGenerate(@ModelAttribute AiChatGenerateParam param) {

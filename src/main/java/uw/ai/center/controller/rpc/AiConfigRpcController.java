@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
  * AI配置查询RPC接口。
  */
 @RestController
-@Tag(name = "ConfigRPC接口")
+@Tag(name = "AI配置接口")
 @RequestMapping("/rpc/config")
 @Primary
 @ResponseAdviceIgnore
