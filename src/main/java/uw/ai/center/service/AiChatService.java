@@ -65,12 +65,6 @@ public class AiChatService {
     private static final long TOOL_LOOP_DEADLINE_MILLIS = 90_000L;
 
     /**
-     * 单次请求 prompt 长度上限。
-     * 超出将直接拒绝，防止 token 滥用 / 内存爆炸 / 上游 context overflow。
-     */
-    private static final int MAX_PROMPT_LENGTH = 100_000;
-
-    /**
      * 工具调用循环结果。
      * 持有最终 ChatResponse、累计的 token 用量，以及是否因达到最大迭代次数而中止。
      */
@@ -286,39 +280,9 @@ public class AiChatService {
     }
 
     /**
-     * 校验 prompt 长度。返回 null 表示通过，否则返回错误响应。
-     */
-    private static ResponseData validatePromptLength(String systemPrompt, String userPrompt) {
-        int sysLen = systemPrompt == null ? 0 : systemPrompt.length();
-        int userLen = userPrompt == null ? 0 : userPrompt.length();
-        if (sysLen > MAX_PROMPT_LENGTH) {
-            return ResponseData.errorMsg("系统提示词过长(" + sysLen + " > " + MAX_PROMPT_LENGTH + ")，请精简后重试");
-        }
-        if (userLen > MAX_PROMPT_LENGTH) {
-            return ResponseData.errorMsg("用户提示词过长(" + userLen + " > " + MAX_PROMPT_LENGTH + ")，请精简后重试");
-        }
-        return null;
-    }
-
-    /**
-     * 校验 prompt 长度（流式场景，返回 Flux 错误流）。返回 null 表示通过。
-     */
-    private static Flux<String> validatePromptLengthFlux(String systemPrompt, String userPrompt) {
-        ResponseData result = validatePromptLength(systemPrompt, userPrompt);
-        if (result == null) {
-            return null;
-        }
-        return Flux.just(result.toString());
-    }
-
-    /**
      * ChatClient 简单调用。
      */
     public static ResponseData<String> generate(long saasId, long userId, int userType, String userInfo, long configId, String systemPrompt, String userPrompt, List<AiToolCallInfo> toolList, Map<String, Object> toolContext, MultipartFile[] fileList, long[] ragLibIds) {
-        ResponseData promptCheck = validatePromptLength(systemPrompt, userPrompt);
-        if (promptCheck != null) {
-            return promptCheck;
-        }
         ChatClient chatClient;
         try {
             chatClient = AiVendorHelper.getChatClient(configId);
@@ -438,10 +402,6 @@ public class AiChatService {
      * ChatClient 流式调用
      */
     public static Flux<String> chatGenerate(long saasId, long userId, int userType, String userInfo, long configId, String systemPrompt, String userPrompt, List<AiToolCallInfo> toolList, Map<String, Object> toolContext, MultipartFile[] fileList, long[] ragLibIds) {
-        Flux<String> promptCheck = validatePromptLengthFlux(systemPrompt, userPrompt);
-        if (promptCheck != null) {
-            return promptCheck;
-        }
         ChatClient chatClient;
         try {
             chatClient = AiVendorHelper.getChatClient(configId);
@@ -833,10 +793,6 @@ public class AiChatService {
      * ChatClient 流式调用
      */
     public static Flux<String> chat(long saasId, long userId, int userType, String userInfo, long configId, long sessionId, String systemPrompt, String userPrompt, List<AiToolCallInfo> toolList, Map<String, Object> toolContext, MultipartFile[] fileList, long[] ragLibIds) {
-        Flux<String> promptCheck = validatePromptLengthFlux(systemPrompt, userPrompt);
-        if (promptCheck != null) {
-            return promptCheck;
-        }
         // 初始化会话信息
         AiSessionInfo sessionInfo;
         if (sessionId > 0) {
