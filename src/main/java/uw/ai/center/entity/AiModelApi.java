@@ -414,22 +414,4 @@ public class AiModelApi implements DataEntity,Serializable{
                 + ", state=" + state + ", createDate=" + createDate + ", modifyDate=" + modifyDate + '}';
     }
 
-    /**
-     * API密钥掩码处理。
-     * 只显示前半部分，后半部分用****代替，方便辨识同时保护密钥安全。
-     * 如：sk-abcdefghij1234 → sk-abcde****
-     *
-     * @param apiKey 原始API密钥
-     * @return 掩码后的API密钥
-     */
-    public static String maskApiKey(String apiKey) {
-        if (apiKey == null || apiKey.isEmpty()) {
-            return "";
-        }
-        if (apiKey.length() <= 8) {
-            return apiKey.substring(0, Math.min(4, apiKey.length())) + "****";
-        }
-        return apiKey.substring(0, 8) + "****";
-    }
-
 }

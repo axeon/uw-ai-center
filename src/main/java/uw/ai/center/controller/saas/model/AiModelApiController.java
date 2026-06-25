@@ -18,6 +18,7 @@ import uw.common.app.dto.*;
 import uw.common.app.entity.*;
 import uw.common.app.helper.SysDataHistoryHelper;
 import uw.common.response.ResponseData;
+import uw.common.util.MaskUtils;
 import uw.common.util.SystemClock;
 import uw.dao.DaoManager;
 import uw.common.data.PageList;
@@ -48,7 +49,7 @@ public class AiModelApiController {
         queryParam.saasId(AuthServiceHelper.getSaasId());
         return dao.list(AiModelApi.class, queryParam).onSuccess(dataList -> {
             for (AiModelApi item : dataList) {
-                item.setApiKey(AiModelApi.maskApiKey(item.getApiKey()));
+                item.setApiKey(MaskUtils.maskSecret(item.getApiKey()));
             }
         });
     }
@@ -67,7 +68,7 @@ public class AiModelApiController {
         queryParam.SELECT_SQL( "SELECT id,saas_id,mch_id,api_code,api_name,api_url,api_key,state,create_date,modify_date from ai_model_api " );
         return dao.list(AiModelApi.class, queryParam).onSuccess(dataList -> {
             for (AiModelApi item : dataList) {
-                item.setApiKey(AiModelApi.maskApiKey(item.getApiKey()));
+                item.setApiKey(MaskUtils.maskSecret(item.getApiKey()));
             }
         });
     }
@@ -85,7 +86,7 @@ public class AiModelApiController {
         AuthServiceHelper.logRef(AiModelApi.class,id);
         return dao.queryForObject(AiModelApi.class, new AuthIdQueryParam(AuthServiceHelper.getSaasId(), id)).onSuccess(item -> {
             if (item != null) {
-                item.setApiKey(AiModelApi.maskApiKey(item.getApiKey()));
+                item.setApiKey(MaskUtils.maskSecret(item.getApiKey()));
             }
         });
     }

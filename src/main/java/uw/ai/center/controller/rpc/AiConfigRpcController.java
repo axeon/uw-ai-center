@@ -21,6 +21,7 @@ import uw.auth.service.annotation.ResponseAdviceIgnore;
 import uw.auth.service.constant.UserType;
 import uw.common.app.constant.CommonState;
 import uw.common.response.ResponseData;
+import uw.common.util.MaskUtils;
 import uw.dao.DaoManager;
 import uw.common.data.PageList;
 
@@ -256,7 +257,7 @@ public class AiConfigRpcController implements AiConfigRpc {
         vo.setApiName(api.getApiName());
         vo.setApiDesc(api.getApiDesc());
         vo.setApiUrl(api.getApiUrl());
-        vo.setApiKey(AiModelApi.maskApiKey(api.getApiKey()));
+        vo.setApiKey(MaskUtils.maskSecret(api.getApiKey()));
         vo.setState(api.getState());
         vo.setCreateDate(api.getCreateDate());
         vo.setModifyDate(api.getModifyDate());

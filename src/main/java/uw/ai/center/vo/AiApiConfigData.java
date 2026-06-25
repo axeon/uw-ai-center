@@ -2,6 +2,7 @@ package uw.ai.center.vo;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import uw.ai.center.entity.AiModelApi;
+import uw.common.util.MaskUtils;
 
 import java.util.Date;
 
@@ -62,10 +63,10 @@ public class AiApiConfigData {
 
     /**
      * 获取API密钥（掩码处理，用于前端展示）。
-     * 只显示前半部分，后半部分用****代替，方便辨识同时保护密钥安全。
+     * 使用 MaskUtils.maskSecret 保留前4后4，中间固定掩码。
      */
     public String getApiKey() {
-        return AiModelApi.maskApiKey(aiModelApi.getApiKey());
+        return MaskUtils.maskSecret(aiModelApi.getApiKey());
     }
 
     /**
