@@ -5,13 +5,14 @@ import uw.common.app.dto.AuthPageQueryParam;
 import uw.dao.annotation.QueryMeta;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
- * session消息列表查询参数。
- */
+* session消息列表查询参数。
+*/
 @Schema(title = "session消息列表查询参数", description = "session消息列表查询参数")
-public class AiSessionMsgQueryParam extends AuthPageQueryParam {
+public class AiSessionMsgQueryParam extends AuthPageQueryParam{
 
     public AiSessionMsgQueryParam() {
         super();
@@ -20,27 +21,27 @@ public class AiSessionMsgQueryParam extends AuthPageQueryParam {
     public AiSessionMsgQueryParam(Long saasId) {
         super(saasId);
     }
-
-    private static final Map<String, String> ALLOWED_SORT_PROPERTY = Map.ofEntries(
-        Map.entry("id", "id"),
-        Map.entry("saasId", "saas_id"),
-        Map.entry("userId", "user_id"),
-        Map.entry("userType", "user_type"),
-        Map.entry("userInfo", "user_info"),
-        Map.entry("configId", "config_id"),
-        Map.entry("sessionId", "session_id"),
-        Map.entry("requestTokens", "request_tokens"),
-        Map.entry("responseTokens", "response_tokens"),
-        Map.entry("requestDate", "request_date"),
-        Map.entry("responseStartDate", "response_start_date"),
-        Map.entry("responseEndDate", "response_end_date"),
-        Map.entry("state", "state")
-);
+	
 
     /**
-     * 允许的排序属性。
+     * 允许排序的属性。
+     * key:排序名 value:排序字段
      *
-     * @return
+     */
+    private static final Map<String, String> ALLOWED_SORT_PROPERTY = Map.ofEntries(
+        Map.entry( "id", "id" ),
+        Map.entry( "saasId", "saas_id" ),
+        Map.entry( "userId", "user_id" ),
+        Map.entry( "configId", "config_id" ),
+        Map.entry( "sessionId", "session_id" ),
+        Map.entry( "requestDate", "request_date" ),
+        Map.entry( "responseStartDate", "response_start_date" ),
+        Map.entry( "responseEndDate", "response_end_date" )
+        );
+
+    /**
+     * 获取允许排序的属性。
+     *
      */
     @Override
     public Map<String, String> ALLOWED_SORT_PROPERTY() {
@@ -48,527 +49,585 @@ public class AiSessionMsgQueryParam extends AuthPageQueryParam {
     }
 
     /**
-     * ID。
-     */
+    * ID。
+    */
     @QueryMeta(expr = "id=?")
-    @Schema(title = "ID", description = "ID")
+    @Schema(title="ID", description = "ID")
     private Long id;
 
     /**
-     * ID数组。
-     */
+    * ID数组。
+    */
     @QueryMeta(expr = "id in (?)")
-    @Schema(title = "ID数组", description = "ID数组，可同时匹配多个。")
+    @Schema(title="ID数组", description = "ID数组，可同时匹配多个。")
     private Long[] ids;
 
     /**
-     * 用户id。
-     */
+    * 用户id。
+    */
     @QueryMeta(expr = "user_id=?")
-    @Schema(title = "用户id", description = "用户id")
+    @Schema(title="用户id", description = "用户id")
     private Long userId;
-
+	
     /**
-     * 用户类型。
-     */
+    * 用户类型。
+    */
     @QueryMeta(expr = "user_type=?")
-    @Schema(title = "用户类型", description = "用户类型")
+    @Schema(title="用户类型", description = "用户类型")
     private Integer userType;
-
+	
     /**
-     * 用户名。
-     */
+    * 用户名。
+    */
     @QueryMeta(expr = "user_info like ?")
-    @Schema(title = "用户名", description = "用户名")
+    @Schema(title="用户名", description = "用户名")
     private String userInfo;
-
+	
     /**
-     * 配置ID。
-     */
+    * 配置ID。
+    */
     @QueryMeta(expr = "config_id=?")
-    @Schema(title = "配置ID", description = "配置ID")
+    @Schema(title="配置ID", description = "配置ID")
     private Long configId;
-
+	
     /**
-     * sessionId。
-     */
+    * sessionId。
+    */
     @QueryMeta(expr = "session_id=?")
-    @Schema(title = "sessionId", description = "sessionId")
+    @Schema(title="sessionId", description = "sessionId")
     private Long sessionId;
+	
+    /**
+    * RAG检索是否启用。
+    */
+    @QueryMeta(expr = "rag_enable=?")
+    @Schema(title="RAG检索是否启用", description = "RAG检索是否启用")
+    private Integer ragEnable;
 
     /**
-     * 请求token数。
-     */
+    * RAG检索是否启用范围。
+    */
+    @QueryMeta(expr = "rag_enable between ? and ?")
+    @Schema(title="RAG检索是否启用范围", description = "RAG检索是否启用范围")
+    private Integer[] ragEnableRange;
+	
+    /**
+    * 请求token数。
+    */
     @QueryMeta(expr = "request_tokens=?")
-    @Schema(title = "请求token数", description = "请求token数")
+    @Schema(title="请求token数", description = "请求token数")
     private Long requestTokens;
 
     /**
-     * 请求token数范围。
-     */
+    * 请求token数范围。
+    */
     @QueryMeta(expr = "request_tokens between ? and ?")
-    @Schema(title = "请求token数范围", description = "请求token数范围")
+    @Schema(title="请求token数范围", description = "请求token数范围")
     private Long[] requestTokensRange;
-
+	
     /**
-     * 响应token数。
-     */
+    * 响应token数。
+    */
     @QueryMeta(expr = "response_tokens=?")
-    @Schema(title = "响应token数", description = "响应token数")
+    @Schema(title="响应token数", description = "响应token数")
     private Long responseTokens;
 
     /**
-     * 响应token数范围。
-     */
+    * 响应token数范围。
+    */
     @QueryMeta(expr = "response_tokens between ? and ?")
-    @Schema(title = "响应token数范围", description = "响应token数范围")
+    @Schema(title="响应token数范围", description = "响应token数范围")
     private Long[] responseTokensRange;
-
+	
     /**
-     * 创建时间范围。
-     */
+    * 创建时间范围。
+    */
     @QueryMeta(expr = "request_date between ? and ?")
-    @Schema(title = "创建时间范围", description = "创建时间范围")
+    @Schema(title="创建时间范围", description = "创建时间范围")
     private Date[] requestDateRange;
 
     /**
-     * 回应开始时间范围。
-     */
+    * 回应开始时间范围。
+    */
     @QueryMeta(expr = "response_start_date between ? and ?")
-    @Schema(title = "回应开始时间范围", description = "回应开始时间范围")
+    @Schema(title="回应开始时间范围", description = "回应开始时间范围")
     private Date[] responseStartDateRange;
 
     /**
-     * 回应结束时间范围。
-     */
+    * 回应结束时间范围。
+    */
     @QueryMeta(expr = "response_end_date between ? and ?")
-    @Schema(title = "回应结束时间范围", description = "回应结束时间范围")
+    @Schema(title="回应结束时间范围", description = "回应结束时间范围")
     private Date[] responseEndDateRange;
 
     /**
-     * 状态。
-     */
+    * 状态。
+    */
     @QueryMeta(expr = "state=?")
-    @Schema(title = "状态", description = "状态")
+    @Schema(title="状态", description = "状态")
     private Integer state;
 
     /**
-     * 状态数组。
-     */
+    * 状态数组。
+    */
     @QueryMeta(expr = "state in (?)")
-    @Schema(title = "状态数组", description = "状态数组，可同时匹配多个状态。")
+    @Schema(title="状态数组", description = "状态数组，可同时匹配多个状态。")
     private Integer[] states;
 
     /**
-     * 大于等于状态。
-     */
+    * 大于等于状态。
+    */
     @QueryMeta(expr = "state>=?")
-    @Schema(title = "大于等于状态", description = "大于等于状态")
+    @Schema(title="大于等于状态", description = "大于等于状态")
     private Integer stateGte;
 
     /**
-     * 小于等于状态。
-     */
+    * 小于等于状态。
+    */
     @QueryMeta(expr = "state<=?")
-    @Schema(title = "小于等于状态", description = "小于等于状态")
+    @Schema(title="小于等于状态", description = "小于等于状态")
     private Integer stateLte;
 
 
     /**
-     * 获取ID。
-     */
+    * 获取ID。
+    */
     public Long getId() {
         return this.id;
     }
 
     /**
-     * 设置ID。
-     */
+    * 设置ID。
+    */
     public void setId(Long id) {
         this.id = id;
     }
 
     /**
-     * 设置ID链式调用。
-     */
+    * 设置ID链式调用。
+    */
     public AiSessionMsgQueryParam id(Long id) {
         setId(id);
         return this;
     }
 
     /**
-     * 获取ID数组。
-     */
+    * 获取ID数组。
+    */
     public Long[] getIds() {
         return this.ids;
     }
 
     /**
-     * 设置ID数组。
-     */
+    * 设置ID数组。
+    */
     public void setIds(Long[] ids) {
         this.ids = ids;
     }
 
     /**
-     * 设置ID数组链式调用。
-     */
+    * 设置ID数组链式调用。
+    */
     public AiSessionMsgQueryParam ids(Long[] ids) {
         setIds(ids);
         return this;
     }
 
     /**
-     * 获取用户id。
-     */
-    public Long getUserId() {
+    * 获取用户id。
+    */
+    public Long getUserId(){
         return this.userId;
     }
 
     /**
-     * 设置用户id。
-     */
-    public void setUserId(Long userId) {
+    * 设置用户id。
+    */
+    public void setUserId(Long userId){
         this.userId = userId;
     }
-
+	
     /**
-     * 设置用户id链式调用。
-     */
-    public AiSessionMsgQueryParam userId(Long userId) {
+    * 设置用户id链式调用。
+    */
+	public AiSessionMsgQueryParam userId(Long userId){
         setUserId(userId);
         return this;
     }
-
+	
     /**
-     * 获取用户类型。
-     */
-    public Integer getUserType() {
+    * 获取用户类型。
+    */
+    public Integer getUserType(){
         return this.userType;
     }
 
     /**
-     * 设置用户类型。
-     */
-    public void setUserType(Integer userType) {
+    * 设置用户类型。
+    */
+    public void setUserType(Integer userType){
         this.userType = userType;
     }
-
+	
     /**
-     * 设置用户类型链式调用。
-     */
-    public AiSessionMsgQueryParam userType(Integer userType) {
+    * 设置用户类型链式调用。
+    */
+	public AiSessionMsgQueryParam userType(Integer userType){
         setUserType(userType);
         return this;
     }
-
+	
     /**
-     * 获取用户名。
-     */
-    public String getUserInfo() {
+    * 获取用户名。
+    */
+    public String getUserInfo(){
         return this.userInfo;
     }
 
     /**
-     * 设置用户名。
-     */
-    public void setUserInfo(String userInfo) {
+    * 设置用户名。
+    */
+    public void setUserInfo(String userInfo){
         this.userInfo = userInfo;
     }
-
+	
     /**
-     * 设置用户名链式调用。
-     */
+    * 设置用户名链式调用。
+    */
     public AiSessionMsgQueryParam userInfo(String userInfo) {
         setUserInfo(userInfo);
         return this;
     }
-
+	
     /**
-     * 获取配置ID。
-     */
-    public Long getConfigId() {
+    * 获取配置ID。
+    */
+    public Long getConfigId(){
         return this.configId;
     }
 
     /**
-     * 设置配置ID。
-     */
-    public void setConfigId(Long configId) {
+    * 设置配置ID。
+    */
+    public void setConfigId(Long configId){
         this.configId = configId;
     }
-
+	
     /**
-     * 设置配置ID链式调用。
-     */
-    public AiSessionMsgQueryParam configId(Long configId) {
+    * 设置配置ID链式调用。
+    */
+	public AiSessionMsgQueryParam configId(Long configId){
         setConfigId(configId);
         return this;
     }
-
+	
     /**
-     * 获取sessionId。
-     */
-    public Long getSessionId() {
+    * 获取sessionId。
+    */
+    public Long getSessionId(){
         return this.sessionId;
     }
 
     /**
-     * 设置sessionId。
-     */
-    public void setSessionId(Long sessionId) {
+    * 设置sessionId。
+    */
+    public void setSessionId(Long sessionId){
         this.sessionId = sessionId;
+    }
+	
+    /**
+    * 设置sessionId链式调用。
+    */
+	public AiSessionMsgQueryParam sessionId(Long sessionId){
+        setSessionId(sessionId);
+        return this;
+    }
+	
+    /**
+    * 获取RAG检索是否启用。
+    */
+    public Integer getRagEnable(){
+        return this.ragEnable;
     }
 
     /**
-     * 设置sessionId链式调用。
-     */
-    public AiSessionMsgQueryParam sessionId(Long sessionId) {
-        setSessionId(sessionId);
+    * 设置RAG检索是否启用。
+    */
+    public void setRagEnable(Integer ragEnable){
+        this.ragEnable = ragEnable;
+    }
+	
+    /**
+    * 设置RAG检索是否启用链式调用。
+    */
+    public AiSessionMsgQueryParam ragEnable(Integer ragEnable){
+        setRagEnable(ragEnable);
         return this;
     }
 
     /**
-     * 获取请求token数。
-     */
-    public Long getRequestTokens() {
+    * 获取RAG检索是否启用范围。
+    */
+    public Integer[] getRagEnableRange(){
+        return this.ragEnableRange;
+    }
+
+    /**
+    * 设置RAG检索是否启用范围。
+    */
+    public void setRagEnableRange(Integer[] ragEnableRange){
+        this.ragEnableRange = ragEnableRange;
+    }
+	
+    /**
+    * 设置RAG检索是否启用范围链式调用。
+    */
+    public AiSessionMsgQueryParam ragEnableRange(Integer[] ragEnableRange){
+        setRagEnableRange(ragEnableRange);
+        return this;
+    }
+	
+    /**
+    * 获取请求token数。
+    */
+    public Long getRequestTokens(){
         return this.requestTokens;
     }
 
     /**
-     * 设置请求token数。
-     */
-    public void setRequestTokens(Long requestTokens) {
+    * 设置请求token数。
+    */
+    public void setRequestTokens(Long requestTokens){
         this.requestTokens = requestTokens;
     }
-
+	
     /**
-     * 设置请求token数链式调用。
-     */
-    public AiSessionMsgQueryParam requestTokens(Long requestTokens) {
+    * 设置请求token数链式调用。
+    */
+    public AiSessionMsgQueryParam requestTokens(Long requestTokens){
         setRequestTokens(requestTokens);
         return this;
     }
 
     /**
-     * 获取请求token数范围。
-     */
-    public Long[] getRequestTokensRange() {
+    * 获取请求token数范围。
+    */
+    public Long[] getRequestTokensRange(){
         return this.requestTokensRange;
     }
 
     /**
-     * 设置请求token数范围。
-     */
-    public void setRequestTokensRange(Long[] requestTokensRange) {
+    * 设置请求token数范围。
+    */
+    public void setRequestTokensRange(Long[] requestTokensRange){
         this.requestTokensRange = requestTokensRange;
     }
-
+	
     /**
-     * 设置请求token数范围链式调用。
-     */
-    public AiSessionMsgQueryParam requestTokensRange(Long[] requestTokensRange) {
+    * 设置请求token数范围链式调用。
+    */
+    public AiSessionMsgQueryParam requestTokensRange(Long[] requestTokensRange){
         setRequestTokensRange(requestTokensRange);
         return this;
     }
-
+	
     /**
-     * 获取响应token数。
-     */
-    public Long getResponseTokens() {
+    * 获取响应token数。
+    */
+    public Long getResponseTokens(){
         return this.responseTokens;
     }
 
     /**
-     * 设置响应token数。
-     */
-    public void setResponseTokens(Long responseTokens) {
+    * 设置响应token数。
+    */
+    public void setResponseTokens(Long responseTokens){
         this.responseTokens = responseTokens;
     }
-
+	
     /**
-     * 设置响应token数链式调用。
-     */
-    public AiSessionMsgQueryParam responseTokens(Long responseTokens) {
+    * 设置响应token数链式调用。
+    */
+    public AiSessionMsgQueryParam responseTokens(Long responseTokens){
         setResponseTokens(responseTokens);
         return this;
     }
 
     /**
-     * 获取响应token数范围。
-     */
-    public Long[] getResponseTokensRange() {
+    * 获取响应token数范围。
+    */
+    public Long[] getResponseTokensRange(){
         return this.responseTokensRange;
     }
 
     /**
-     * 设置响应token数范围。
-     */
-    public void setResponseTokensRange(Long[] responseTokensRange) {
+    * 设置响应token数范围。
+    */
+    public void setResponseTokensRange(Long[] responseTokensRange){
         this.responseTokensRange = responseTokensRange;
     }
-
+	
     /**
-     * 设置响应token数范围链式调用。
-     */
-    public AiSessionMsgQueryParam responseTokensRange(Long[] responseTokensRange) {
+    * 设置响应token数范围链式调用。
+    */
+    public AiSessionMsgQueryParam responseTokensRange(Long[] responseTokensRange){
         setResponseTokensRange(responseTokensRange);
         return this;
     }
-
+	
     /**
-     * 获取创建时间范围。
-     */
-    public Date[] getRequestDateRange() {
+    * 获取创建时间范围。
+    */
+    public Date[] getRequestDateRange(){
         return this.requestDateRange;
     }
 
     /**
-     * 设置创建时间范围。
-     */
-    public void setRequestDateRange(Date[] requestDateRange) {
+    * 设置创建时间范围。
+    */
+    public void setRequestDateRange(Date[] requestDateRange){
         this.requestDateRange = requestDateRange;
     }
-
+	
     /**
-     * 设置创建时间范围链式调用。
-     */
+    * 设置创建时间范围链式调用。
+    */
     public AiSessionMsgQueryParam requestDateRange(Date[] requestDateRange) {
         setRequestDateRange(requestDateRange);
         return this;
     }
-
+	
     /**
-     * 获取回应开始时间范围。
-     */
-    public Date[] getResponseStartDateRange() {
+    * 获取回应开始时间范围。
+    */
+    public Date[] getResponseStartDateRange(){
         return this.responseStartDateRange;
     }
 
     /**
-     * 设置回应开始时间范围。
-     */
-    public void setResponseStartDateRange(Date[] responseStartDateRange) {
+    * 设置回应开始时间范围。
+    */
+    public void setResponseStartDateRange(Date[] responseStartDateRange){
         this.responseStartDateRange = responseStartDateRange;
     }
-
+	
     /**
-     * 设置回应开始时间范围链式调用。
-     */
+    * 设置回应开始时间范围链式调用。
+    */
     public AiSessionMsgQueryParam responseStartDateRange(Date[] responseStartDateRange) {
         setResponseStartDateRange(responseStartDateRange);
         return this;
     }
-
+	
     /**
-     * 获取回应结束时间范围。
-     */
-    public Date[] getResponseEndDateRange() {
+    * 获取回应结束时间范围。
+    */
+    public Date[] getResponseEndDateRange(){
         return this.responseEndDateRange;
     }
 
     /**
-     * 设置回应结束时间范围。
-     */
-    public void setResponseEndDateRange(Date[] responseEndDateRange) {
+    * 设置回应结束时间范围。
+    */
+    public void setResponseEndDateRange(Date[] responseEndDateRange){
         this.responseEndDateRange = responseEndDateRange;
     }
-
+	
     /**
-     * 设置回应结束时间范围链式调用。
-     */
+    * 设置回应结束时间范围链式调用。
+    */
     public AiSessionMsgQueryParam responseEndDateRange(Date[] responseEndDateRange) {
         setResponseEndDateRange(responseEndDateRange);
         return this;
     }
-
+	
     /**
-     * 获取状态。
-     */
-    public Integer getState() {
+    * 获取状态。
+    */
+    public Integer getState(){
         return this.state;
     }
 
     /**
-     * 设置状态。
-     */
-    public void setState(Integer state) {
+    * 设置状态。
+    */
+    public void setState(Integer state){
         this.state = state;
     }
-
+	
     /**
-     * 设置状态链式调用。
-     */
+    * 设置状态链式调用。
+    */
     public AiSessionMsgQueryParam state(Integer state) {
         setState(state);
         return this;
     }
 
     /**
-     * 获取状态数组。
-     */
-    public Integer[] getStates() {
+    * 获取状态数组。
+    */
+    public Integer[] getStates(){
         return this.states;
     }
 
     /**
-     * 设置状态数组。
-     */
-    public void setStates(Integer[] states) {
+    * 设置状态数组。
+    */
+    public void setStates(Integer[] states){
         this.states = states;
     }
-
+	
     /**
-     * 设置状态数组链式调用。
-     */
+    * 设置状态数组链式调用。
+    */
     public AiSessionMsgQueryParam states(Integer[] states) {
         setStates(states);
         return this;
     }
-
+    
     /**
-     * 获取大于等于状态。
-     */
-    public Integer getStateGte() {
+    * 获取大于等于状态。
+    */
+    public Integer getStateGte(){
         return this.stateGte;
     }
 
     /**
-     * 设置大于等于状态。
-     */
-    public void setStateGte(Integer stateGte) {
+    * 设置大于等于状态。
+    */
+    public void setStateGte(Integer stateGte){
         this.stateGte = stateGte;
     }
-
+	
     /**
-     * 设置大于等于状态链式调用。
-     */
+    * 设置大于等于状态链式调用。
+    */
     public AiSessionMsgQueryParam stateGte(Integer stateGte) {
         setStateGte(stateGte);
         return this;
     }
-
+    
     /**
-     * 获取小于等于状态。
-     */
-    public Integer getStateLte() {
+    * 获取小于等于状态。
+    */
+    public Integer getStateLte(){
         return this.stateLte;
     }
 
     /**
-     * 获取小于等于状态。
-     */
-    public void setStateLte(Integer stateLte) {
+    * 获取小于等于状态。
+    */
+    public void setStateLte(Integer stateLte){
         this.stateLte = stateLte;
     }
-
+	
     /**
-     * 获取小于等于状态链式调用。
-     */
+    * 获取小于等于状态链式调用。
+    */
     public AiSessionMsgQueryParam stateLte(Integer stateLte) {
         setStateLte(stateLte);
         return this;
     }
-
+    
 
 }

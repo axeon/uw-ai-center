@@ -9,7 +9,6 @@ import uw.dao.annotation.ColumnMeta;
 import uw.dao.annotation.TableMeta;
 
 import java.io.Serializable;
-import java.util.Date;
 
 
 /**
@@ -120,7 +119,7 @@ public class AiModelConfig implements DataEntity,Serializable{
      */
     @ColumnMeta(columnName="create_date", dataType="java.util.Date", dataSize=23, nullable=true)
     @Schema(title = "创建时间", description = "创建时间", maxLength=23, nullable=true )
-    private Date createDate;
+    private java.util.Date createDate;
 
     /**
      * 修改时间
@@ -274,14 +273,14 @@ public class AiModelConfig implements DataEntity,Serializable{
     /**
      * 获取创建时间。
      */
-    public Date getCreateDate(){
+    public java.util.Date getCreateDate(){
         return this.createDate;
     }
 
     /**
      * 获取修改时间。
      */
-    public Date getModifyDate(){
+    public java.util.Date getModifyDate(){
         return this.modifyDate;
     }
 
@@ -497,7 +496,7 @@ public class AiModelConfig implements DataEntity,Serializable{
     /**
      * 设置创建时间。
      */
-    public void setCreateDate(Date createDate){
+    public void setCreateDate(java.util.Date createDate){
         _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "createDate", this.createDate, createDate, !_IS_LOADED );
         this.createDate = createDate;
     }
@@ -505,7 +504,7 @@ public class AiModelConfig implements DataEntity,Serializable{
     /**
      *  设置创建时间链式调用。
      */
-    public AiModelConfig createDate(Date createDate){
+    public AiModelConfig createDate(java.util.Date createDate){
         setCreateDate(createDate);
         return this;
     }
