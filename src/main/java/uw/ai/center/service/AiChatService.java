@@ -922,7 +922,7 @@ public class AiChatService {
                     try {
                         AiModelConfigData configData = AiVendorHelper.getModelConfigData(session.getConfigId());
                         if (configData != null) {
-                            session.setModelType(configData.getModelType());
+//                            session.setModelType(configData.getModelType());
                         }
                     } catch (Exception e) {
                         // 配置不在缓存中（可能已禁用），忽略
