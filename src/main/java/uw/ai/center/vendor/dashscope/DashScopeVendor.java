@@ -3,10 +3,14 @@ package uw.ai.center.vendor.dashscope;
 import org.springframework.stereotype.Service;
 import uw.ai.center.vendor.AiAudioTranscriptionVendor;
 import uw.ai.center.vendor.AiImageGenerationVendor;
+import uw.ai.center.vendor.AiRerankVendor;
 import uw.ai.center.vendor.client.AudioTranscriptionClient;
 import uw.ai.center.vendor.client.ImageGenerationClient;
+import uw.ai.center.vendor.client.RerankClient;
 import uw.ai.center.vendor.dashscope.image.DashScopeImageModel;
 import uw.ai.center.vendor.dashscope.image.DashScopeImageParam;
+import uw.ai.center.vendor.dashscope.rerank.DashScopeRerankModel;
+import uw.ai.center.vendor.dashscope.rerank.DashScopeRerankParam;
 import uw.ai.center.vendor.dashscope.transcription.DashScopeAudioParam;
 import uw.ai.center.vendor.dashscope.transcription.DashScopeRealtimeTranscriptionModel;
 import uw.ai.center.vendor.dashscope.transcription.RealtimeTranscriptionModel;
@@ -23,11 +27,11 @@ import java.util.Map;
 
 /**
  * DashScope 协议 vendor 实现（阿里云原生 API）。
- * <p>implements 列表即能力清单：{@link AiImageGenerationVendor} + {@link AiAudioTranscriptionVendor}，
- * 类型系统直接表达"本 vendor 支持哪些能力"，无需点开源码看哪些方法被覆写。
+ * <p>implements 列表即能力清单：{@link AiImageGenerationVendor} + {@link AiAudioTranscriptionVendor}
+ * + {@link AiRerankVendor}，类型系统直接表达"本 vendor 支持哪些能力"，无需点开源码看哪些方法被覆写。
  */
 @Service
-public class DashScopeVendor implements AiImageGenerationVendor, AiAudioTranscriptionVendor {
+public class DashScopeVendor implements AiImageGenerationVendor, AiAudioTranscriptionVendor, AiRerankVendor {
 
     /**
      * {@inheritDoc}
@@ -67,7 +71,7 @@ public class DashScopeVendor implements AiImageGenerationVendor, AiAudioTranscri
 
     /**
      * {@inheritDoc}
-     * @return DashScope 配置参数集合（image/audio/tts 三类合并）
+     * @return DashScope 配置参数集合（image/audio/tts/rerank 四类合并）
      */
     @Override
     public List<JsonConfigParam> configParam() {
@@ -75,6 +79,7 @@ public class DashScopeVendor implements AiImageGenerationVendor, AiAudioTranscri
         params.addAll(Arrays.asList(DashScopeImageParam.Config.values()));
         params.addAll(Arrays.asList(DashScopeAudioParam.Config.values()));
         params.addAll(Arrays.asList(DashScopeTtsParam.Config.values()));
+        params.addAll(Arrays.asList(DashScopeRerankParam.Config.values()));
         return params;
     }
 
@@ -164,6 +169,38 @@ public class DashScopeVendor implements AiImageGenerationVendor, AiAudioTranscri
                 workspaceId,
                 params
         );
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>从 {@link AiModelConfigData} 读 apiUrl/apiKey/modelName 和 model_data 中的 rerank 默认参数，
+     * 构造 {@link DashScopeRerankModel} 注入到 {@link RerankClient}。配置变更后通过
+     * {@code invalidateConfig} 触发 CacheChangeNotifyListener → 重建 client。
+     */
+    @Override
+    public RerankClient buildRerankClient(AiModelConfigData configData) {
+        JsonConfigBox configParamBox = configData.getConfigParamBox();
+        Map<String, Object> params = new HashMap<>();
+        if (configParamBox != null) {
+            int topN = configParamBox.getIntParam("rerank.top.n", 0);
+            if (topN > 0) {
+                params.put("top_n", topN);
+            }
+            String instruct = configParamBox.getParam("rerank.instruct", "");
+            if (instruct != null && !instruct.isEmpty()) {
+                params.put("instruct", instruct);
+            }
+            params.put("return_documents", configParamBox.getBooleanParam("rerank.return.documents", true));
+        } else {
+            // configParamBox 为 null 时使用枚举默认值兜底（returnDocuments=true）
+            params.put("return_documents", true);
+        }
+        DashScopeRerankModel model = new DashScopeRerankModel(
+                configData.getApiUrl(),
+                configData.getApiKeyRaw(),
+                configData.getModelName(),
+                params);
+        return new RerankClient(configData, model);
     }
 
     /**

@@ -7,6 +7,7 @@ import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uw.ai.center.vo.RerankResult;
 import uw.httpclient.http.HttpData;
 import uw.httpclient.json.JsonInterfaceHelper;
 
@@ -279,5 +280,92 @@ public class DashScopeApiClient {
     public static byte[] synthesizeSpeech(String baseUrl, String apiKey, String model, String text, Map<String, Object> params) {
         // 语音合成将在功能点4中实现
         throw new UnsupportedOperationException("语音合成功能将在后续功能点中实现");
+    }
+
+    // ==================== DashScope 重排 ====================
+
+    /**
+     * 文本重排（qwen3-rerank）。
+     * 对召回结果按与 query 的语义相关性进行二次精准排序，调用 DashScope 原生 rerank 端点。
+     *
+     * @param baseUrl   DashScope API 基础 URL（如 https://dashscope.aliyuncs.com/api/v1）
+     * @param apiKey    API Key
+     * @param model     模型名（如 qwen3-rerank）
+     * @param query     查询文本
+     * @param documents 候选文档列表
+     * @param params    重排参数（key 与 DashScope API 字段名一致：top_n/return_documents/instruct）
+     * @return 重排结果（items 已按 relevanceScore 降序）
+     */
+    public static RerankResult rerank(String baseUrl, String apiKey, String model,
+                                      String query, List<String> documents, Map<String, Object> params) {
+        String nativeBaseUrl = resolveNativeApiBaseUrl(baseUrl);
+        String rerankUrl = nativeBaseUrl + "/services/rerank/text-rerank/text-rerank";
+
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Authorization", "Bearer " + apiKey);
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("query", query);
+        input.put("documents", documents);
+
+        Map<String, Object> parameters = new HashMap<>();
+        if (params != null) {
+            parameters.putAll(params);
+        }
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("model", model);
+        body.put("input", input);
+        body.put("parameters", parameters);
+
+        logger.info("DashScope重排请求: url={}, model={}, documents={}", rerankUrl, model, documents.size());
+        if (logger.isDebugEnabled()) {
+            logger.debug("DashScope重排请求参数: parameters={}", parameters);
+        }
+
+        try {
+            HttpData httpData = HTTP_HELPER.postBodyForData(rerankUrl, headers, body);
+            String responseBody = httpData.getResponseData();
+            logger.info("DashScope重排响应: statusCode={}", httpData.getStatusCode());
+            if (logger.isDebugEnabled()) {
+                logger.debug("DashScope重排响应体: body={}", truncateBody(responseBody));
+            }
+
+            JsonNode responseJson = OBJECT_MAPPER.readTree(responseBody);
+
+            // DashScope 失败响应：status_code 非 200 或 code 非空
+            String statusCode = responseJson.path("status_code").asText();
+            String code = responseJson.path("code").asText("");
+            if (!statusCode.isEmpty() && !"200".equals(statusCode)) {
+                String message = responseJson.path("message").asText("");
+                throw new RuntimeException("DashScope重排调用失败: statusCode=" + statusCode
+                        + ", code=" + code + ", message=" + message);
+            }
+            if (!code.isEmpty()) {
+                String message = responseJson.path("message").asText("");
+                throw new RuntimeException("DashScope重排调用失败: code=" + code
+                        + ", message=" + message);
+            }
+
+            List<RerankResult.RerankItem> items = new ArrayList<>();
+            JsonNode resultsNode = responseJson.path("output").path("results");
+            if (resultsNode.isArray()) {
+                for (JsonNode r : resultsNode) {
+                    int index = r.path("index").asInt(0);
+                    double relevanceScore = r.path("relevance_score").asDouble(0.0);
+                    JsonNode docNode = r.path("document").path("text");
+                    String docText = (docNode.isMissingNode() || docNode.isNull()) ? null : docNode.asText();
+                    items.add(new RerankResult.RerankItem(index, relevanceScore, docText));
+                }
+            }
+
+            int totalTokens = responseJson.path("usage").path("total_tokens").asInt(0);
+            logger.info("DashScope重排成功: items={}, totalTokens={}", items.size(), totalTokens);
+            return new RerankResult(items, totalTokens);
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException("DashScope重排调用失败: " + e.getMessage(), e);
+        }
     }
 }

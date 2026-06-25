@@ -16,6 +16,7 @@ import uw.ai.center.vendor.client.AudioTranscriptionClient;
 import uw.ai.center.vendor.client.ChatClient;
 import uw.ai.center.vendor.client.EmbeddingClient;
 import uw.ai.center.vendor.client.ImageGenerationClient;
+import uw.ai.center.vendor.client.RerankClient;
 import uw.cache.CacheChangeNotifyListener;
 import uw.cache.CacheDataLoader;
 import uw.cache.FusionCache;
@@ -182,6 +183,13 @@ public class AiVendorHelper {
      */
     public static AudioTranscriptionClient getAudioTranscriptionClient(long configId) {
         return asType(getClient(configId), ModelType.AUDIO_TRANSCRIPTION, AudioTranscriptionClient.class, configId);
+    }
+
+    /**
+     * 获取 RERANK 类型客户端。类型不符时抛 IllegalStateException。
+     */
+    public static RerankClient getRerankClient(long configId) {
+        return asType(getClient(configId), ModelType.RERANK, RerankClient.class, configId);
     }
 
     /**
@@ -455,6 +463,12 @@ public class AiVendorHelper {
                     throw unsupported(vendor, modelType, configId);
                 }
                 yield av.buildAudioTranscriptionClient(configData);
+            }
+            case RERANK -> {
+                if (!(vendor instanceof AiRerankVendor rv)) {
+                    throw unsupported(vendor, modelType, configId);
+                }
+                yield rv.buildRerankClient(configData);
             }
             default -> throw new IllegalStateException("模型类型[" + modelType + "]暂未接入能力接口, configId=" + configId);
         };
