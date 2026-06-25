@@ -2,7 +2,7 @@ package uw.ai.center.vendor.client;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import uw.ai.center.constant.ModelType;
-import uw.ai.center.vendor.dashscope.realtimeTranscriptionModel.RealtimeTranscriptionModel;
+import uw.ai.center.vendor.dashscope.transcription.RealtimeTranscriptionModel;
 import uw.ai.center.vo.AiModelConfigData;
 
 import java.util.function.Supplier;

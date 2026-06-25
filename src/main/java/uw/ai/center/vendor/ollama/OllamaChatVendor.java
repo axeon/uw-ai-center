@@ -1,13 +1,10 @@
 package uw.ai.center.vendor.ollama;
 
 import dev.langchain4j.model.ollama.OllamaChatModel;
-import dev.langchain4j.model.ollama.OllamaEmbeddingModel;
 import dev.langchain4j.model.ollama.OllamaStreamingChatModel;
 import org.springframework.stereotype.Service;
-import uw.ai.center.vendor.capability.ChatVendor;
-import uw.ai.center.vendor.capability.EmbeddingVendor;
+import uw.ai.center.vendor.AiChatVendor;
 import uw.ai.center.vendor.client.ChatClient;
-import uw.ai.center.vendor.client.EmbeddingClient;
 import uw.ai.center.vo.AiModelConfigData;
 import uw.common.app.vo.JsonConfigBox;
 import uw.common.app.vo.JsonConfigParam;
@@ -17,12 +14,14 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Ollama 协议 vendor 实现。
- * <p>implements 列表即能力清单：{@link ChatVendor} + {@link EmbeddingVendor}，
- * 类型系统直接表达"本 vendor 支持哪些能力"，无需点开源码看哪些方法被覆写。
+ * Ollama 协议 CHAT 能力 Vendor。
+ * <p>implements 列表即能力清单：{@link AiChatVendor}，类型系统直接表达"本 vendor 仅支持 CHAT"，
+ * 无需点开源码看哪些方法被覆写。
+ * <p>EMBEDDING 能力由独立的 {@link OllamaEmbeddingVendor} 提供，数据库 vendor_class 字段
+ * 按模型 modelType 区分填本类或子 Vendor 的 className。
  */
 @Service
-public class OllamaVendor implements ChatVendor, EmbeddingVendor {
+public class OllamaChatVendor implements AiChatVendor {
 
     /**
      * {@inheritDoc}
@@ -93,20 +92,6 @@ public class OllamaVendor implements ChatVendor, EmbeddingVendor {
                 .build();
 
         return new ChatClient(configData, syncModel, streamingModel);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public EmbeddingClient buildEmbeddingClient(AiModelConfigData configData) {
-        var embeddingModel = OllamaEmbeddingModel.builder()
-                .baseUrl(configData.getApiUrl())
-                .modelName(configData.getModelName())
-                .timeout(Duration.ofSeconds(60))
-                .build();
-
-        return new EmbeddingClient(configData, embeddingModel);
     }
 
     /**

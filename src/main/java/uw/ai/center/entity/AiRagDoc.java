@@ -82,15 +82,15 @@ public class AiRagDoc implements DataEntity,Serializable{
     /**
      * 文档主体大小
      */
-    @ColumnMeta(columnName="doc_body_size", dataType="long", dataSize=19, nullable=true)
-    @Schema(title = "文档主体大小", description = "文档主体大小", maxLength=19, nullable=true )
+    @ColumnMeta(columnName="doc_body_size", dataType="long", dataSize=19, nullable=false)
+    @Schema(title = "文档主体大小", description = "文档主体大小", maxLength=19, nullable=false )
     private long docBodySize;
 
     /**
      * 文档内容大小
      */
-    @ColumnMeta(columnName="doc_content_size", dataType="long", dataSize=19, nullable=true)
-    @Schema(title = "文档内容大小", description = "文档内容大小", maxLength=19, nullable=true )
+    @ColumnMeta(columnName="doc_content_size", dataType="long", dataSize=19, nullable=false)
+    @Schema(title = "文档内容大小", description = "文档内容大小", maxLength=19, nullable=false )
     private long docContentSize;
 
     /**
@@ -110,8 +110,8 @@ public class AiRagDoc implements DataEntity,Serializable{
     /**
      * 状态
      */
-    @ColumnMeta(columnName="state", dataType="int", dataSize=10, nullable=true)
-    @Schema(title = "状态", description = "状态", maxLength=10, nullable=true )
+    @ColumnMeta(columnName="state", dataType="int", dataSize=10, nullable=false)
+    @Schema(title = "状态", description = "状态", maxLength=10, nullable=false )
     private int state;
 
     /**

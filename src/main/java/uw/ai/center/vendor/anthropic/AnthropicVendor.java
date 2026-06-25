@@ -3,7 +3,7 @@ package uw.ai.center.vendor.anthropic;
 import dev.langchain4j.model.anthropic.AnthropicChatModel;
 import dev.langchain4j.model.anthropic.AnthropicStreamingChatModel;
 import org.springframework.stereotype.Service;
-import uw.ai.center.vendor.capability.ChatVendor;
+import uw.ai.center.vendor.AiChatVendor;
 import uw.ai.center.vendor.client.ChatClient;
 import uw.ai.center.vo.AiModelConfigData;
 import uw.common.app.vo.JsonConfigBox;
@@ -15,14 +15,14 @@ import java.util.List;
 
 /**
  * Anthropic 协议 vendor 实现。
- * <p>implements 列表即能力清单：{@link ChatVendor}，类型系统直接表达"本 vendor 仅支持 CHAT"，
+ * <p>implements 列表即能力清单：{@link AiChatVendor}，类型系统直接表达"本 vendor 仅支持 CHAT"，
  * 无需点开源码看哪些方法被覆写。
  * <p>同一 Vendor 既能接官方 Anthropic（Claude 系列），也能接 Anthropic 兼容代理
  * （阿里云百炼调千问、Kimi、智谱 GLM-4.5 等）：{@code baseUrl + apiKey} 在 ai_model_api 中按供应商填写。
  * <p>由于 langchain4j-anthropic 不提供 EmbeddingModel，本协议仅支持 CHAT。
  */
 @Service
-public class AnthropicVendor implements ChatVendor {
+public class AnthropicVendor implements AiChatVendor {
 
     /**
      * {@inheritDoc}

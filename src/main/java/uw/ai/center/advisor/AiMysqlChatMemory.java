@@ -37,16 +37,17 @@ public class AiMysqlChatMemory {
      * 先按 id 降序取最近 N 条（N 由 windowSize 控制），再反转为升序，
      * 保证历史消息时间顺序正确（最旧在前、最新在前）。
      *
+     * @param saasId     租户ID（与 sessionId 联合校验归属）
      * @param sessionId  会话ID
      * @param windowSize 每轮对话消息对数量上限（&lt;=0 时使用默认值 50，&gt;MAX_HISTORY_LIMIT 时截断）
      */
-    public static List<ChatMessage> load(long sessionId, int windowSize) {
+    public static List<ChatMessage> load(long saasId, long sessionId, int windowSize) {
         int limit = resolveLimit(windowSize);
         List<ChatMessage> messages = new ArrayList<>(limit * 2);
         try {
             dao.list(AiSessionMsg.class,
-                    "select id, session_id, user_prompt, response_info from ai_session_msg where session_id=? and state=? order by id desc limit ?",
-                    new Object[]{sessionId, CommonState.ENABLED.getValue(), limit}).onSuccess(msgList -> {
+                    "select id, session_id, user_prompt, response_info from ai_session_msg where saas_id=? and session_id=? and state=? order by id desc limit ?",
+                    new Object[]{saasId, sessionId, CommonState.ENABLED.getValue(), limit}).onSuccess(msgList -> {
                 // 数据库按 id desc 返回（最新在前），反向遍历后追加（最旧在前）
                 List<AiSessionMsg> raw = msgList.list();
                 for (int i = raw.size() - 1; i >= 0; i--) {
@@ -62,7 +63,7 @@ public class AiMysqlChatMemory {
                 }
             });
         } catch (Exception e) {
-            logger.error("加载会话历史消息失败, sessionId={}, windowSize={}", sessionId, windowSize, e);
+            logger.error("加载会话历史消息失败, saasId={}, sessionId={}, windowSize={}", saasId, sessionId, windowSize, e);
         }
         return messages;
     }
@@ -81,11 +82,12 @@ public class AiMysqlChatMemory {
      * 软删除会话消息（将启用状态的消息置为删除状态）。
      * <p>清除历史后，load() 不再返回这些消息，相当于重置多轮对话上下文。
      *
+     * @param saasId    租户ID（与 sessionId 联合校验归属）
      * @param sessionId 会话ID
      */
-    public static void clear(long sessionId) {
-        dao.execute("update ai_session_msg set state=? where session_id=? and state=?",
-                new Object[]{CommonState.DELETED.getValue(), sessionId,
+    public static void clear(long saasId, long sessionId) {
+        dao.execute("update ai_session_msg set state=? where saas_id=? and session_id=? and state=?",
+                new Object[]{CommonState.DELETED.getValue(), saasId, sessionId,
                         CommonState.ENABLED.getValue()});
     }
 }

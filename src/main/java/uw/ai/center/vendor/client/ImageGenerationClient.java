@@ -5,7 +5,7 @@ import dev.langchain4j.model.image.ImageModel;
 import dev.langchain4j.model.output.Response;
 import io.swagger.v3.oas.annotations.media.Schema;
 import uw.ai.center.constant.ModelType;
-import uw.ai.center.vendor.dashscope.imageModel.DashScopeImageModel;
+import uw.ai.center.vendor.dashscope.image.DashScopeImageModel;
 import uw.ai.center.vo.AiModelConfigData;
 
 import java.util.List;

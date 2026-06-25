@@ -1,4 +1,4 @@
-package uw.ai.center.vendor.dashscope.realtimeTranscriptionModel;
+package uw.ai.center.vendor.dashscope.transcription;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

@@ -25,7 +25,7 @@ import uw.common.response.ResponseData;
  */
 @RestController
 @RequestMapping("/user/translate")
-@Tag(name = "Ai翻译接口")
+@Tag(name = "AI翻译接口")
 public class AiTranslateUserController {
     private static final Logger log = LoggerFactory.getLogger( AiTranslateUserController.class );
 

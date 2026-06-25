@@ -1,4 +1,4 @@
-package uw.ai.center.vendor.dashscope.imageModel;
+package uw.ai.center.vendor.dashscope.image;
 
 import dev.langchain4j.data.image.Image;
 import dev.langchain4j.model.image.ImageModel;

@@ -1,6 +1,5 @@
-package uw.ai.center.vendor.capability;
+package uw.ai.center.vendor;
 
-import uw.ai.center.vendor.AiVendor;
 import uw.ai.center.vendor.client.EmbeddingClient;
 import uw.ai.center.vo.AiModelConfigData;
 
@@ -10,7 +9,7 @@ import uw.ai.center.vo.AiModelConfigData;
  * Vendor 类按需 implements 此接口——类的 implements 列表即能力清单，
  * 无需点开源码查看哪些方法被覆写。
  */
-public interface EmbeddingVendor extends AiVendor {
+public interface AiEmbeddingVendor extends AiVendor {
 
     /**
      * 构建 EMBEDDING 客户端实例。

@@ -59,10 +59,10 @@ public class AiChatService {
     private static final int MAX_TOOL_ITERATIONS = 10;
 
     /**
-     * 单次请求 prompt 长度上限。
-     * 超出将直接拒绝，防止 token 滥用 / 内存爆炸 / 上游 context overflow。
+     * 工具调用循环总超时(ms),避免下游工具微服务变慢时主调用线程被耗尽。
+     * 单次 chatModel.chat() ~120s,工具 RPC ~15s,默认 10 轮理论上界远超 90s,实际配 90s 兜底。
      */
-    private static final int MAX_PROMPT_LENGTH = 100_000;
+    private static final long TOOL_LOOP_DEADLINE_MILLIS = 90_000L;
 
     /**
      * 工具调用循环结果。
@@ -85,6 +85,21 @@ public class AiChatService {
     }
 
     /**
+     * 工具调用循环中 chatModel.chat() 抛异常时使用。
+     * 携带已累计的 token 计量,供上层在异常路径下也能落库 token,避免整条请求 token 用量丢失。
+     */
+    private static final class ToolLoopFailedException extends RuntimeException {
+        final int totalInputTokens;
+        final int totalOutputTokens;
+
+        ToolLoopFailedException(int totalInputTokens, int totalOutputTokens, Throwable cause) {
+            super("工具调用循环中 chatModel.chat() 失败", cause);
+            this.totalInputTokens = totalInputTokens;
+            this.totalOutputTokens = totalOutputTokens;
+        }
+    }
+
+    /**
      * 执行工具调用循环（generate/chatGenerate/chat 三处共用，避免逻辑重复）。
      * <p>
      * 每轮累加 token usage（修复原先只取最后一轮导致计量丢失的问题），达到 {@link #MAX_TOOL_ITERATIONS}
@@ -100,45 +115,61 @@ public class AiChatService {
     private static ToolLoopResult executeToolLoop(ChatModel chatModel, List<ChatMessage> messages,
                                                   List<ToolSpecification> toolSpecs,
                                                   Map<String, Object> toolContext, Object logKey) {
-        ChatRequest chatRequest = ChatRequest.builder()
-                .messages(messages)
-                .toolSpecifications(toolSpecs)
-                .build();
-        ChatResponse chatResponse = chatModel.chat(chatRequest);
-        AiMessage aiMessage = chatResponse.aiMessage();
-        int totalInputTokens = sumInputTokens(chatResponse.tokenUsage());
-        int totalOutputTokens = sumOutputTokens(chatResponse.tokenUsage());
+        long startTime = SystemClock.now();
+        ChatResponse chatResponse = null;
+        int totalInputTokens = 0;
+        int totalOutputTokens = 0;
         int iteration = 0;
         boolean maxReached = false;
-        while (aiMessage.hasToolExecutionRequests() && iteration < MAX_TOOL_ITERATIONS) {
-            iteration++;
-            for (ToolExecutionRequest req : aiMessage.toolExecutionRequests()) {
-                String toolInput = mergeToolContext(req.arguments(), toolContext);
-                String result;
-                try {
-                    result = AiToolHelper.executeTool(req.name(), toolInput);
-                } catch (Exception e) {
-                    // 单次工具执行失败不中断整条链路：把异常文案作为工具结果回传，让模型据此决定下一步
-                    logger.error("工具执行异常, toolName={}, key={}", req.name(), logKey, e);
-                    result = "[ERROR] 工具执行异常: " + e.getClass().getSimpleName() + " - " + e.getMessage();
-                }
-                messages.add(aiMessage);
-                messages.add(new ToolExecutionResultMessage(req.id(), req.name(), result));
-            }
-            chatRequest = ChatRequest.builder()
+        try {
+            ChatRequest chatRequest = ChatRequest.builder()
                     .messages(messages)
                     .toolSpecifications(toolSpecs)
                     .build();
             chatResponse = chatModel.chat(chatRequest);
-            aiMessage = chatResponse.aiMessage();
-            totalInputTokens += sumInputTokens(chatResponse.tokenUsage());
-            totalOutputTokens += sumOutputTokens(chatResponse.tokenUsage());
+            AiMessage aiMessage = chatResponse.aiMessage();
+            totalInputTokens = sumInputTokens(chatResponse.tokenUsage());
+            totalOutputTokens = sumOutputTokens(chatResponse.tokenUsage());
+            while (aiMessage.hasToolExecutionRequests() && iteration < MAX_TOOL_ITERATIONS) {
+                // 每轮迭代前检查总 deadline,避免下游工具微服务变慢时主调用线程被耗尽
+                if (SystemClock.now() - startTime > TOOL_LOOP_DEADLINE_MILLIS) {
+                    logger.warn("工具调用循环超过总 deadline {}ms, key={}, iteration={}",
+                            TOOL_LOOP_DEADLINE_MILLIS, logKey, iteration);
+                    break;
+                }
+                iteration++;
+                for (ToolExecutionRequest req : aiMessage.toolExecutionRequests()) {
+                    String toolInput = mergeToolContext(req.arguments(), toolContext);
+                    String result;
+                    try {
+                        result = AiToolHelper.executeTool(req.name(), toolInput);
+                    } catch (Exception e) {
+                        // 单次工具执行失败不中断整条链路：把异常文案作为工具结果回传，让模型据此决定下一步
+                        logger.error("工具执行异常, toolName={}, key={}", req.name(), logKey, e);
+                        result = "[ERROR] 工具执行异常: " + e.getClass().getSimpleName() + " - " + e.getMessage();
+                    }
+                    messages.add(aiMessage);
+                    messages.add(new ToolExecutionResultMessage(req.id(), req.name(), result));
+                }
+                chatRequest = ChatRequest.builder()
+                        .messages(messages)
+                        .toolSpecifications(toolSpecs)
+                        .build();
+                chatResponse = chatModel.chat(chatRequest);
+                aiMessage = chatResponse.aiMessage();
+                totalInputTokens += sumInputTokens(chatResponse.tokenUsage());
+                totalOutputTokens += sumOutputTokens(chatResponse.tokenUsage());
+            }
+            if (iteration >= MAX_TOOL_ITERATIONS && chatResponse != null
+                    && chatResponse.aiMessage().hasToolExecutionRequests()) {
+                maxReached = true;
+                logger.warn("工具调用达到最大迭代次数 {}, key={}", MAX_TOOL_ITERATIONS, logKey);
+            }
+            return new ToolLoopResult(chatResponse, totalInputTokens, totalOutputTokens, maxReached);
+        } catch (Exception e) {
+            // chatModel.chat() 失败,把已累计 token 通过自定义异常透传给调用方,避免异常路径下 token 用量丢失
+            throw new ToolLoopFailedException(totalInputTokens, totalOutputTokens, e);
         }
-        if (iteration >= MAX_TOOL_ITERATIONS && aiMessage.hasToolExecutionRequests()) {
-            maxReached = true;
-            logger.warn("工具调用达到最大迭代次数 {}, key={}", MAX_TOOL_ITERATIONS, logKey);
-        }
-        return new ToolLoopResult(chatResponse, totalInputTokens, totalOutputTokens, maxReached);
     }
 
     /**
@@ -156,6 +187,71 @@ public class AiChatService {
         }
         inputMap.putAll(toolContext);
         return JsonUtils.toString(inputMap);
+    }
+
+    /**
+     * 无工具分支的流式聊天 + 落库。chat/chatGenerate 两入口的无工具流式逻辑一致,抽出复用。
+     * <p>使用 {@link AtomicBoolean#compareAndSet(boolean, boolean)} 保证 onComplete/onError/onDispose 三路回调
+     * 中 sessionMsg 只落库一次。客户端取消订阅或上游无回调时由 onDispose 兜底。
+     *
+     * @param chatClient 流式 ChatClient(内部调 getStreamingChatModel())
+     * @param messages   已组装好的消息列表(含 system/user/历史等)
+     * @param sessionMsg 待落库的会话消息
+     * @param logKey     日志定位用 key(configId 或 sessionId)
+     */
+    private static Flux<String> streamChatAndPersist(ChatClient chatClient, List<ChatMessage> messages,
+                                                     AiSessionMsg sessionMsg, Object logKey) {
+        return Flux.create(sink -> {
+            sessionMsg.setResponseStartDate(SystemClock.nowDate());
+            StringBuilder responseBuilder = new StringBuilder();
+            AtomicBoolean saved = new AtomicBoolean(false);
+            sink.onDispose(() -> {
+                if (saved.compareAndSet(false, true)) {
+                    sessionMsg.setResponseEndDate(SystemClock.nowDate());
+                    sessionMsg.setResponseInfo(responseBuilder.length() > 0
+                            ? responseBuilder.toString()
+                            : "[ERROR] AI响应被中断");
+                    saveSessionMsg(sessionMsg);
+                }
+            });
+            chatClient.getStreamingChatModel().chat(messages, new StreamingChatResponseHandler() {
+                @Override
+                public void onPartialResponse(String token) {
+                    responseBuilder.append(token);
+                    sink.next(new AiChatSentEvent<>(token).toString());
+                }
+
+                @Override
+                public void onCompleteResponse(ChatResponse completeResponse) {
+                    if (!saved.compareAndSet(false, true)) {
+                        return;
+                    }
+                    TokenUsage tokenUsage = completeResponse.tokenUsage();
+                    sessionMsg.setRequestTokens(tokenUsage != null && tokenUsage.inputTokenCount() != null
+                            ? tokenUsage.inputTokenCount() : 0);
+                    sessionMsg.setResponseTokens(tokenUsage != null && tokenUsage.outputTokenCount() != null
+                            ? tokenUsage.outputTokenCount() : 0);
+                    sessionMsg.setResponseEndDate(SystemClock.nowDate());
+                    sessionMsg.setResponseInfo(responseBuilder.toString());
+                    saveSessionMsg(sessionMsg);
+                    sink.complete();
+                }
+
+                @Override
+                public void onError(Throwable error) {
+                    if (!saved.compareAndSet(false, true)) {
+                        return;
+                    }
+                    // 详细原因只进日志(可能含上游厂商 URL/连接细节/Key),DB 与对外都用固定文案脱敏
+                    logger.error("流式聊天异常, logKey={}, errClass={}, msg={}", logKey,
+                            error.getClass().getSimpleName(), error.getMessage());
+                    sessionMsg.setResponseEndDate(SystemClock.nowDate());
+                    sessionMsg.setResponseInfo("[ERROR] AI流式响应失败");
+                    saveSessionMsg(sessionMsg);
+                    sink.error(new RuntimeException("AI流式响应失败，请稍后重试"));
+                }
+            });
+        });
     }
 
     /**
@@ -184,39 +280,9 @@ public class AiChatService {
     }
 
     /**
-     * 校验 prompt 长度。返回 null 表示通过，否则返回错误响应。
-     */
-    private static ResponseData validatePromptLength(String systemPrompt, String userPrompt) {
-        int sysLen = systemPrompt == null ? 0 : systemPrompt.length();
-        int userLen = userPrompt == null ? 0 : userPrompt.length();
-        if (sysLen > MAX_PROMPT_LENGTH) {
-            return ResponseData.errorMsg("系统提示词过长(" + sysLen + " > " + MAX_PROMPT_LENGTH + ")，请精简后重试");
-        }
-        if (userLen > MAX_PROMPT_LENGTH) {
-            return ResponseData.errorMsg("用户提示词过长(" + userLen + " > " + MAX_PROMPT_LENGTH + ")，请精简后重试");
-        }
-        return null;
-    }
-
-    /**
-     * 校验 prompt 长度（流式场景，返回 Flux 错误流）。返回 null 表示通过。
-     */
-    private static Flux<String> validatePromptLengthFlux(String systemPrompt, String userPrompt) {
-        ResponseData result = validatePromptLength(systemPrompt, userPrompt);
-        if (result == null) {
-            return null;
-        }
-        return Flux.just(result.toString());
-    }
-
-    /**
      * ChatClient 简单调用。
      */
     public static ResponseData<String> generate(long saasId, long userId, int userType, String userInfo, long configId, String systemPrompt, String userPrompt, List<AiToolCallInfo> toolList, Map<String, Object> toolContext, MultipartFile[] fileList, long[] ragLibIds) {
-        ResponseData promptCheck = validatePromptLength(systemPrompt, userPrompt);
-        if (promptCheck != null) {
-            return promptCheck;
-        }
         ChatClient chatClient;
         try {
             chatClient = AiVendorHelper.getChatClient(configId);
@@ -316,6 +382,11 @@ public class AiChatService {
             // 异常路径下也落库 sessionMsg，避免会话历史出现只问不答的"幽灵"消息
             sessionMsg.setResponseEndDate(SystemClock.nowDate());
             sessionMsg.setResponseInfo("[ERROR] AI模型调用失败");
+            // 工具调用循环异常时,从自定义异常透传已累计 token,避免整条请求 token 用量丢失
+            if (e instanceof ToolLoopFailedException tf) {
+                sessionMsg.setRequestTokens(tf.totalInputTokens);
+                sessionMsg.setResponseTokens(tf.totalOutputTokens);
+            }
             saveSessionMsg(sessionMsg);
             return ResponseData.errorMsg("AI模型调用失败，请稍后重试");
         }
@@ -331,10 +402,6 @@ public class AiChatService {
      * ChatClient 流式调用
      */
     public static Flux<String> chatGenerate(long saasId, long userId, int userType, String userInfo, long configId, String systemPrompt, String userPrompt, List<AiToolCallInfo> toolList, Map<String, Object> toolContext, MultipartFile[] fileList, long[] ragLibIds) {
-        Flux<String> promptCheck = validatePromptLengthFlux(systemPrompt, userPrompt);
-        if (promptCheck != null) {
-            return promptCheck;
-        }
         ChatClient chatClient;
         try {
             chatClient = AiVendorHelper.getChatClient(configId);
@@ -410,7 +477,6 @@ public class AiChatService {
         // 如果有工具，先同步执行工具调用循环，再流式返回最终结果
         // 注：LangChain4j 的工具调用在同步 ChatModel 上完成，无法在工具决策阶段流式，
         // 仅最终回答阶段可流式；当前实现为工具循环完成后一次性返回 finalText，并非真正的端到端流式。
-        // TODO: 后续接入 LangChain4j 流式 + 工具的整合 API 时，改为工具决策完成后流式产出回答文本
         if (hasTools) {
             try {
                 ToolLoopResult loopResult = executeToolLoop(chatClient.getChatModel(), messages,
@@ -436,67 +502,20 @@ public class AiChatService {
                 return Flux.just(new AiChatSentEvent<>(finalText).toString());
             } catch (Exception e) {
                 logger.error("流式工具调用失败, configId={}", configId, e);
+                // 异常路径下也落库 sessionMsg,与无工具分支 onError 行为一致,避免整条请求历史丢失
+                sessionMsg.setResponseEndDate(SystemClock.nowDate());
+                sessionMsg.setResponseInfo("[ERROR] AI工具调用失败");
+                if (e instanceof ToolLoopFailedException tf) {
+                    sessionMsg.setRequestTokens(tf.totalInputTokens);
+                    sessionMsg.setResponseTokens(tf.totalOutputTokens);
+                }
+                saveSessionMsg(sessionMsg);
                 return Flux.just(ResponseData.errorMsg("AI工具调用失败，请稍后重试").toString());
             }
         }
 
-        // 无工具：直接流式调用
-        return Flux.create(sink -> {
-            sessionMsg.setResponseStartDate(SystemClock.nowDate());
-            StringBuilder responseBuilder = new StringBuilder();
-            // 防御性：onComplete/onError 可能被同一上游重复触发或并发触发，保证 sessionMsg 只落库一次
-            AtomicBoolean saved = new AtomicBoolean(false);
-
-            // 兜底：客户端取消订阅（如浏览器关闭）或上游无回调时，保证 sessionMsg 落库一次。
-            // 正常 complete/error 路径中 saved 已被 set 为 true，此处不会重复执行。
-            sink.onDispose(() -> {
-                if (saved.compareAndSet(false, true)) {
-                    sessionMsg.setResponseEndDate(SystemClock.nowDate());
-                    sessionMsg.setResponseInfo(responseBuilder.length() > 0
-                            ? responseBuilder.toString()
-                            : "[ERROR] AI响应被中断");
-                    saveSessionMsg(sessionMsg);
-                }
-            });
-
-            chatClient.getStreamingChatModel().chat(messages, new StreamingChatResponseHandler() {
-                @Override
-                public void onPartialResponse(String token) {
-                    responseBuilder.append(token);
-                    sink.next(new AiChatSentEvent<>(token).toString());
-                }
-
-                @Override
-                public void onCompleteResponse(ChatResponse completeResponse) {
-                    if (!saved.compareAndSet(false, true)) {
-                        return;
-                    }
-                    TokenUsage tokenUsage = completeResponse.tokenUsage();
-                    sessionMsg.setRequestTokens(tokenUsage != null && tokenUsage.inputTokenCount() != null
-                            ? tokenUsage.inputTokenCount() : 0);
-                    sessionMsg.setResponseTokens(tokenUsage != null && tokenUsage.outputTokenCount() != null
-                            ? tokenUsage.outputTokenCount() : 0);
-                    sessionMsg.setResponseEndDate(SystemClock.nowDate());
-                    sessionMsg.setResponseInfo(responseBuilder.toString());
-                    saveSessionMsg(sessionMsg);
-                    sink.complete();
-                }
-
-                @Override
-                public void onError(Throwable error) {
-                    if (!saved.compareAndSet(false, true)) {
-                        return;
-                    }
-                    // 详细原因只进日志（可能含上游厂商 URL/连接细节/Key），DB 与对外都用固定文案脱敏
-                    logger.error("流式聊天异常, configId={}, errClass={}, msg={}", configId,
-                            error.getClass().getSimpleName(), error.getMessage());
-                    sessionMsg.setResponseEndDate(SystemClock.nowDate());
-                    sessionMsg.setResponseInfo("[ERROR] AI流式响应失败");
-                    saveSessionMsg(sessionMsg);
-                    sink.error(new RuntimeException("AI流式响应失败，请稍后重试"));
-                }
-            });
-        });
+        // 无工具:直接流式调用
+        return streamChatAndPersist(chatClient, messages, sessionMsg, configId);
     }
 
 
@@ -740,7 +759,13 @@ public class AiChatService {
         return dao.save(sessionMsg).onSuccess(savedEntity -> {
             // 更新session会话
             String sql = "update ai_session_info set last_update=?, msg_num=msg_num+1,request_tokens=request_tokens+?,response_tokens=response_tokens+? where saas_id=? and id=?";
-            dao.execute(sql, new Object[]{SystemClock.nowDate(), sessionMsg.getRequestTokens(), sessionMsg.getResponseTokens(), sessionMsg.getSaasId(), sessionMsg.getSessionId()});
+            ResponseData<Integer> updateResp = dao.execute(sql, new Object[]{SystemClock.nowDate(), sessionMsg.getRequestTokens(), sessionMsg.getResponseTokens(), sessionMsg.getSaasId(), sessionMsg.getSessionId()});
+            // update 影响行数为 0 通常意味着 session 已被并发软删,sessionMsg 已落库但 session_info 未更新,记录 warn 便于排查
+            if (updateResp == null || updateResp.getData() == null || updateResp.getData() == 0) {
+                logger.warn("更新 session_info 失败或影响行数为 0, saasId={}, sessionId={}, code={}",
+                        sessionMsg.getSaasId(), sessionMsg.getSessionId(),
+                        updateResp == null ? "null" : updateResp.getCode());
+            }
         });
     }
 
@@ -767,10 +792,6 @@ public class AiChatService {
      * ChatClient 流式调用
      */
     public static Flux<String> chat(long saasId, long userId, int userType, String userInfo, long configId, long sessionId, String systemPrompt, String userPrompt, List<AiToolCallInfo> toolList, Map<String, Object> toolContext, MultipartFile[] fileList, long[] ragLibIds) {
-        Flux<String> promptCheck = validatePromptLengthFlux(systemPrompt, userPrompt);
-        if (promptCheck != null) {
-            return promptCheck;
-        }
         // 初始化会话信息
         AiSessionInfo sessionInfo;
         if (sessionId > 0) {
@@ -843,7 +864,7 @@ public class AiChatService {
         }
 
         // === LangChain4j 流式调用（加载历史消息） ===
-        List<ChatMessage> messages = AiMysqlChatMemory.load(sessionInfo.getId(), sessionInfo.getWindowSize());
+        List<ChatMessage> messages = AiMysqlChatMemory.load(sessionInfo.getSaasId(), sessionInfo.getId(), sessionInfo.getWindowSize());
         if (StringUtils.isNotBlank(systemPrompt)) {
             messages.add(new SystemMessage(systemPrompt));
         }
@@ -885,62 +906,7 @@ public class AiChatService {
         }
 
         // 无工具：直接流式调用
-        return Flux.create(sink -> {
-            sessionMsg.setResponseStartDate(SystemClock.nowDate());
-            StringBuilder responseBuilder = new StringBuilder();
-            // 防御性：onComplete/onError 可能被同一上游重复触发或并发触发，保证 sessionMsg 只落库一次
-            AtomicBoolean saved = new AtomicBoolean(false);
-
-            // 兜底：客户端取消订阅（如浏览器关闭）或上游无回调时，保证 sessionMsg 落库一次。
-            // 正常 complete/error 路径中 saved 已被 set 为 true，此处不会重复执行。
-            sink.onDispose(() -> {
-                if (saved.compareAndSet(false, true)) {
-                    sessionMsg.setResponseEndDate(SystemClock.nowDate());
-                    sessionMsg.setResponseInfo(responseBuilder.length() > 0
-                            ? responseBuilder.toString()
-                            : "[ERROR] AI响应被中断");
-                    saveSessionMsg(sessionMsg);
-                }
-            });
-
-            chatClient.getStreamingChatModel().chat(messages, new StreamingChatResponseHandler() {
-                @Override
-                public void onPartialResponse(String token) {
-                    responseBuilder.append(token);
-                    sink.next(new AiChatSentEvent<>(token).toString());
-                }
-
-                @Override
-                public void onCompleteResponse(ChatResponse completeResponse) {
-                    if (!saved.compareAndSet(false, true)) {
-                        return;
-                    }
-                    TokenUsage tokenUsage = completeResponse.tokenUsage();
-                    sessionMsg.setRequestTokens(tokenUsage != null && tokenUsage.inputTokenCount() != null
-                            ? tokenUsage.inputTokenCount() : 0);
-                    sessionMsg.setResponseTokens(tokenUsage != null && tokenUsage.outputTokenCount() != null
-                            ? tokenUsage.outputTokenCount() : 0);
-                    sessionMsg.setResponseEndDate(SystemClock.nowDate());
-                    sessionMsg.setResponseInfo(responseBuilder.toString());
-                    saveSessionMsg(sessionMsg);
-                    sink.complete();
-                }
-
-                @Override
-                public void onError(Throwable error) {
-                    if (!saved.compareAndSet(false, true)) {
-                        return;
-                    }
-                    // 详细原因只进日志（可能含上游厂商 URL/连接细节/Key），DB 与对外都用固定文案脱敏
-                    logger.error("流式聊天异常, sessionId={}, errClass={}, msg={}", sessionInfo.getId(),
-                            error.getClass().getSimpleName(), error.getMessage());
-                    sessionMsg.setResponseEndDate(SystemClock.nowDate());
-                    sessionMsg.setResponseInfo("[ERROR] AI流式响应失败");
-                    saveSessionMsg(sessionMsg);
-                    sink.error(new RuntimeException("AI流式响应失败，请稍后重试"));
-                }
-            });
-        });
+        return streamChatAndPersist(chatClient, messages, sessionMsg, sessionInfo.getId());
     }
 
     /**

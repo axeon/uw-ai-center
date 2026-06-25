@@ -1,4 +1,4 @@
-package uw.ai.center.vendor.dashscope.imageModel;
+package uw.ai.center.vendor.dashscope.rerank;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -6,17 +6,16 @@ import uw.common.app.vo.JsonConfigParam;
 import uw.common.util.EnumUtils;
 
 /**
- * DashScope 图片生成参数。
+ * DashScope 重排参数（qwen3-rerank）。
  */
-public class DashScopeImageParam {
+public class DashScopeRerankParam {
 
     @JsonFormat(shape = JsonFormat.Shape.OBJECT)
-    @Schema(title = "图片生成参数", description = "图片生成参数")
+    @Schema(title = "重排参数", description = "DashScope qwen3-rerank 重排参数")
     public enum Config implements JsonConfigParam {
-        IMAGE_SIZE(ParamType.STRING, "1024*1024", "图片尺寸", "生成图片的尺寸，如1024*1024、720*1280等"),
-        IMAGE_STYLE(ParamType.STRING, "<auto>", "图片风格", "生成图片的风格，如<auto>、<photography>等"),
-        IMAGE_N(ParamType.INT, "1", "生成数量", "一次生成的图片数量"),
-        IMAGE_REF_MODE(ParamType.STRING, "", "参考模式", "图片生成参考模式"),
+        RERANK_TOP_N(ParamType.INT, "0", "返回前N条", "0表示返回全部，否则只返回得分最高的前N条"),
+        RERANK_INSTRUCT(ParamType.STRING, "", "任务类型指令", "可选，空表示用模型默认（问答检索）"),
+        RERANK_RETURN_DOCUMENTS(ParamType.BOOLEAN, "true", "回带文档原文", "true结果中包含原文，false仅返回下标与得分"),
         ;
 
         private final JsonConfigParam.ParamData paramData;

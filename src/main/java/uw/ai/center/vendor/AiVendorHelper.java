@@ -5,7 +5,6 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 import uw.ai.center.constant.ModelType;
 import uw.ai.center.entity.AiModelApi;
 import uw.ai.center.entity.AiModelConfig;
@@ -17,10 +16,7 @@ import uw.ai.center.vendor.client.AudioTranscriptionClient;
 import uw.ai.center.vendor.client.ChatClient;
 import uw.ai.center.vendor.client.EmbeddingClient;
 import uw.ai.center.vendor.client.ImageGenerationClient;
-import uw.ai.center.vendor.capability.AudioTranscriptionVendor;
-import uw.ai.center.vendor.capability.ChatVendor;
-import uw.ai.center.vendor.capability.EmbeddingVendor;
-import uw.ai.center.vendor.capability.ImageGenerationVendor;
+import uw.ai.center.vendor.client.RerankClient;
 import uw.cache.CacheChangeNotifyListener;
 import uw.cache.CacheDataLoader;
 import uw.cache.FusionCache;
@@ -34,8 +30,9 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * AI Vendor 帮助类，管理 Vendors、AiModelConfigData 聚合缓存和 AiModelClient 实例缓存。
+ * <p>不标注 {@code @Component}：类的 static 块（FusionCache 注册）由 {@link uw.ai.center.conf.Lc4jVendorAutoConfiguration}
+ * 构造器中调用 {@link #registerVendor} 时由 JVM 类初始化机制触发，避免对 Spring 加载顺序的隐式依赖。
  */
-@Component
 public class AiVendorHelper {
 
     private static final Logger logger = LoggerFactory.getLogger(AiVendorHelper.class);
@@ -99,6 +96,11 @@ public class AiVendorHelper {
                 return dao.queryForObject(AiModelApi.class,
                         "select * from ai_model_api where id=? and state=1", new Object[]{apiId}).getData();
             }
+        }, (CacheChangeNotifyListener<Long, AiModelApi>) (key, oldValue, newValue) -> {
+            // AiModelApi 失效兜底:级联失效引用它的 AiModelConfigData 主缓存
+            // AiModelConfigData 失效会触发其 listener → invalidateClient + cascadeInvalidateRagClients
+            // 防止绕过 invalidateApiConfig 直接调 FusionCache.invalidate(AiModelApi.class, ...) 时 client 持有旧 apiKey
+            cascadeInvalidateModelConfigByApiId(key);
         });
 
         // configCode → configId 映射缓存（高频 RPC 查询场景，失效时由 invalidateConfig 双清）
@@ -181,6 +183,13 @@ public class AiVendorHelper {
      */
     public static AudioTranscriptionClient getAudioTranscriptionClient(long configId) {
         return asType(getClient(configId), ModelType.AUDIO_TRANSCRIPTION, AudioTranscriptionClient.class, configId);
+    }
+
+    /**
+     * 获取 RERANK 类型客户端。类型不符时抛 IllegalStateException。
+     */
+    public static RerankClient getRerankClient(long configId) {
+        return asType(getClient(configId), ModelType.RERANK, RerankClient.class, configId);
     }
 
     /**
@@ -314,9 +323,8 @@ public class AiVendorHelper {
      * API配置变更时，级联失效关联的模型配置缓存。
      * <p>apiCode 双清使用调用方传入的 {@code previousApiCode}（推荐为 update 前读到的旧值），
      * 避免"失效前再读缓存"导致的 TOCTOU。
-     * <p><b>失效顺序</b>：先失效 {@code AiModelApi}，再级联失效关联的 {@code AiModelConfigData}。
-     * 反序会导致 CacheDataLoader 重新加载 ModelConfig 时复用尚未刷新的 AiModelApi 缓存，
-     * 把旧 apiKey 重新打包进 AiModelConfigData，直到下一次主缓存过期才能自愈。
+     * <p><b>失效顺序</b>：先失效 {@code AiModelApi}，由 {@code AiModelApi} 的 CacheChangeNotifyListener
+     * 自动级联失效引用它的 {@code AiModelConfigData} 主缓存（再触发 invalidateClient + cascadeInvalidateRagClients）。
      *
      * @param apiId           要失效的 API 配置ID
      * @param previousApiCode 调用方在 update 前读到的旧 apiCode（可为 null，将退化为读缓存）
@@ -329,19 +337,34 @@ public class AiVendorHelper {
                 oldCode = api.getApiCode();
             }
         }
-        // 1. 先失效 AiModelApi + apiCode 映射，确保后续 CacheDataLoader 重载 ModelConfig 时拿到新的 apiKey
+        // 失效 AiModelApi + apiCode 映射
+        // AiModelApi 失效时 CacheChangeNotifyListener 会自动级联失效 AiModelConfigData + Client
         FusionCache.invalidate(AiModelApi.class, apiId);
         if (StringUtils.isNotBlank(oldCode)) {
             FusionCache.invalidate(CACHE_API_CODE_TO_ID, oldCode);
         }
-        // 2. 再级联失效引用该 apiId 的 ModelConfig，CacheDataLoader 会复用上一步已刷新的 AiModelApi 缓存
-        PageList<AiModelConfig> configs = dao.list(AiModelConfig.class,
-                "select id from ai_model_config where api_id=? and state<>?",
-                new Object[]{apiId, uw.common.app.constant.CommonState.DELETED.getValue()}).getData();
-        if (configs != null) {
-            for (AiModelConfig config : configs) {
-                invalidateConfig(config.getId());
+    }
+
+    /**
+     * 级联失效引用指定 apiId 的所有 AiModelConfigData 主缓存。
+     * AiModelConfigData 失效时其 CacheChangeNotifyListener 会自动失效 Client + RAG 客户端缓存。
+     * 查询失败仅记录日志，不阻断主缓存失效流程。
+     *
+     * @param apiId API 配置ID
+     */
+    private static void cascadeInvalidateModelConfigByApiId(long apiId) {
+        try {
+            PageList<AiModelConfig> configs = dao.list(AiModelConfig.class,
+                    "select id from ai_model_config where api_id=? and state<>?",
+                    new Object[]{apiId, uw.common.app.constant.CommonState.DELETED.getValue()}).getData();
+            if (configs == null || configs.isEmpty()) {
+                return;
             }
+            for (AiModelConfig config : configs) {
+                FusionCache.invalidate(AiModelConfigData.class, config.getId());
+            }
+        } catch (Exception e) {
+            logger.warn("级联失效AiModelConfigData失败, apiId={}", apiId, e);
         }
     }
 
@@ -400,7 +423,7 @@ public class AiVendorHelper {
             throw new IllegalStateException("AI模型配置[" + configId + "]不存在或未启用");
         }
 
-        logger.info("加载AI模型配置: id={}, configName={}, apiUrl={}, modelName={}, modelType={}, vendorClass={}",
+        logger.debug("加载AI模型配置: id={}, configName={}, apiUrl={}, modelName={}, modelType={}, vendorClass={}",
                 configData.getId(), configData.getConfigName(),
                 configData.getApiUrl(), configData.getModelName(),
                 configData.getModelType(), configData.getVendorClass());
@@ -418,28 +441,34 @@ public class AiVendorHelper {
 
         return switch (modelType) {
             case CHAT -> {
-                if (!(vendor instanceof ChatVendor cv)) {
+                if (!(vendor instanceof AiChatVendor cv)) {
                     throw unsupported(vendor, modelType, configId);
                 }
                 yield cv.buildChatClient(configData);
             }
             case EMBEDDING -> {
-                if (!(vendor instanceof EmbeddingVendor ev)) {
+                if (!(vendor instanceof AiEmbeddingVendor ev)) {
                     throw unsupported(vendor, modelType, configId);
                 }
                 yield ev.buildEmbeddingClient(configData);
             }
             case IMAGE_GENERATION -> {
-                if (!(vendor instanceof ImageGenerationVendor iv)) {
+                if (!(vendor instanceof AiImageGenerationVendor iv)) {
                     throw unsupported(vendor, modelType, configId);
                 }
                 yield iv.buildImageClient(configData);
             }
             case AUDIO_TRANSCRIPTION -> {
-                if (!(vendor instanceof AudioTranscriptionVendor av)) {
+                if (!(vendor instanceof AiAudioTranscriptionVendor av)) {
                     throw unsupported(vendor, modelType, configId);
                 }
                 yield av.buildAudioTranscriptionClient(configData);
+            }
+            case RERANK -> {
+                if (!(vendor instanceof AiRerankVendor rv)) {
+                    throw unsupported(vendor, modelType, configId);
+                }
+                yield rv.buildRerankClient(configData);
             }
             default -> throw new IllegalStateException("模型类型[" + modelType + "]暂未接入能力接口, configId=" + configId);
         };

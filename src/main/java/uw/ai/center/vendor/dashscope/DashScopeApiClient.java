@@ -7,6 +7,7 @@ import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import uw.ai.center.vo.RerankResult;
 import uw.httpclient.http.HttpData;
 import uw.httpclient.json.JsonInterfaceHelper;
 
@@ -35,6 +36,39 @@ public class DashScopeApiClient {
     private static final Logger logger = LoggerFactory.getLogger(DashScopeApiClient.class);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private static final JsonInterfaceHelper HTTP_HELPER = new JsonInterfaceHelper();
+
+    /**
+     * 响应体截断上限：日志与异常 message 中只保留前 500 字符，避免完整 HTTP 响应（可能含上游鉴权回显等敏感信息）进入可观测链路。
+     */
+    private static final int RESPONSE_BODY_LOG_LIMIT = 500;
+
+    /**
+     * 任务轮询最大次数。
+     */
+    private static final int POLL_MAX_RETRIES = 30;
+
+    /**
+     * 轮询初始 sleep（毫秒）。
+     */
+    private static final long POLL_INITIAL_SLEEP_MILLIS = 2000L;
+
+    /**
+     * 轮询 sleep 上限（毫秒）。
+     */
+    private static final long POLL_MAX_SLEEP_MILLIS = 10000L;
+
+    /**
+     * 截断 HTTP 响应体到 {@value #RESPONSE_BODY_LOG_LIMIT} 字符上限。
+     * 用于日志和异常 message，避免上游错误响应被原样塞入堆栈/日志造成信息泄露。
+     */
+    private static String truncateBody(String body) {
+        if (body == null) {
+            return "null";
+        }
+        return body.length() > RESPONSE_BODY_LOG_LIMIT
+                ? body.substring(0, RESPONSE_BODY_LOG_LIMIT) + "...(truncated)"
+                : body;
+    }
 
     /**
      * DashScope Fun-ASR WebSocket
@@ -110,9 +144,7 @@ public class DashScopeApiClient {
             String responseBody = httpData.getResponseData();
             logger.info("DashScope图片生成任务提交响应: statusCode={}", httpData.getStatusCode());
             if (logger.isDebugEnabled()) {
-                String bodySnippet = responseBody != null && responseBody.length() > 500
-                        ? responseBody.substring(0, 500) + "...(truncated)" : responseBody;
-                logger.debug("DashScope图片生成任务提交响应体: body={}", bodySnippet);
+                logger.debug("DashScope图片生成任务提交响应体: body={}", truncateBody(responseBody));
             }
 
             JsonNode responseJson = OBJECT_MAPPER.readTree(responseBody);
@@ -132,7 +164,8 @@ public class DashScopeApiClient {
             String taskId = responseJson.path("output").path("task_id").asText();
             String errorMsg = responseJson.path("message").asText("");
             if (taskId.isEmpty()) {
-                throw new RuntimeException("DashScope图片生成任务提交失败: statusCode=" + statusCode + ", message=" + errorMsg + ", response=" + responseBody);
+                throw new RuntimeException("DashScope图片生成任务提交失败: statusCode=" + statusCode
+                        + ", message=" + errorMsg + ", response=" + truncateBody(responseBody));
             }
             logger.info("DashScope图片生成任务已提交: taskId={}", taskId);
 
@@ -141,15 +174,16 @@ public class DashScopeApiClient {
             Map<String, String> queryHeaders = new HashMap<>();
             queryHeaders.put("Authorization", "Bearer " + apiKey);
 
-            int maxRetries = 30;
-            for (int i = 0; i < maxRetries; i++) {
-                Thread.sleep(2000);
+            long nextSleep = POLL_INITIAL_SLEEP_MILLIS;
+            for (int i = 0; i < POLL_MAX_RETRIES; i++) {
+                Thread.sleep(nextSleep);
 
                 HttpData queryData = HTTP_HELPER.getForData(queryUrl, queryHeaders, null);
                 JsonNode queryJson = OBJECT_MAPPER.readTree(queryData.getResponseData());
 
                 String taskStatus = queryJson.path("output").path("task_status").asText();
-                logger.info("DashScope图片生成任务轮询({}/{}): taskId={}, status={}", i + 1, maxRetries, taskId, taskStatus);
+                logger.info("DashScope图片生成任务轮询({}/{}): taskId={}, status={}, nextSleep={}",
+                        i + 1, POLL_MAX_RETRIES, taskId, taskStatus, nextSleep);
 
                 switch (taskStatus) {
                     case "SUCCEEDED":
@@ -160,14 +194,17 @@ public class DashScopeApiClient {
                         String failMsg = queryJson.path("output").path("message").asText("未知错误");
                         throw new RuntimeException("DashScope图片生成任务失败: " + failMsg);
                     case "PENDING", "RUNNING":
-                        // 继续轮询
+                        // 指数退避(2s→4s→8s,上限 10s)
+                        nextSleep = Math.min(nextSleep * 2, POLL_MAX_SLEEP_MILLIS);
                         break;
                     default:
                         throw new RuntimeException("DashScope图片生成任务未知状态: " + taskStatus);
                 }
             }
 
-            throw new RuntimeException("DashScope图片生成任务超时（60秒）");
+            throw new RuntimeException("DashScope图片生成任务超时(maxRetries=" + POLL_MAX_RETRIES
+                    + ", initialSleepMillis=" + POLL_INITIAL_SLEEP_MILLIS
+                    + ", maxSleepMillis=" + POLL_MAX_SLEEP_MILLIS + ")");
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException("DashScope图片生成任务被中断", e);
@@ -243,5 +280,92 @@ public class DashScopeApiClient {
     public static byte[] synthesizeSpeech(String baseUrl, String apiKey, String model, String text, Map<String, Object> params) {
         // 语音合成将在功能点4中实现
         throw new UnsupportedOperationException("语音合成功能将在后续功能点中实现");
+    }
+
+    // ==================== DashScope 重排 ====================
+
+    /**
+     * 文本重排（qwen3-rerank）。
+     * 对召回结果按与 query 的语义相关性进行二次精准排序，调用 DashScope 原生 rerank 端点。
+     *
+     * @param baseUrl   DashScope API 基础 URL（如 https://dashscope.aliyuncs.com/api/v1）
+     * @param apiKey    API Key
+     * @param model     模型名（如 qwen3-rerank）
+     * @param query     查询文本
+     * @param documents 候选文档列表
+     * @param params    重排参数（key 与 DashScope API 字段名一致：top_n/return_documents/instruct）
+     * @return 重排结果（items 已按 relevanceScore 降序）
+     */
+    public static RerankResult rerank(String baseUrl, String apiKey, String model,
+                                      String query, List<String> documents, Map<String, Object> params) {
+        String nativeBaseUrl = resolveNativeApiBaseUrl(baseUrl);
+        String rerankUrl = nativeBaseUrl + "/services/rerank/text-rerank/text-rerank";
+
+        Map<String, String> headers = new HashMap<>();
+        headers.put("Authorization", "Bearer " + apiKey);
+
+        Map<String, Object> input = new HashMap<>();
+        input.put("query", query);
+        input.put("documents", documents);
+
+        Map<String, Object> parameters = new HashMap<>();
+        if (params != null) {
+            parameters.putAll(params);
+        }
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("model", model);
+        body.put("input", input);
+        body.put("parameters", parameters);
+
+        logger.info("DashScope重排请求: url={}, model={}, documents={}", rerankUrl, model, documents.size());
+        if (logger.isDebugEnabled()) {
+            logger.debug("DashScope重排请求参数: parameters={}", parameters);
+        }
+
+        try {
+            HttpData httpData = HTTP_HELPER.postBodyForData(rerankUrl, headers, body);
+            String responseBody = httpData.getResponseData();
+            logger.info("DashScope重排响应: statusCode={}", httpData.getStatusCode());
+            if (logger.isDebugEnabled()) {
+                logger.debug("DashScope重排响应体: body={}", truncateBody(responseBody));
+            }
+
+            JsonNode responseJson = OBJECT_MAPPER.readTree(responseBody);
+
+            // DashScope 失败响应：status_code 非 200 或 code 非空
+            String statusCode = responseJson.path("status_code").asText();
+            String code = responseJson.path("code").asText("");
+            if (!statusCode.isEmpty() && !"200".equals(statusCode)) {
+                String message = responseJson.path("message").asText("");
+                throw new RuntimeException("DashScope重排调用失败: statusCode=" + statusCode
+                        + ", code=" + code + ", message=" + message);
+            }
+            if (!code.isEmpty()) {
+                String message = responseJson.path("message").asText("");
+                throw new RuntimeException("DashScope重排调用失败: code=" + code
+                        + ", message=" + message);
+            }
+
+            List<RerankResult.RerankItem> items = new ArrayList<>();
+            JsonNode resultsNode = responseJson.path("output").path("results");
+            if (resultsNode.isArray()) {
+                for (JsonNode r : resultsNode) {
+                    int index = r.path("index").asInt(0);
+                    double relevanceScore = r.path("relevance_score").asDouble(0.0);
+                    JsonNode docNode = r.path("document").path("text");
+                    String docText = (docNode.isMissingNode() || docNode.isNull()) ? null : docNode.asText();
+                    items.add(new RerankResult.RerankItem(index, relevanceScore, docText));
+                }
+            }
+
+            int totalTokens = responseJson.path("usage").path("total_tokens").asInt(0);
+            logger.info("DashScope重排成功: items={}, totalTokens={}", items.size(), totalTokens);
+            return new RerankResult(items, totalTokens);
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException("DashScope重排调用失败: " + e.getMessage(), e);
+        }
     }
 }

@@ -64,7 +64,7 @@ public class AiModelConfigController {
                                                  @Parameter(description = "apiId", required = true) @RequestParam long apiId) {
         // 通过 apiId 从库中取 apiUrl/apiKey（带 saasId 校验），避免 SSRF
         AiModelApi apiConfig = dao.queryForObject(AiModelApi.class,
-                "select * from ai_model_api where id=? and saas_id=? and state=?", new Object[]{apiId, AuthServiceHelper.getSaasId(), CommonState.ENABLED.getValue()}).getData();
+                "select id,saas_id,mch_id,api_code,api_name,api_desc,api_url,api_key,state,create_date,modify_date from ai_model_api where id=? and saas_id=? and state=?", new Object[]{apiId, AuthServiceHelper.getSaasId(), CommonState.ENABLED.getValue()}).getData();
         if (apiConfig == null) {
             return ResponseData.errorMsg("API配置不存在或无权访问");
         }

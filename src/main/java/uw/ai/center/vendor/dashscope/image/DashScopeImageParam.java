@@ -1,4 +1,4 @@
-package uw.ai.center.vendor.dashscope.ttsModel;
+package uw.ai.center.vendor.dashscope.image;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -6,18 +6,17 @@ import uw.common.app.vo.JsonConfigParam;
 import uw.common.util.EnumUtils;
 
 /**
- * DashScope 语音合成参数。
+ * DashScope 图片生成参数。
  */
-public class DashScopeTtsParam {
+public class DashScopeImageParam {
 
     @JsonFormat(shape = JsonFormat.Shape.OBJECT)
-    @Schema(title = "语音合成参数", description = "DashScope 语音合成参数")
+    @Schema(title = "图片生成参数", description = "图片生成参数")
     public enum Config implements JsonConfigParam {
-        TTS_VOICE(ParamType.STRING, "longxiaochun", "音色", "语音合成的音色，如longxiaochun、longshu等"),
-        TTS_FORMAT(ParamType.STRING, "wav", "输出格式", "音频输出格式，如wav、mp3、pcm等"),
-        TTS_SAMPLE_RATE(ParamType.INT, "22050", "采样率", "音频采样率"),
-        TTS_VOLUME(ParamType.INT, "50", "音量", "语音音量（0-100）"),
-        TTS_SPEED(ParamType.FLOAT, "1.0", "语速", "语音合成语速"),
+        IMAGE_SIZE(ParamType.STRING, "1024*1024", "图片尺寸", "生成图片的尺寸，如1024*1024、720*1280等"),
+        IMAGE_STYLE(ParamType.STRING, "<auto>", "图片风格", "生成图片的风格，如<auto>、<photography>等"),
+        IMAGE_N(ParamType.INT, "1", "生成数量", "一次生成的图片数量"),
+        IMAGE_REF_MODE(ParamType.STRING, "", "参考模式", "图片生成参考模式"),
         ;
 
         private final JsonConfigParam.ParamData paramData;

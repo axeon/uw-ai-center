@@ -50,8 +50,10 @@ public class AiRagSearcher {
                 if (source == null) {
                     continue;
                 }
-                // 提取chunk文本内容
-                String text = (String) source.get("text");
+                // 提取chunk文本内容(text 字段在 ES 中类型为 text,理论上必为 String,
+                // 但若索引 mapping 被外部改写为 object 等其他类型,直接强转会 ClassCastException)
+                Object textObj = source.get("text");
+                String text = textObj instanceof String ? (String) textObj : (textObj != null ? textObj.toString() : null);
                 // 从metadata中提取UUID（ES文档的metadata.id存的是chunk的UUID）
                 Object metadataObj = source.get("metadata");
                 Map<String, Object> metadata = metadataObj instanceof Map ? (Map<String, Object>) metadataObj : null;

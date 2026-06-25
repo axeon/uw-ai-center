@@ -97,8 +97,8 @@ public class AiToolInfo implements DataEntity,Serializable{
     /**
      * 状态
      */
-    @ColumnMeta(columnName="state", dataType="int", dataSize=10, nullable=true)
-    @Schema(title = "状态", description = "状态", maxLength=10, nullable=true )
+    @ColumnMeta(columnName="state", dataType="int", dataSize=10, nullable=false)
+    @Schema(title = "状态", description = "状态", maxLength=10, nullable=false )
     private int state;
 
     /**

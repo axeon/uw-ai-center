@@ -18,7 +18,6 @@ import dev.langchain4j.store.embedding.elasticsearch.ElasticsearchEmbeddingStore
 import io.swagger.v3.oas.annotations.media.Schema;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import uw.ai.center.entity.AiRagDoc;
 import uw.ai.center.entity.AiRagLib;
@@ -43,7 +42,6 @@ import java.util.stream.Collectors;
 /**
  * RAG库服务.
  */
-@Service
 public class AiRagService {
 
     /**
@@ -58,6 +56,16 @@ public class AiRagService {
      * 单个 RAG 文档大小上限：50MB。
      */
     private static final long MAX_RAG_DOC_SIZE = 50L * 1024 * 1024;
+    /**
+     * 纯文本入库字符数上限：5MB。
+     * 超出会拒绝入库,防止 splitter 生成超大中间 segment 触发上游 embedding API 限流或 OOM。
+     */
+    private static final int MAX_RAG_TEXT_SIZE = 5 * 1024 * 1024;
+    /**
+     * RAG query 字符数上限：2000。
+     * 超出会自动截断,防止超长 query 撑爆 embedding token。
+     */
+    private static final int MAX_RAG_QUERY_LENGTH = 2000;
     /**
      * 允许的 RAG 文档扩展名白名单。
      */
@@ -75,8 +83,9 @@ public class AiRagService {
     private static final DaoManager dao = DaoManager.getInstance();
     /**
      * ElasticsearchClient实例（替代原RestClient，使用ES官方高级客户端API）.
+     * <p>由 {@code AiEsConfiguration#elasticsearchClient} 在 Bean 创建时通过 {@link #setEsClient} 注入。
      */
-    private static ElasticsearchClient esClient;
+    private static volatile ElasticsearchClient esClient;
     /**
      * 实例缓存。
      */
@@ -87,7 +96,27 @@ public class AiRagService {
         }
     });
 
-    private AiRagService(ElasticsearchClient esClient) {
+    /**
+     * 私有构造器，禁止实例化（纯静态工具类）。
+     */
+    private AiRagService() {
+    }
+
+    /**
+     * 注入 ElasticsearchClient 实例。
+     * <p>由 {@code AiEsConfiguration} 在 Spring 启动期间调用一次，初始化静态字段。
+     * 使用 volatile + 单次写入保证可见性，运行期不可重设。
+     *
+     * @param esClient ES 官方高级客户端
+     */
+    public static void setEsClient(ElasticsearchClient esClient) {
+        if (esClient == null) {
+            throw new IllegalArgumentException("esClient must not be null");
+        }
+        if (AiRagService.esClient != null) {
+            logger.warn("AiRagService.esClient 已初始化，重复注入将被忽略");
+            return;
+        }
         AiRagService.esClient = esClient;
     }
 
@@ -182,6 +211,15 @@ public class AiRagService {
      * @return Map<UUID, chunkText> 用于存入AiRagDoc.docContent
      */
     public static Map<String, String> buildDocument(long ragLibId, String fileContent) {
+        if (fileContent == null || fileContent.isEmpty()) {
+            logger.warn("纯文本入库被拒绝: 内容为空, libId={}", ragLibId);
+            return null;
+        }
+        if (fileContent.length() > MAX_RAG_TEXT_SIZE) {
+            logger.warn("纯文本入库被拒绝: 内容超过上限({}字符), libId={}, length={}",
+                    MAX_RAG_TEXT_SIZE, ragLibId, fileContent.length());
+            return null;
+        }
         AiRagClientWrapper ragClientWrapper = getRagClientWrapper(ragLibId);
         if (ragClientWrapper == null) {
             logger.error("RAG客户端不存在, libId={}", ragLibId);
@@ -299,7 +337,7 @@ public class AiRagService {
                     new Object[]{CommonState.DELETED.getValue(), SystemClock.nowDate(), ragLibId, CommonState.DELETED.getValue()});
         } catch (Exception e) {
             logger.error("软删除RAG文档记录失败, ragLibId={}", ragLibId, e);
-            throw new RuntimeException("软删除RAG文档记录失败: " + ragLibId, e);
+            throw new IllegalStateException("软删除RAG文档记录失败: " + ragLibId, e);
         }
         // 2. 失效该 RAG 库的客户端缓存（释放 EmbeddingModel 引用等）
         invalidateRagClientCache(ragLibId);
@@ -308,7 +346,7 @@ public class AiRagService {
             esClient.indices().delete(d -> d.index(RAG_ES_INDEX_PREFIX + ragLibId));
         } catch (Exception e) {
             logger.error("删除ES索引失败, ragLibId={}", ragLibId, e);
-            throw new RuntimeException("删除ES索引失败: " + ragLibId, e);
+            throw new IllegalStateException("删除ES索引失败: " + ragLibId, e);
         }
     }
 
@@ -366,6 +404,14 @@ public class AiRagService {
      */
     public static String query(long ragLibId, String query) {
         long startMs = SystemClock.now();
+        if (query == null || query.isEmpty()) {
+            logger.warn("RAG查询被拒绝: query为空, libId={}", ragLibId);
+            return "";
+        }
+        if (query.length() > MAX_RAG_QUERY_LENGTH) {
+            logger.warn("RAG query过长自动截断, libId={}, length={}", ragLibId, query.length());
+            query = query.substring(0, MAX_RAG_QUERY_LENGTH);
+        }
         String shortQuery = truncate(query, 100);
         AiRagClientWrapper ragClientWrapper = getRagClientWrapper(ragLibId);
         if (ragClientWrapper == null) {

@@ -1,5 +1,6 @@
 package uw.ai.center.vo;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import uw.ai.center.entity.AiModelApi;
 
 import java.util.Date;
@@ -70,6 +71,7 @@ public class AiApiConfigData {
     /**
      * 获取API密钥明文（仅供服务端内部使用，如构建Vendor客户端，不序列化到前端）。
      */
+    @JsonIgnore
     public String getApiKeyRaw() {
         return aiModelApi.getApiKey();
     }

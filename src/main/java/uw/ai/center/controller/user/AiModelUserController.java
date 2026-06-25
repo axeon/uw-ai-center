@@ -21,7 +21,7 @@ import uw.dao.TransactionException;
  * <p>面向 C 端用户，只读列出当前租户下启用的 AI 模型配置（脱敏，不含密钥），供前端选择模型。
  */
 @RestController
-@Tag(name = "ModelUser接口")
+@Tag(name = "AI模型接口")
 @RequestMapping("/user/model")
 public class AiModelUserController {
     private final DaoManager dao = DaoManager.getInstance();

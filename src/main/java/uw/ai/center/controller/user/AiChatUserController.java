@@ -30,7 +30,7 @@ import uw.common.data.PageList;
  * 用户身份（saasId/userId 等）由 AuthServiceHelper 自动注入，无需前端传递。
  */
 @RestController
-@Tag(name = "ChatUser接口")
+@Tag(name = "AI聊天接口")
 @RequestMapping("/user/chat")
 @ResponseAdviceIgnore
 public class AiChatUserController {

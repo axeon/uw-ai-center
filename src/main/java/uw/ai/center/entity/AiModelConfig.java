@@ -58,10 +58,10 @@ public class AiModelConfig implements DataEntity,Serializable{
     private String vendorClass;
 
     /**
-     * 模型类型: CHAT/EMBEDDING/RERANK/TTS/OCR
+     * 模型类型: CHAT/EMBEDDING/RERANK/TTS/OCR/IMAGE_GENERATION/AUDIO_TRANSCRIPTION
      */
     @ColumnMeta(columnName="model_type", dataType="String", dataSize=50, nullable=false)
-    @Schema(title = "模型类型: CHAT/EMBEDDING/RERANK/TTS/OCR", description = "模型类型: CHAT/EMBEDDING/RERANK/TTS/OCR", maxLength=50, nullable=false )
+    @Schema(title = "模型类型: CHAT/EMBEDDING/RERANK/TTS/OCR/IMAGE_GENERATION/AUDIO_TRANSCRIPTION", description = "模型类型: CHAT/EMBEDDING/RERANK/TTS/OCR/IMAGE_GENERATION/AUDIO_TRANSCRIPTION", maxLength=50, nullable=false )
     private String modelType;
 
     /**
@@ -110,8 +110,8 @@ public class AiModelConfig implements DataEntity,Serializable{
     /**
      * 状态
      */
-    @ColumnMeta(columnName="state", dataType="int", dataSize=10, nullable=true)
-    @Schema(title = "状态", description = "状态", maxLength=10, nullable=true )
+    @ColumnMeta(columnName="state", dataType="int", dataSize=10, nullable=false)
+    @Schema(title = "状态", description = "状态", maxLength=10, nullable=false )
     private int state;
 
     /**
@@ -215,7 +215,7 @@ public class AiModelConfig implements DataEntity,Serializable{
     }
 
     /**
-     * 获取模型类型: CHAT/EMBEDDING/RERANK/TTS/OCR。
+     * 获取模型类型: CHAT/EMBEDDING/RERANK/TTS/OCR/IMAGE_GENERATION/AUDIO_TRANSCRIPTION。
      */
     public String getModelType(){
         return this.modelType;
@@ -366,7 +366,7 @@ public class AiModelConfig implements DataEntity,Serializable{
     }
 
     /**
-     * 设置模型类型: CHAT/EMBEDDING/RERANK/TTS/OCR。
+     * 设置模型类型: CHAT/EMBEDDING/RERANK/TTS/OCR/IMAGE_GENERATION/AUDIO_TRANSCRIPTION。
      */
     public void setModelType(String modelType){
         _UPDATED_INFO = DataUpdateInfo.addUpdateInfo(_UPDATED_INFO, "modelType", this.modelType, modelType, !_IS_LOADED );
@@ -374,7 +374,7 @@ public class AiModelConfig implements DataEntity,Serializable{
     }
 
     /**
-     *  设置模型类型: CHAT/EMBEDDING/RERANK/TTS/OCR链式调用。
+     *  设置模型类型: CHAT/EMBEDDING/RERANK/TTS/OCR/IMAGE_GENERATION/AUDIO_TRANSCRIPTION链式调用。
      */
     public AiModelConfig modelType(String modelType){
         setModelType(modelType);
