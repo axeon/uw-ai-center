@@ -78,6 +78,9 @@ public class AnthropicVendor implements AiChatVendor {
         JsonConfigBox box = configData.getConfigParamBox();
         double temperature = box != null ? box.getDoubleParam("temperature", 1.0) : 1.0;
         int maxTokens = box != null ? box.getIntParam("max.tokens", 4096) : 4096;
+        // Prompt Caching 开关：默认关闭，开启后 SystemMessage / 工具定义会被标记 cache_control。
+        boolean cacheSystemMessages = box != null && box.getBooleanParam("cache.system.messages", false);
+        boolean cacheTools = box != null && box.getBooleanParam("cache.tools", false);
 
         var syncModel = AnthropicChatModel.builder()
                 .apiKey(configData.getApiKeyRaw())
@@ -85,6 +88,8 @@ public class AnthropicVendor implements AiChatVendor {
                 .modelName(configData.getModelName())
                 .temperature(temperature)
                 .maxTokens(maxTokens)
+                .cacheSystemMessages(cacheSystemMessages)
+                .cacheTools(cacheTools)
                 .timeout(Duration.ofSeconds(120))
                 .build();
 
@@ -94,6 +99,8 @@ public class AnthropicVendor implements AiChatVendor {
                 .modelName(configData.getModelName())
                 .temperature(temperature)
                 .maxTokens(maxTokens)
+                .cacheSystemMessages(cacheSystemMessages)
+                .cacheTools(cacheTools)
                 .timeout(Duration.ofSeconds(120))
                 .build();
 

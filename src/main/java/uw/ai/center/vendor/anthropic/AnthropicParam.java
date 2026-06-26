@@ -21,6 +21,8 @@ public class AnthropicParam {
         TOP_P(ParamType.FLOAT, "", "核采样阈值", "核采样概率质量，与 temperature 二选一"),
         STOP_SEQUENCES(ParamType.STRING, "", "停止序列", "遇到这些字符串时停止生成"),
         SYSTEM(ParamType.STRING, "", "系统提示词", "Anthropic 协议中 system 为顶层独立字段"),
+        CACHE_SYSTEM_MESSAGES(ParamType.BOOLEAN, "FALSE", "缓存系统提示词", "开启后 SystemMessage 标记 cache_control，命中按 0.1x 计费"),
+        CACHE_TOOLS(ParamType.BOOLEAN, "FALSE", "缓存工具定义", "开启后工具列表标记 cache_control，工具调用循环场景下复用率最高"),
         ;
 
         private final JsonConfigParam.ParamData paramData;
