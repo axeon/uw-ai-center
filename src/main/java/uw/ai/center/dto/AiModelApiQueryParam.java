@@ -9,16 +9,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
-* rag文档库列表查询参数。
+* AI模型API配置列表查询参数。
 */
-@Schema(title = "rag文档库列表查询参数", description = "rag文档库列表查询参数")
-public class AiRagLibQueryParam extends AuthPageQueryParam{
+@Schema(title = "AI模型API配置列表查询参数", description = "AI模型API配置列表查询参数")
+public class AiModelApiQueryParam extends AuthPageQueryParam{
 
-    public AiRagLibQueryParam() {
+    public AiModelApiQueryParam() {
         super();
     }
 
-    public AiRagLibQueryParam(Long saasId) {
+    public AiModelApiQueryParam(Long saasId) {
         super(saasId);
     }
 	
@@ -31,7 +31,7 @@ public class AiRagLibQueryParam extends AuthPageQueryParam{
     private static final Map<String, String> ALLOWED_SORT_PROPERTY = Map.ofEntries(
         Map.entry( "id", "id" ),
         Map.entry( "saasId", "saas_id" ),
-        Map.entry( "embedConfigId", "embed_config_id" ),
+        Map.entry( "mchId", "mch_id" ),
         Map.entry( "createDate", "create_date" ),
         Map.entry( "modifyDate", "modify_date" )
         );
@@ -60,47 +60,40 @@ public class AiRagLibQueryParam extends AuthPageQueryParam{
     private Long[] ids;
 
     /**
-    * 文档库类型。
+    * 商户ID。
     */
-    @QueryMeta(expr = "lib_type=?")
-    @Schema(title="文档库类型", description = "文档库类型")
-    private Integer libType;
+    @QueryMeta(expr = "mch_id=?")
+    @Schema(title="商户ID", description = "商户ID")
+    private Long mchId;
 	
     /**
-    * 文档库名称。
+    * 配置代码。
     */
-    @QueryMeta(expr = "lib_name like ?")
-    @Schema(title="文档库名称", description = "文档库名称")
-    private String libName;
+    @QueryMeta(expr = "api_code like ?")
+    @Schema(title="配置代码", description = "配置代码")
+    private String apiCode;
 	
     /**
-    * embed配置ID。
+    * 配置名称。
     */
-    @QueryMeta(expr = "embed_config_id=?")
-    @Schema(title="embed配置ID", description = "embed配置ID")
-    private Long embedConfigId;
+    @QueryMeta(expr = "api_name like ?")
+    @Schema(title="配置名称", description = "配置名称")
+    private String apiName;
 	
     /**
-    * embed模型名。
+    * API地址。
     */
-    @QueryMeta(expr = "embed_model_name like ?")
-    @Schema(title="embed模型名", description = "embed模型名")
-    private String embedModelName;
+    @QueryMeta(expr = "api_url like ?")
+    @Schema(title="API地址", description = "API地址")
+    private String apiUrl;
 	
     /**
-    * 创建时间范围。
+    * API密钥。
     */
-    @QueryMeta(expr = "create_date between ? and ?")
-    @Schema(title="创建时间范围", description = "创建时间范围")
-    private Date[] createDateRange;
-
-    /**
-    * 修改时间范围。
-    */
-    @QueryMeta(expr = "modify_date between ? and ?")
-    @Schema(title="修改时间范围", description = "修改时间范围")
-    private Date[] modifyDateRange;
-
+    @QueryMeta(expr = "api_key like ?")
+    @Schema(title="API密钥", description = "API密钥")
+    private String apiKey;
+	
     /**
     * 状态。
     */
@@ -129,6 +122,20 @@ public class AiRagLibQueryParam extends AuthPageQueryParam{
     @Schema(title="小于等于状态", description = "小于等于状态")
     private Integer stateLte;
 
+    /**
+    * 创建时间范围。
+    */
+    @QueryMeta(expr = "create_date between ? and ?")
+    @Schema(title="创建时间范围", description = "创建时间范围")
+    private Date[] createDateRange;
+
+    /**
+    * 修改时间范围。
+    */
+    @QueryMeta(expr = "modify_date between ? and ?")
+    @Schema(title="修改时间范围", description = "修改时间范围")
+    private Date[] modifyDateRange;
+
 
     /**
     * 获取ID。
@@ -147,7 +154,7 @@ public class AiRagLibQueryParam extends AuthPageQueryParam{
     /**
     * 设置ID链式调用。
     */
-    public AiRagLibQueryParam id(Long id) {
+    public AiModelApiQueryParam id(Long id) {
         setId(id);
         return this;
     }
@@ -169,140 +176,118 @@ public class AiRagLibQueryParam extends AuthPageQueryParam{
     /**
     * 设置ID数组链式调用。
     */
-    public AiRagLibQueryParam ids(Long[] ids) {
+    public AiModelApiQueryParam ids(Long[] ids) {
         setIds(ids);
         return this;
     }
 
     /**
-    * 获取文档库类型。
+    * 获取商户ID。
     */
-    public Integer getLibType(){
-        return this.libType;
+    public Long getMchId(){
+        return this.mchId;
     }
 
     /**
-    * 设置文档库类型。
+    * 设置商户ID。
     */
-    public void setLibType(Integer libType){
-        this.libType = libType;
+    public void setMchId(Long mchId){
+        this.mchId = mchId;
     }
 	
     /**
-    * 设置文档库类型链式调用。
+    * 设置商户ID链式调用。
     */
-	public AiRagLibQueryParam libType(Integer libType){
-        setLibType(libType);
+	public AiModelApiQueryParam mchId(Long mchId){
+        setMchId(mchId);
         return this;
     }
 	
     /**
-    * 获取文档库名称。
+    * 获取配置代码。
     */
-    public String getLibName(){
-        return this.libName;
+    public String getApiCode(){
+        return this.apiCode;
     }
 
     /**
-    * 设置文档库名称。
+    * 设置配置代码。
     */
-    public void setLibName(String libName){
-        this.libName = libName;
+    public void setApiCode(String apiCode){
+        this.apiCode = apiCode;
     }
 	
     /**
-    * 设置文档库名称链式调用。
+    * 设置配置代码链式调用。
     */
-    public AiRagLibQueryParam libName(String libName) {
-        setLibName(libName);
+    public AiModelApiQueryParam apiCode(String apiCode) {
+        setApiCode(apiCode);
         return this;
     }
 	
     /**
-    * 获取embed配置ID。
+    * 获取配置名称。
     */
-    public Long getEmbedConfigId(){
-        return this.embedConfigId;
+    public String getApiName(){
+        return this.apiName;
     }
 
     /**
-    * 设置embed配置ID。
+    * 设置配置名称。
     */
-    public void setEmbedConfigId(Long embedConfigId){
-        this.embedConfigId = embedConfigId;
+    public void setApiName(String apiName){
+        this.apiName = apiName;
     }
 	
     /**
-    * 设置embed配置ID链式调用。
+    * 设置配置名称链式调用。
     */
-	public AiRagLibQueryParam embedConfigId(Long embedConfigId){
-        setEmbedConfigId(embedConfigId);
+    public AiModelApiQueryParam apiName(String apiName) {
+        setApiName(apiName);
         return this;
     }
 	
     /**
-    * 获取embed模型名。
+    * 获取API地址。
     */
-    public String getEmbedModelName(){
-        return this.embedModelName;
+    public String getApiUrl(){
+        return this.apiUrl;
     }
 
     /**
-    * 设置embed模型名。
+    * 设置API地址。
     */
-    public void setEmbedModelName(String embedModelName){
-        this.embedModelName = embedModelName;
+    public void setApiUrl(String apiUrl){
+        this.apiUrl = apiUrl;
     }
 	
     /**
-    * 设置embed模型名链式调用。
+    * 设置API地址链式调用。
     */
-    public AiRagLibQueryParam embedModelName(String embedModelName) {
-        setEmbedModelName(embedModelName);
+    public AiModelApiQueryParam apiUrl(String apiUrl) {
+        setApiUrl(apiUrl);
         return this;
     }
 	
     /**
-    * 获取创建时间范围。
+    * 获取API密钥。
     */
-    public Date[] getCreateDateRange(){
-        return this.createDateRange;
+    public String getApiKey(){
+        return this.apiKey;
     }
 
     /**
-    * 设置创建时间范围。
+    * 设置API密钥。
     */
-    public void setCreateDateRange(Date[] createDateRange){
-        this.createDateRange = createDateRange;
+    public void setApiKey(String apiKey){
+        this.apiKey = apiKey;
     }
 	
     /**
-    * 设置创建时间范围链式调用。
+    * 设置API密钥链式调用。
     */
-    public AiRagLibQueryParam createDateRange(Date[] createDateRange) {
-        setCreateDateRange(createDateRange);
-        return this;
-    }
-	
-    /**
-    * 获取修改时间范围。
-    */
-    public Date[] getModifyDateRange(){
-        return this.modifyDateRange;
-    }
-
-    /**
-    * 设置修改时间范围。
-    */
-    public void setModifyDateRange(Date[] modifyDateRange){
-        this.modifyDateRange = modifyDateRange;
-    }
-	
-    /**
-    * 设置修改时间范围链式调用。
-    */
-    public AiRagLibQueryParam modifyDateRange(Date[] modifyDateRange) {
-        setModifyDateRange(modifyDateRange);
+    public AiModelApiQueryParam apiKey(String apiKey) {
+        setApiKey(apiKey);
         return this;
     }
 	
@@ -323,7 +308,7 @@ public class AiRagLibQueryParam extends AuthPageQueryParam{
     /**
     * 设置状态链式调用。
     */
-    public AiRagLibQueryParam state(Integer state) {
+    public AiModelApiQueryParam state(Integer state) {
         setState(state);
         return this;
     }
@@ -345,7 +330,7 @@ public class AiRagLibQueryParam extends AuthPageQueryParam{
     /**
     * 设置状态数组链式调用。
     */
-    public AiRagLibQueryParam states(Integer[] states) {
+    public AiModelApiQueryParam states(Integer[] states) {
         setStates(states);
         return this;
     }
@@ -367,7 +352,7 @@ public class AiRagLibQueryParam extends AuthPageQueryParam{
     /**
     * 设置大于等于状态链式调用。
     */
-    public AiRagLibQueryParam stateGte(Integer stateGte) {
+    public AiModelApiQueryParam stateGte(Integer stateGte) {
         setStateGte(stateGte);
         return this;
     }
@@ -389,10 +374,54 @@ public class AiRagLibQueryParam extends AuthPageQueryParam{
     /**
     * 获取小于等于状态链式调用。
     */
-    public AiRagLibQueryParam stateLte(Integer stateLte) {
+    public AiModelApiQueryParam stateLte(Integer stateLte) {
         setStateLte(stateLte);
         return this;
     }
     
+    /**
+    * 获取创建时间范围。
+    */
+    public Date[] getCreateDateRange(){
+        return this.createDateRange;
+    }
+
+    /**
+    * 设置创建时间范围。
+    */
+    public void setCreateDateRange(Date[] createDateRange){
+        this.createDateRange = createDateRange;
+    }
+	
+    /**
+    * 设置创建时间范围链式调用。
+    */
+    public AiModelApiQueryParam createDateRange(Date[] createDateRange) {
+        setCreateDateRange(createDateRange);
+        return this;
+    }
+	
+    /**
+    * 获取修改时间范围。
+    */
+    public Date[] getModifyDateRange(){
+        return this.modifyDateRange;
+    }
+
+    /**
+    * 设置修改时间范围。
+    */
+    public void setModifyDateRange(Date[] modifyDateRange){
+        this.modifyDateRange = modifyDateRange;
+    }
+	
+    /**
+    * 设置修改时间范围链式调用。
+    */
+    public AiModelApiQueryParam modifyDateRange(Date[] modifyDateRange) {
+        setModifyDateRange(modifyDateRange);
+        return this;
+    }
+	
 
 }
