@@ -24,6 +24,7 @@ import uw.ai.center.dto.AiSessionInfoQueryParam;
 import uw.ai.center.dto.AiSessionMsgQueryParam;
 import uw.ai.center.entity.AiSessionInfo;
 import uw.ai.center.entity.AiSessionMsg;
+import uw.ai.center.vo.AiSessionInfoEx;
 import uw.ai.center.advisor.AiMysqlChatMemory;
 import uw.ai.center.tool.AiToolHelper;
 import uw.ai.center.vendor.AiVendorHelper;
@@ -33,6 +34,7 @@ import uw.ai.center.vo.AiModelConfigData;
 import uw.ai.vo.AiToolCallInfo;
 import uw.common.app.constant.CommonState;
 import uw.common.app.vo.JsonConfigBox;
+import uw.common.dto.QueryParam;
 import uw.common.response.ResponseData;
 import uw.common.util.JsonUtils;
 import uw.common.util.SystemClock;
@@ -531,7 +533,7 @@ public class AiChatService {
         // sessionId 为空时按 saasId+userId+sessionType 查询，多记录时按 id 倒序取最新一条
         AiSessionInfoQueryParam queryParam = new AiSessionInfoQueryParam(saasId).userId(userId).sessionType(sessionType).id(sessionId);
         if (sessionId == null) {
-            queryParam.ADD_SORT("id", uw.common.dto.QueryParam.SORT_DESC);
+            queryParam.ADD_SORT("id", QueryParam.SORT_DESC);
         }
         return dao.queryForObject(AiSessionInfo.class, queryParam);
     }
@@ -910,28 +912,57 @@ public class AiChatService {
     }
 
     /**
-     * 列表SessionInfo，并填充modelType（从FusionCache获取，无额外DB查询）。
+     * 列表SessionInfo，返回AiSessionInfoEx（附带modelType）。
+     *
+     * <p>设计思路：ai_session_info 表通过 config_id 外键关联 ai_model_config，
+     * 但 modelType 不在 session 表中冗余存储（避免模型配置变更后老数据脏）。
+     * 列表查询时实时从 FusionCache 反查 configId 对应的 modelType，填充到 Ex 扩展字段。</p>
      *
      * @return
      */
-    public static ResponseData<PageList<AiSessionInfo>> listSessionInfo(AiSessionInfoQueryParam queryParam) {
+    public static ResponseData<PageList<AiSessionInfoEx>> listSessionInfo(AiSessionInfoQueryParam queryParam) {
         ResponseData<PageList<AiSessionInfo>> result = dao.list(AiSessionInfo.class, queryParam);
-        if (result.isSuccess() && result.getData() != null) {
-            for (AiSessionInfo session : result.getData()) {
-                if (session.getConfigId() > 0) {
-                    try {
-                        AiModelConfigData configData = AiVendorHelper.getModelConfigData(session.getConfigId());
-                        if (configData != null) {
-                            session.setModelType(configData.getModelType());
-                        }
-                    } catch (Exception e) {
-                        // 配置不在缓存中（可能已禁用），忽略
-                        logger.debug("会话configId={}的模型配置未找到", session.getConfigId());
+        if (!result.isSuccess() || result.getData() == null) {
+            return ResponseData.error(PageList.empty(), result);
+        }
+        PageList<AiSessionInfo> orig = result.getData();
+        List<AiSessionInfoEx> exList = new ArrayList<>(orig.size());
+        for (AiSessionInfo session : orig) {
+            AiSessionInfoEx ex = new AiSessionInfoEx();
+            ex.setId(session.getId());
+            ex.setSaasId(session.getSaasId());
+            ex.setUserId(session.getUserId());
+            ex.setUserType(session.getUserType());
+            ex.setUserInfo(session.getUserInfo());
+            ex.setConfigId(session.getConfigId());
+            ex.setSessionType(session.getSessionType());
+            ex.setSessionName(session.getSessionName());
+            ex.setMsgNum(session.getMsgNum());
+            ex.setWindowSize(session.getWindowSize());
+            ex.setRequestTokens(session.getRequestTokens());
+            ex.setResponseTokens(session.getResponseTokens());
+            ex.setSystemPrompt(session.getSystemPrompt());
+            ex.setToolConfig(session.getToolConfig());
+            ex.setRagConfig(session.getRagConfig());
+            ex.setCreateDate(session.getCreateDate());
+            ex.setModifyDate(session.getModifyDate());
+            ex.setLastUpdate(session.getLastUpdate());
+            ex.setState(session.getState());
+            if (session.getConfigId() > 0) {
+                try {
+                    AiModelConfigData configData = AiVendorHelper.getModelConfigData(session.getConfigId());
+                    if (configData != null) {
+                        ex.setModelType(configData.getModelType());
                     }
+                } catch (Exception e) {
+                    // 配置不在缓存中（可能已禁用），忽略
+                    logger.debug("会话configId={}的模型配置未找到", session.getConfigId());
                 }
             }
+            exList.add(ex);
         }
-        return result;
+        PageList<AiSessionInfoEx> exPageList = new PageList<>(exList, orig.startIndex(), orig.resultNum(), orig.sizeAll());
+        return ResponseData.success(exPageList, result);
     }
 
     /**

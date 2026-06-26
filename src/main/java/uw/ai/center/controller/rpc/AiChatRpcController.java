@@ -15,6 +15,7 @@ import uw.ai.center.constant.SessionType;
 import uw.ai.center.dto.AiSessionInfoQueryParam;
 import uw.ai.center.dto.AiSessionMsgQueryParam;
 import uw.ai.center.entity.AiSessionInfo;
+import uw.ai.center.vo.AiSessionInfoEx;
 import uw.ai.center.entity.AiSessionMsg;
 import uw.ai.center.service.AiChatService;
 import uw.ai.center.vendor.AiVendorHelper;
@@ -137,14 +138,15 @@ public class AiChatRpcController implements AiChatRpc {
     /**
      * 列出会话信息（分页）。
      * <p>强制绑定调用方 saasId，防止 RPC 调用方查询其他租户的会话数据。
+     * <p>响应每条会话附带 modelType（CHAT/IMAGE_GENERATION/EMBEDDING 等），由 Service 层从 FusionCache 反查 configId 填充。</p>
      *
      * @param queryParam 查询参数（自动绑定调用方 saasId）
-     * @return 会话分页列表
+     * @return 会话分页列表，每条记录附带 modelType 字段
      */
     @GetMapping("/listSessionInfo")
     @Operation(summary = "列出会话信息", description = "列出会话信息")
     @MscPermDeclare(user = UserType.RPC)
-    public ResponseData<PageList<AiSessionInfo>> listSessionInfo(AiSessionInfoQueryParam queryParam) {
+    public ResponseData<PageList<AiSessionInfoEx>> listSessionInfo(AiSessionInfoQueryParam queryParam) {
         queryParam.saasId(AuthServiceHelper.getSaasId());
         return AiChatService.listSessionInfo(queryParam);
     }
